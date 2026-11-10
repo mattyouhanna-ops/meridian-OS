@@ -561,8 +561,9 @@ function renderCardPage(agent, req) {
   };
   for (const [k, v] of Object.entries(tags)) html = html.replaceAll(k, v);
   // Co-branding: subtle "Powered by Meridian OS" on every agency card.
-  const powered = `<div style="text-align:center;padding:16px 0 30px;font:600 11px/1 Inter,system-ui,sans-serif;letter-spacing:2.5px;color:#8f7426;opacity:.75">POWERED BY ${esc(platformBrand().toUpperCase())}</div>`;
-  html = html.replace("</body>", powered + "</body>");
+  const powered = `<div style="width:100%;text-align:center;padding:18px 0 4px;font:600 11px/1 Inter,system-ui,sans-serif;letter-spacing:2.5px;color:#8f7426;opacity:.75">POWERED BY ${esc(platformBrand().toUpperCase())}</div>`;
+  // Keep it inside the centered card column (body is a flex row — a sibling would float off to the side).
+  html = html.replace("</main>", powered + "</main>");
   return html;
 }
 function renderAdminPage(agent) {

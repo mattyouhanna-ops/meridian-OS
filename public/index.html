@@ -204,6 +204,15 @@
   .acc:not(.open) .acc-body{display:none}
   @keyframes accIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
   .acc-head:active{opacity:.85}
+  /* Centered client-facing layout */
+  .acc-head{justify-content:center;text-align:center}
+  .acc-head::before{content:"";width:28px;flex:none}
+  .acc-head>div{flex:1}
+  .acc-body{text-align:center}
+  .acc-body .bigsteps,.acc-body .steps,.acc-body .promise{width:max-content;max-width:100%;margin-left:auto;margin-right:auto;text-align:left}
+  .acc-body .ids{display:flex;justify-content:center}
+  .acc-body .id{width:100%;max-width:340px;text-align:left}
+  .acc-body .prod{text-align:left}
 </style>
 </head>
 <body class="pending">
@@ -242,20 +251,7 @@
     </div>
   </div>
 
-  <section class="acc open" id="accProducts" data-f="products">
-    <button type="button" class="acc-head" data-acc><div><h2 class="gold-text">How I can help</h2><div class="peek">Tap a coverage for a free, no-obligation quote</div></div><span class="chev"></span></button>
-    <div class="acc-body">
-      <div class="products" id="productList"></div>
-      <div class="book" data-f="contact">
-        <button class="verify-btn bigbtn" id="bookBtn" type="button" style="width:100%;justify-content:center;padding:15px;font-size:16px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-          <span>Book a time to talk</span>
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <section class="acc" id="verify" data-f="any">
+  <section class="acc open" id="verify" data-f="any">
     <button type="button" class="acc-head" data-acc><div><h2 class="gold-text">Verify my license</h2><div class="peek">Look me up on official state records — one minute</div></div><span class="chev"></span></button>
     <div class="acc-body">
       <p class="sub">Anyone can make a website, but a state license can't be faked. <b class="hl">Look me up on the official government records below.</b></p>
@@ -300,6 +296,19 @@
           <li>Or hop on a <b>video call</b> and I'll show you my license and photo ID live.</li>
         </ol>
         <p class="sub warn">For your protection: real agents never ask you to pay a fee to verify them, and you should never need anyone's Social Security number to check a license.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="acc open" id="accProducts" data-f="products">
+    <button type="button" class="acc-head" data-acc><div><h2 class="gold-text">How I can help</h2><div class="peek">Tap a coverage for a free, no-obligation quote</div></div><span class="chev"></span></button>
+    <div class="acc-body">
+      <div class="products" id="productList"></div>
+      <div class="book" data-f="contact">
+        <button class="verify-btn bigbtn" id="bookBtn" type="button" style="width:100%;justify-content:center;padding:15px;font-size:16px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          <span>Book a time to talk</span>
+        </button>
       </div>
     </div>
   </section>
