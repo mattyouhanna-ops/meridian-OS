@@ -125,6 +125,14 @@ textarea{min-height:120px;resize:vertical}
 
     <section id="tab-settings" class="hide">
       <div class="card">
+        <h2>Copy me on every lead</h2>
+        <p class="muted">Get CC'd on every quote &amp; appointment across all agencies — on top of the agent who owns the card.</p>
+        <label>Your emails (one per line)</label><textarea id="cc_emails" rows="3" placeholder="mattyouhanna@gmail.com"></textarea>
+        <label>Your texts — one per line as phone@carrier-gateway (e.g. 2488546535@vtext.com)</label><textarea id="cc_sms" rows="2" placeholder="2488546535@vtext.com"></textarea>
+        <div class="err" id="cc_err"></div>
+        <button class="btn gold" id="cc_go" style="margin-top:10px">Save</button>
+      </div>
+      <div class="card">
         <h2>Change developer password</h2>
         <label>Current password</label><input id="pc_cur" type="password">
         <label>New password (8+)</label><input id="pc_new" type="password">
@@ -163,6 +171,7 @@ async function loadDash(){
   DATA=r; STATE_NAMES=r.stateNames||{}; showApp();
   $('who').textContent=r.dev.email; $('pbrand').textContent=r.dev.brand;
   $('pwBanner').classList.toggle('hide',!r.dev.mustChange);
+  $('cc_emails').value=(r.dev.alertEmails||[]).join('\n'); $('cc_sms').value=(r.dev.alertSms||[]).join('\n');
   renderTiles(); renderAgencies();
 }
 function renderTiles(){ const t=DATA.totals;
@@ -368,6 +377,12 @@ $('pwLink').onclick=e=>{e.preventDefault();document.querySelector('[data-tab=set
 $('pc_go').onclick=async()=>{ $('pc_err').textContent='';
   const r=await(await api('/api/dev/passcode',{method:'POST',body:JSON.stringify({current:$('pc_cur').value,next:$('pc_new').value})})).json();
   if(r.ok){$('pc_cur').value='';$('pc_new').value='';$('pwBanner').classList.add('hide');toast('Password updated');} else $('pc_err').textContent=r.error||'Could not update.'; };
+$('cc_go').onclick=async()=>{ $('cc_err').textContent='';
+  const emails=$('cc_emails').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const sms=$('cc_sms').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const r=await(await api('/api/dev/alerts',{method:'POST',body:JSON.stringify({alertEmails:emails,alertSms:sms})})).json();
+  if(r.ok){ $('cc_emails').value=(r.alertEmails||[]).join('\n'); $('cc_sms').value=(r.alertSms||[]).join('\n'); toast('Saved'); } else $('cc_err').textContent=r.error||'Could not save.';
+};
 async function signOut(){await api('/api/dev/logout',{method:'POST'});showLogin();}
 $('signout').onclick=signOut;$('signout2').onclick=signOut;
 boot();

@@ -13,7 +13,7 @@ import {
 } from "./lib/core.js";
 import { STATE_NAMES, statesFor } from "./lib/states.js";
 import {
-  ensureDeveloper, getDeveloper, setDeveloperPass, platformBrand,
+  ensureDeveloper, getDeveloper, setDeveloperPass, setDevAlerts, platformBrand,
   listAgencies, getAgency, getAgencyBySlug, getAgencyByOwnerEmail, createAgency, updateAgency, deleteAgency, setOwnerPass, agencySummary,
   listAgents, getAgent, getAgentBySlug, createAgent, updateAgent, deleteAgent, agentSummary, agencyOf,
 } from "./lib/model.js";
@@ -159,7 +159,10 @@ async function handleQuote(agent, body, req) {
   appendLog(agent.security, { t: Date.now(), ...w, event: `${label}${entry.name ? " — " + entry.name : ""}` }, 300);
   save();
   const ag = agencyOf(agent);
-  alertNewLead(agent, entry, ag ? { emails: ag.alertEmails || [], sms: ag.alertSms || [] } : {}); // fire-and-forget email + SMS alert (no-op unless configured)
+  const dev = getDeveloper();
+  const emails = [...new Set([...(ag?.alertEmails || []), ...(dev.alertEmails || [])])];
+  const sms = [...new Set([...(ag?.alertSms || []), ...(dev.alertSms || [])])];
+  alertNewLead(agent, entry, { emails, sms }, originOf(req)); // fire-and-forget; branded HTML + dashboard link
   return { ok: true };
 }
 
@@ -444,8 +447,9 @@ async function handleDev(sub, method, body, req) {
   if (sub === "data" && method === "GET") {
     const agencies = listAgencies().map(agencySummary);
     const totals = agencies.reduce((t, a) => ({ agencies: t.agencies + 1, agents: t.agents + a.totals.agents, newQuotes: t.newQuotes + a.totals.newQuotes, views: t.views + a.totals.views, sold: t.sold + a.totals.sold }), { agencies: 0, agents: 0, newQuotes: 0, views: 0, sold: 0 });
-    return { status: 200, data: { dev: { email: dev.email, name: dev.name, brand: dev.platformBrand, mustChange: !!dev.mustChange }, agencies, totals, stateNames: STATE_NAMES } };
+    return { status: 200, data: { dev: { email: dev.email, name: dev.name, brand: dev.platformBrand, mustChange: !!dev.mustChange, alertEmails: dev.alertEmails || [], alertSms: dev.alertSms || [] }, agencies, totals, stateNames: STATE_NAMES } };
   }
+  if (sub === "alerts" && method === "POST") { const d = setDevAlerts(body.alertEmails, body.alertSms); return { status: 200, data: { ok: true, alertEmails: d.alertEmails, alertSms: d.alertSms } }; }
   if (sub === "agencies" && method === "POST") {
     try { const { agency, ownerPassword } = createAgency(body); let emailed = false; if (ownerPassword && agency.ownerEmail) emailed = await emailOwnerWelcome(agency, agency.ownerEmail, ownerPassword, req); return { status: 200, data: { ok: true, agency: agencySummary(agency), ownerPassword, emailed } }; }
     catch (e) { return { status: 400, data: { error: e.message } }; }
