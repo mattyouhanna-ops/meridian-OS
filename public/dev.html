@@ -236,6 +236,7 @@ function agentRow(x,a){
     <span class="muted" style="font-size:12px">${x.views} views · ${(x.states||[]).join(', ')||'—'}</span></div>
     <div class="link-url">${esc(card)}</div>
     <div class="acts">
+      <button class="btn sm" data-act="edit">✏️ Edit info</button>
       <button class="btn sm" data-act="open">Card</button>
       <button class="btn sm" data-act="dash">Dashboard</button>
       <button class="btn sm ghost" data-act="welcome">Welcome msg</button>
@@ -271,8 +272,33 @@ async function createAgent(w,a,wrap){
 }
 function welcomeText(a,pass){ const card=ORIGIN+'/a/'+a.slug;
   return `Hey ${first(a.name)} — your Meridian card is ready.\n\n1) Open ${card}/admin\n2) Sign in: ${a.email} / ${pass}\n3) Change your password, check your info, done.\n\nYour card to text out: ${card}\nTip: open it on your phone → Share → Add to Home Screen.`; }
+function showEditAgent(x,a,row){
+  const box=row.querySelector('.msgbox'); box.classList.remove('hide');
+  const states=new Set(x.states||[]);
+  box.innerHTML=`
+    <div class="row"><div><label>Name</label><input class="e_name"></div><div><label>Title</label><input class="e_title"></div></div>
+    <div class="row"><div><label>Phone</label><input class="e_phone"></div><div><label>Email (their login)</label><input class="e_email" type="email"></div></div>
+    <label>NPN / license #</label><input class="e_npn">
+    <label>Licensed states</label><div class="stategrid e_states">${Object.keys(STATE_NAMES).sort().map(c=>`<label><input type="checkbox" value="${c}" ${states.has(c)?'checked':''}>${c}</label>`).join('')}</div>
+    <div class="err e_err"></div>
+    <div class="acts"><button class="btn gold sm e_save">Save changes</button><button class="btn sm ghost e_cancel">Cancel</button></div>`;
+  box.querySelector('.e_name').value=x.name||''; box.querySelector('.e_title').value=x.title||'';
+  box.querySelector('.e_phone').value=x.phone||''; box.querySelector('.e_email').value=x.email||''; box.querySelector('.e_npn').value=x.npn||'';
+  box.querySelector('.e_cancel').onclick=()=>{box.classList.add('hide');box.innerHTML='';};
+  box.querySelector('.e_save').onclick=async()=>{
+    box.querySelector('.e_err').textContent='';
+    const profile={name:box.querySelector('.e_name').value.trim(),title:box.querySelector('.e_title').value.trim(),phone:box.querySelector('.e_phone').value.trim(),email:box.querySelector('.e_email').value.trim(),npn:box.querySelector('.e_npn').value.trim(),states:[...box.querySelectorAll('.e_states input:checked')].map(i=>i.value)};
+    if(!profile.name||!profile.phone||!profile.email){box.querySelector('.e_err').textContent='Name, phone and email are required.';return;}
+    const btn=box.querySelector('.e_save'); btn.disabled=true; btn.textContent='Saving…';
+    const r=await(await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({profile})})).json();
+    if(r.error){ btn.disabled=false; btn.textContent='Save changes'; box.querySelector('.e_err').textContent=r.error; return; }
+    toast('Saved ✓'); box.classList.add('hide'); box.innerHTML='';
+    const el=row.closest('.agency'); loadAgents(a,el); loadDash();
+  };
+}
 async function agentAction(act,x,a,row){
   const card=ORIGIN+'/a/'+x.slug, box=row.querySelector('.msgbox');
+  if(act==='edit'){ showEditAgent(x,a,row); return; }
   if(act==='open') window.open(card,'_blank');
   else if(act==='dash') window.open(card+'/admin','_blank');
   else if(act==='welcome'){ box.classList.remove('hide'); const txt=welcomeText(x,'(their current password)'); box.innerHTML=`<textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`; box.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); }
