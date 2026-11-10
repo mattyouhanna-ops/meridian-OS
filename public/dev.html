@@ -38,6 +38,9 @@ input:focus,textarea:focus{outline:none;border-color:var(--dim)}
 .tile b{display:block;font-size:26px;font-family:'Cormorant Garamond',serif;color:var(--gold2)}
 .tile span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
 .agency{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;background:var(--panel2)}
+.credline{font-size:12.5px;color:var(--muted);margin:8px 0;padding:8px 10px;border:1px dashed #33333a;border-radius:10px;background:#0e0e10;word-break:break-word}
+.credline code{color:var(--gold2);font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:#1a1708;padding:1px 6px;border-radius:6px}
+.credline b{color:var(--text)}
 .agency .hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .dot{width:12px;height:12px;border-radius:50%;flex:none}
 .nm{font-weight:700;font-size:17px}
@@ -90,6 +93,7 @@ textarea{min-height:120px;resize:vertical}
     <div id="pwBanner" class="banner hide">⚠️ You're on a default password. <a href="#" id="pwLink">Change it now</a>.</div>
     <div class="tabrow">
       <div class="tab active" data-tab="agencies">Agencies</div>
+      <div class="tab" data-tab="onboarding">Onboarding <span id="reqCount" class="chip gold hide" style="margin-left:4px"></span></div>
       <div class="tab" data-tab="inbox">Platform inbox</div>
       <div class="tab" data-tab="settings">Settings</div>
     </div>
@@ -112,6 +116,24 @@ textarea{min-height:120px;resize:vertical}
           <div id="ag_result" class="hide" style="margin-top:12px"></div>
         </div>
         <div id="agencies"></div>
+      </div>
+    </section>
+
+    <section id="tab-onboarding" class="hide">
+      <div class="card">
+        <div class="flexb"><h2>Account requests</h2><button class="btn sm" id="refreshReqs">↻ Refresh</button></div>
+        <p class="muted">People who asked for an account from the landing page. Nothing is live until you create them in an agency.</p>
+        <div id="reqs"></div>
+      </div>
+      <div class="card">
+        <h2>How to onboard someone</h2>
+        <ol class="muted" style="line-height:1.9;padding-left:20px;margin:6px 0 0">
+          <li>Approve a request above (or just go straight to an agency).</li>
+          <li>Open the <b>Agencies</b> tab → pick the agency → <b>+ Add agent</b>.</li>
+          <li>Enter their name, email, phone, carrier and states → <b>Create agent</b>.</li>
+          <li>A welcome email with their login sends automatically — the password also shows under their name here so you can resend it.</li>
+          <li>They open their card <code>/a/their-name/admin</code>, set their own password, and they're live.</li>
+        </ol>
       </div>
     </section>
 
@@ -172,7 +194,7 @@ async function loadDash(){
   $('who').textContent=r.dev.email; $('pbrand').textContent=r.dev.brand;
   $('pwBanner').classList.toggle('hide',!r.dev.mustChange);
   $('cc_emails').value=(r.dev.alertEmails||[]).join('\n'); $('cc_sms').value=(r.dev.alertSms||[]).join('\n');
-  renderTiles(); renderAgencies();
+  renderTiles(); renderAgencies(); loadRequests();
 }
 function renderTiles(){ const t=DATA.totals;
   $('tiles').innerHTML=[['Agencies',t.agencies],['Agents',t.agents],['New quotes',t.newQuotes],['Views',t.views],['Policies sold',t.sold]]
@@ -194,8 +216,8 @@ function renderAgencies(){
         <span class="sp"></span>
         <span class="muted" style="font-size:12px">${t.agents} agents · ${t.views} views · ${t.sold} sold</span>
       </div>
+      ${a.hasOwner?`<div class="credline">👤 <b>Owner login:</b> ${esc(a.ownerEmail||'')} · ${a.ownerIssuedPass?`password <code>${esc(a.ownerIssuedPass)}</code> <span class="muted">(temp — not changed yet)</span>`:'<span class="muted">custom password set — use “Reset owner login” to issue a new one</span>'}</div>`:'<div class="credline muted">No owner yet — you manage this agency directly.</div>'}
       <div class="acts">
-        <button class="btn sm" data-act="manage">${openAgencies.has(a.id)?'Hide agents':'Manage agents'}</button>
         <button class="btn sm ghost" data-act="notify">🔔 Alert recipients${(a.alertEmails&&a.alertEmails.length||a.alertSms&&a.alertSms.length)?' ('+((a.alertEmails||[]).length+(a.alertSms||[]).length)+')':''}</button>
         <button class="btn sm ghost" data-act="owner">${a.hasOwner?'Reset owner login':'Add owner login'}</button>
         <button class="btn sm ghost" data-act="license">🔑 License</button>
@@ -205,13 +227,13 @@ function renderAgencies(){
       <div class="licensebox hide" style="margin-top:8px"></div>
       <div class="ownerbox hide" style="margin-top:8px"></div>
       <div class="notifybox hide" style="margin-top:8px"></div>
-      <div class="sub agents-wrap ${openAgencies.has(a.id)?'':'hide'}"></div>
+      <div class="sub agents-wrap"></div>
     </div>`;
   }).join('');
   box.querySelectorAll('.agency').forEach(el=>{
     const id=el.dataset.id, a=DATA.agencies.find(x=>x.id===id);
-    el.querySelectorAll('.hd ~ .acts [data-act], .acts [data-act]').forEach(b=>b.onclick=()=>agencyAction(b.dataset.act,a,el));
-    if(openAgencies.has(id)) loadAgents(a,el);
+    el.querySelectorAll('.acts [data-act]').forEach(b=>b.onclick=()=>agencyAction(b.dataset.act,a,el));
+    loadAgents(a,el); // always show agents nested, no click needed
   });
 }
 
@@ -287,6 +309,7 @@ function agentRow(x,a){
     ${x.newQuotes?`<span class="chip gold">${x.newQuotes} new</span>`:''}<span class="sp"></span>
     <span class="muted" style="font-size:12px">${x.views} views · ${(x.states||[]).join(', ')||'—'}</span></div>
     <div class="link-url">${esc(card)}</div>
+    <div class="credline">🔑 <b>Login:</b> ${esc(x.email)} · ${x.issuedPass?`password <code>${esc(x.issuedPass)}</code> <span class="muted">(temp — not changed yet)</span>`:'<span class="muted">custom password set — use “Reset pw” to issue a new one</span>'}</div>
     <div class="acts">
       <button class="btn sm" data-act="edit">✏️ Edit info</button>
       <button class="btn sm" data-act="open">Card</button>
@@ -393,8 +416,34 @@ async function loadLeads(){ const r=await(await api('/api/dev/leads')).json(); c
 }
 
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
-  const n=t.dataset.tab; ['agencies','inbox','settings'].forEach(s=>$('tab-'+s).classList.toggle('hide',s!==n)); if(n==='inbox')loadLeads(); });
+  const n=t.dataset.tab; ['agencies','onboarding','inbox','settings'].forEach(s=>$('tab-'+s).classList.toggle('hide',s!==n)); if(n==='inbox')loadLeads(); if(n==='onboarding')loadRequests(); });
 $('refreshLeads').onclick=loadLeads;
+$('refreshReqs').onclick=loadRequests;
+
+async function loadRequests(){
+  const r=await(await api('/api/dev/requests')).json(); const reqs=(r.requests||[]);
+  const open=reqs.filter(x=>x.status==='new');
+  const badge=$('reqCount'); if(open.length){ badge.textContent=open.length; badge.classList.remove('hide'); } else badge.classList.add('hide');
+  const box=$('reqs');
+  if(!reqs.length){ box.innerHTML='<p class="muted">No account requests yet.</p>'; return; }
+  box.innerHTML=reqs.map(x=>{
+    const when=new Date(x.createdAt).toLocaleString();
+    const st=x.status==='new'?'<span class="chip gold">New</span>':(x.status==='approved'?'<span class="chip on">Approved</span>':'<span class="chip off">Declined</span>');
+    return `<div class="lead" data-id="${x.id}">
+      <div class="r1"><b>${esc(x.name)}</b> ${st}<span class="sp"></span><span class="muted" style="font-size:12px">${esc(x.industry||'')} · ${when}</span></div>
+      <div class="muted" style="font-size:13px;margin:4px 0">${esc(x.email)}${x.phone?' · '+esc(x.phone):''}${x.company?' · '+esc(x.company):''}</div>
+      ${x.note?`<div class="muted" style="font-size:13px;margin-bottom:6px">“${esc(x.note)}”</div>`:''}
+      ${x.status==='new'?`<div class="acts"><button class="btn sm gold" data-ract="approve">Approve</button><button class="btn sm ghost" data-ract="decline">Decline</button></div>`:''}
+    </div>`;
+  }).join('');
+  box.querySelectorAll('.lead').forEach(el=>{
+    const id=el.dataset.id;
+    el.querySelectorAll('[data-ract]').forEach(b=>b.onclick=async()=>{
+      await api('/api/dev/requests/'+id,{method:'POST',body:JSON.stringify({action:b.dataset.ract})});
+      toast(b.dataset.ract==='approve'?'Approved — now add them in Agencies':'Declined'); loadRequests();
+    });
+  });
+}
 $('pwLink').onclick=e=>{e.preventDefault();document.querySelector('[data-tab=settings]').click();};
 $('pc_go').onclick=async()=>{ $('pc_err').textContent='';
   const r=await(await api('/api/dev/passcode',{method:'POST',body:JSON.stringify({current:$('pc_cur').value,next:$('pc_new').value})})).json();

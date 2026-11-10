@@ -17,6 +17,7 @@ import {
   listAgencies, getAgency, getAgencyBySlug, getAgencyByOwnerEmail, createAgency, updateAgency, deleteAgency, setOwnerPass, agencySummary,
   agencyLicensed, licenseDaysLeft, setAgencyLicense,
   listAgents, getAgent, getAgentBySlug, getAgentByEmail, createAgent, updateAgent, deleteAgent, agentSummary, agencyOf,
+  listAccountRequests, addAccountRequest, setAccountRequestStatus,
 } from "./lib/model.js";
 import { cardPNG } from "./lib/og.js";
 import { alertNewLead, sendEmail, welcomeEmailHTML } from "./lib/notify.js";
@@ -502,6 +503,15 @@ async function handleDev(sub, method, body, req) {
     try { const a = setAgencyLicense(lm[1], { days: Number(body.days) || 0, until: Number(body.until) || 0, clear: !!body.clear }); return { status: 200, data: { ok: true, agency: agencySummary(a) } }; }
     catch (e) { return { status: 400, data: { error: e.message } }; }
   }
+  // account requests (public "request an account" submissions)
+  if (sub === "requests" && method === "GET") return { status: 200, data: { requests: listAccountRequests() } };
+  const rm = sub.match(/^requests\/([a-z0-9]+)$/i);
+  if (rm && method === "POST") {
+    const action = body.action === "approve" ? "approved" : (body.action === "decline" ? "declined" : "new");
+    const r = setAccountRequestStatus(rm[1], action);
+    if (!r) return { status: 404, data: { error: "Request not found." } };
+    return { status: 200, data: { ok: true, request: r } };
+  }
   // platform-wide leads across every agency
   if (sub === "leads" && method === "GET") {
     const leads = [];
@@ -605,6 +615,24 @@ const server = http.createServer(async (req, res) => {
       if (agent && agent.passHash && checkPass(pass, agent.passHash))
         return sendJSON(res, 200, { ok: true, role: "agent", url: "/a/" + agent.slug + "/admin", mustChange: !!agent.mustChange }, { "set-cookie": makeSessionCookie("agent", agent.id) });
       return sendJSON(res, 401, { error: "Email or password is incorrect." });
+    }
+    // Public "request an account" — stored for the developer to approve. Never auto-creates access.
+    if (p === "/api/request-account" && method === "POST") {
+      if (!sameOrigin(req)) return sendJSON(res, 403, { error: "Not allowed" });
+      const body = await readBody(req);
+      const name = String(body.name || "").trim();
+      const email = String(body.email || "").trim().toLowerCase();
+      if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return sendJSON(res, 400, { error: "Please enter your name and a valid email." });
+      const r = addAccountRequest({ name, email, phone: body.phone, industry: body.industry, company: body.company, note: body.note });
+      try {
+        const dev = getDeveloper();
+        const to = dev && dev.email;
+        if (to) {
+          const lines = [`New ${platformBrand()} account request`, "", `Name: ${name}`, `Email: ${email}`, body.phone ? `Phone: ${body.phone}` : "", body.industry ? `Industry: ${body.industry}` : "", body.company ? `Company: ${body.company}` : "", body.note ? `Note: ${body.note}` : "", "", `Review it in your developer console → Onboarding.`].filter(Boolean);
+          sendEmail(to, `New account request — ${name}`, lines.join("\n")).catch(() => {});
+        }
+      } catch {}
+      return sendJSON(res, 200, { ok: true, id: r.id });
     }
 
     // developer API + owner API

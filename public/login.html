@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Meridian OS — Sign in</title>
+<title>Meridian OS</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,85 +14,169 @@
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:22px;
   font-family:Inter,system-ui,-apple-system,sans-serif;color:#e9e9ec;
-  background:radial-gradient(900px 500px at 50% -10%,rgba(212,175,55,.16),transparent 60%),#0b0b0c}
-.card{width:100%;max-width:380px;background:linear-gradient(180deg,#141416,#0e0e10);
-  border:1px solid #2a2a2e;border-radius:20px;padding:30px 26px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+  background:radial-gradient(900px 520px at 50% -8%,rgba(212,175,55,.17),transparent 60%),#0b0b0c}
+.wrap{width:100%;max-width:400px}
+.card{background:linear-gradient(180deg,#141416,#0e0e10);border:1px solid #2a2a2e;border-radius:20px;
+  padding:28px 24px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
 .crest{width:56px;height:56px;margin:0 auto 14px;border-radius:14px;display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(145deg,#1a1a1d,#0c0c0e);border:1px solid #3a2f12;
-  font-weight:800;font-size:22px;color:#f1d78a;letter-spacing:1px}
-h1{margin:0 0 4px;text-align:center;font-size:21px;font-weight:800}
-.sub{margin:0 0 22px;text-align:center;font-size:13px;color:#8a8a90}
-label{display:block;font-size:12px;color:#a9a9af;margin:14px 0 6px;letter-spacing:.3px}
-input{width:100%;background:#0e0e10;border:1px solid #2e2e33;border-radius:12px;color:#fff;
-  padding:13px 14px;font-size:15px;outline:none}
-input:focus{border-color:#d4af37}
-.btn{margin-top:20px;width:100%;border:none;border-radius:12px;padding:14px;font-weight:700;font-size:15px;cursor:pointer;
+  background:linear-gradient(145deg,#1a1a1d,#0c0c0e);border:1px solid #3a2f12;font-weight:800;font-size:22px;color:#f1d78a;letter-spacing:1px}
+h1{margin:0 0 4px;text-align:center;font-size:23px;font-weight:800}
+.sub{margin:0 0 20px;text-align:center;font-size:13px;color:#8a8a90;line-height:1.5}
+.seclabel{font-size:11px;letter-spacing:.6px;color:#8a8a90;text-transform:uppercase;margin:4px 0 10px}
+.inds{display:grid;gap:10px;margin-bottom:20px}
+.ind{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid #2e2e33;border-radius:13px;background:#0e0e10;cursor:pointer;transition:.15s}
+.ind:hover{border-color:#3a3a40}
+.ind.on{border-color:#d4af37;background:linear-gradient(180deg,rgba(212,175,55,.1),rgba(212,175,55,.03))}
+.ind .ic{font-size:22px;width:28px;text-align:center}
+.ind .t{flex:1}
+.ind .t b{display:block;font-size:14.5px}
+.ind .t span{font-size:12px;color:#8a8a90}
+.badge{font-size:10px;font-weight:700;letter-spacing:.4px;padding:3px 8px;border-radius:999px;background:#2a2410;color:#f1d78a;border:1px solid #3a2f12}
+.badge.soon{background:#1a1a1d;color:#8a8a90;border-color:#2e2e33}
+.moresoon{text-align:center;font-size:11.5px;color:#6b6b70;margin:-6px 0 18px}
+label{display:block;font-size:12px;color:#a9a9af;margin:12px 0 6px;letter-spacing:.3px}
+input,textarea{width:100%;background:#0e0e10;border:1px solid #2e2e33;border-radius:12px;color:#fff;padding:13px 14px;font-size:15px;outline:none;font-family:inherit}
+input:focus,textarea:focus{border-color:#d4af37}
+.btn{width:100%;border:none;border-radius:12px;padding:14px;font-weight:700;font-size:15px;cursor:pointer;
   background:linear-gradient(180deg,#f1d78a,#d4af37);color:#231c00}
 .btn:active{transform:translateY(1px)}
 .btn[disabled]{opacity:.6}
+.btn.ghost{background:transparent;border:1px solid #2e2e33;color:#e9e9ec;margin-top:10px}
 .err{margin-top:12px;color:#ff8f8f;font-size:13px;text-align:center;min-height:16px}
-.foot{margin-top:22px;text-align:center;color:#6b6b70;font-size:10.5px;letter-spacing:.6px}
-.hint{margin-top:16px;text-align:center;font-size:12px;color:#7a7a80;line-height:1.6}
-.load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0b0b0c;z-index:5}
-.spin{width:30px;height:30px;border:3px solid #2a2a2e;border-top-color:#d4af37;border-radius:50%;animation:s 1s linear infinite}
-@keyframes s{to{transform:rotate(360deg)}}
+.back{display:inline-block;margin-bottom:6px;color:#8a8a90;font-size:13px;cursor:pointer;background:none;border:none;padding:0}
+.hint{margin-top:14px;text-align:center;font-size:12px;color:#7a7a80;line-height:1.6}
+.foot{margin-top:20px;text-align:center;color:#6b6b70;font-size:10.5px;letter-spacing:.6px}
+.ok{text-align:center}
+.ok .big{font-size:40px;margin-bottom:8px}
+.hide{display:none}
 </style>
 </head>
 <body>
-<div class="load" id="load"><div class="spin"></div></div>
+<div class="wrap">
 
-<form class="card" id="card" hidden autocomplete="on">
-  <div class="crest">M</div>
-  <h1>Sign in</h1>
-  <p class="sub">One login for your whole team</p>
+  <!-- LANDING -->
+  <div class="card" id="vLanding">
+    <div class="crest">M</div>
+    <h1>Meridian OS</h1>
+    <p class="sub">The all-in-one marketing tool for sales pros. Pick your line of business to get started.</p>
 
-  <label for="email">Email</label>
-  <input id="email" type="email" autocomplete="username" inputmode="email" placeholder="you@email.com" required>
+    <div class="seclabel">Choose your industry</div>
+    <div class="inds" id="inds">
+      <div class="ind on" data-ind="Life Insurance"><span class="ic">🛡️</span><div class="t"><b>Life Insurance</b><span>Licensed agents — verify, quote, get leads</span></div><span class="badge">Live</span></div>
+      <div class="ind" data-ind="Mortgage"><span class="ic">🏠</span><div class="t"><b>Mortgage</b><span>Loan officers — your digital business card</span></div><span class="badge">New</span></div>
+    </div>
+    <div class="moresoon">More sales industries are being added soon.</div>
 
-  <label for="pass">Password</label>
-  <input id="pass" type="password" autocomplete="current-password" placeholder="Your password" required>
+    <button class="btn" id="goLogin">Agent log in</button>
+    <button class="btn ghost" id="goRequest">Request an account</button>
+    <div class="foot">POWERED BY MERIDIAN OS</div>
+  </div>
 
-  <button class="btn" id="go" type="submit">Sign in</button>
-  <div class="err" id="err"></div>
+  <!-- LOGIN -->
+  <form class="card hide" id="vLogin" autocomplete="on">
+    <button type="button" class="back" id="backFromLogin">← Back</button>
+    <div class="crest">M</div>
+    <h1>Agent log in</h1>
+    <p class="sub">One login for your whole team — you'll land on your own dashboard.</p>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" inputmode="email" placeholder="you@email.com" required>
+    <label for="pass">Password</label>
+    <input id="pass" type="password" autocomplete="current-password" placeholder="Your password" required>
+    <button class="btn" id="go" type="submit" style="margin-top:18px">Sign in</button>
+    <div class="err" id="loginErr"></div>
+    <div class="foot">POWERED BY MERIDIAN OS</div>
+  </form>
 
-  <div class="hint">Developers, agency owners, and agents all sign in here — you'll land on your own dashboard automatically.</div>
-  <div class="foot">POWERED BY MERIDIAN OS</div>
-</form>
+  <!-- REQUEST ACCOUNT -->
+  <form class="card hide" id="vRequest" autocomplete="on">
+    <button type="button" class="back" id="backFromReq">← Back</button>
+    <div class="crest">M</div>
+    <h1>Request an account</h1>
+    <p class="sub">Tell us a bit about you. Requests are reviewed — you'll be contacted if you're approved.</p>
+    <label for="r_name">Full name</label>
+    <input id="r_name" placeholder="Your name" required>
+    <label for="r_email">Email</label>
+    <input id="r_email" type="email" inputmode="email" placeholder="you@email.com" required>
+    <label for="r_phone">Mobile</label>
+    <input id="r_phone" inputmode="tel" placeholder="(248) 555-1234">
+    <label for="r_company">Company / agency (optional)</label>
+    <input id="r_company" placeholder="Where you work">
+    <label for="r_note">Anything else? (optional)</label>
+    <textarea id="r_note" rows="2" placeholder="Who referred you, your license, etc."></textarea>
+    <input type="hidden" id="r_industry" value="Life Insurance">
+    <button class="btn" id="reqGo" type="submit" style="margin-top:18px">Send request</button>
+    <div class="err" id="reqErr"></div>
+    <div class="foot">POWERED BY MERIDIAN OS</div>
+  </form>
+
+  <!-- SUCCESS -->
+  <div class="card hide" id="vDone">
+    <div class="ok">
+      <div class="big">✅</div>
+      <h1>Request sent</h1>
+      <p class="sub">Thanks — your request is in. If you're approved, you'll get a welcome email with your login. No account is active until then.</p>
+      <button class="btn ghost" id="doneBack">Back to start</button>
+    </div>
+    <div class="foot">POWERED BY MERIDIAN OS</div>
+  </div>
+
+</div>
 
 <script>
 const $=id=>document.getElementById(id);
-async function route(url){ location.replace(url); }
+const views={landing:$('vLanding'),login:$('vLogin'),request:$('vRequest'),done:$('vDone')};
+function show(v){ for(const k in views) views[k].classList.toggle('hide',k!==v); }
+function route(url){ location.replace(url); }
+let industry='Life Insurance';
 
-function showForm(){ $('load').hidden=true; $('card').hidden=false; try{$('email').focus();}catch(e){} }
-// On open: if already signed in, go straight to the right dashboard.
-// Hard 2.5s cap so a cold server can never leave the page stuck on the spinner.
+// Industry picker
+$('inds').querySelectorAll('.ind').forEach(el=>el.onclick=()=>{
+  $('inds').querySelectorAll('.ind').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on'); industry=el.dataset.ind; $('r_industry').value=industry;
+});
+
+$('goLogin').onclick=()=>{ show('login'); setTimeout(()=>$('email').focus(),50); };
+$('goRequest').onclick=()=>{ $('r_industry').value=industry; show('request'); setTimeout(()=>$('r_name').focus(),50); };
+$('backFromLogin').onclick=()=>show('landing');
+$('backFromReq').onclick=()=>show('landing');
+$('doneBack').onclick=()=>show('landing');
+
+// If already signed in, go straight to the dashboard (non-blocking, capped at 2.5s).
 (async()=>{
-  const ctrl=new AbortController();
-  const to=setTimeout(()=>ctrl.abort(),2500);
-  try{
-    const r=await fetch('/api/whoami',{credentials:'same-origin',signal:ctrl.signal});
-    const j=await r.json(); clearTimeout(to);
-    if(j && j.role && j.url){ return route(j.url); }
+  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),2500);
+  try{ const r=await fetch('/api/whoami',{credentials:'same-origin',signal:ctrl.signal}); const j=await r.json(); clearTimeout(to);
+    if(j&&j.role&&j.url) return route(j.url);
   }catch(e){ clearTimeout(to); }
-  showForm();
 })();
-// Absolute fallback: whatever happens, show the form within 3s.
-setTimeout(showForm,3000);
 
-$('card').addEventListener('submit',async(e)=>{
-  e.preventDefault();
-  $('err').textContent='';
+// Login
+$('vLogin').addEventListener('submit',async e=>{
+  e.preventDefault(); $('loginErr').textContent='';
   const email=$('email').value.trim(), pass=$('pass').value;
-  if(!email||!pass){ $('err').textContent='Enter your email and password.'; return; }
+  if(!email||!pass){ $('loginErr').textContent='Enter your email and password.'; return; }
   $('go').disabled=true; $('go').textContent='Signing in…';
   try{
-    const r=await fetch('/api/login',{method:'POST',credentials:'same-origin',
-      headers:{'content-type':'application/json'},body:JSON.stringify({email,passcode:pass})});
+    const r=await fetch('/api/login',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify({email,passcode:pass})});
     const j=await r.json();
-    if(j.ok && j.url){ route(j.url); return; }
-    $('err').textContent=j.error||'Could not sign in.';
-  }catch(e){ $('err').textContent='Network error — try again.'; }
+    if(j.ok&&j.url){ return route(j.url); }
+    $('loginErr').textContent=j.error||'Could not sign in.';
+  }catch(e){ $('loginErr').textContent='Network error — try again.'; }
   $('go').disabled=false; $('go').textContent='Sign in';
+});
+
+// Request an account
+$('vRequest').addEventListener('submit',async e=>{
+  e.preventDefault(); $('reqErr').textContent='';
+  const body={name:$('r_name').value.trim(),email:$('r_email').value.trim(),phone:$('r_phone').value.trim(),company:$('r_company').value.trim(),note:$('r_note').value.trim(),industry:$('r_industry').value};
+  if(!body.name||!body.email){ $('reqErr').textContent='Name and email are required.'; return; }
+  $('reqGo').disabled=true; $('reqGo').textContent='Sending…';
+  try{
+    const r=await fetch('/api/request-account',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+    const j=await r.json();
+    if(j.ok){ show('done'); }
+    else $('reqErr').textContent=j.error||'Could not send request.';
+  }catch(e){ $('reqErr').textContent='Network error — try again.'; }
+  $('reqGo').disabled=false; $('reqGo').textContent='Send request';
 });
 </script>
 </body>
