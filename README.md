@@ -1,6 +1,12 @@
-# Meridian Team Platform
+# Meridian OS
 
-One app that runs the whole team: an **owner dashboard** that controls every agent, plus a **per-agent digital business card** and **agent dashboard**. Every agent's texted link automatically unfurls as their own black/gold Meridian business card (generated on the server), and the Meridian crest is the Add-to-Home-Screen icon for everyone.
+A multi-tenant platform for life-insurance teams. Three tiers:
+
+- **Developer** (you, the platform) — `/dev`: create & manage agencies, drill into any agency's agents, platform-wide inbox, suspend/delete agencies.
+- **Agency owner** — `/owner`: manage only their own agency's agents and leads.
+- **Agent** — `/a/<slug>`: their co-branded digital business card + `/a/<slug>/admin` dashboard.
+
+Every agent's texted link auto-unfurls as their own black/gold business card (generated on the server), the Meridian crest is the Add-to-Home-Screen icon, cards are co-branded "Powered by Meridian OS", and a deactivated agent (or suspended agency) redirects to a corporate landing page — no orphan-lead leaks. Lead alerts go out by email + text when configured.
 
 ## What's here
 - `server.js` — the whole server (Node built-ins + `sharp`).

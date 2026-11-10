@@ -13,8 +13,9 @@ import {
 } from "./lib/core.js";
 import { STATE_NAMES, statesFor } from "./lib/states.js";
 import {
-  ensureOwner, getOwner, setOwnerPass, listAgents, getAgent, getAgentBySlug,
-  createAgent, updateAgent, deleteAgent, agentSummary,
+  ensureDeveloper, getDeveloper, setDeveloperPass, platformBrand,
+  listAgencies, getAgency, getAgencyBySlug, getAgencyByOwnerEmail, createAgency, updateAgency, deleteAgency, setOwnerPass, agencySummary,
+  listAgents, getAgent, getAgentBySlug, createAgent, updateAgent, deleteAgent, agentSummary, agencyOf,
 } from "./lib/model.js";
 import { cardPNG } from "./lib/og.js";
 import { alertNewLead } from "./lib/notify.js";
@@ -23,7 +24,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUB = path.join(HERE, "public");
 const PORT = process.env.PORT || 3000;
 
-ensureOwner(); // seed owner on first boot
+ensureDeveloper(); // seed developer + Meridian (agency #1) on first boot
 
 // ---------- small helpers ----------
 const sendJSON = (res, status, data, headers = {}) =>
@@ -59,7 +60,9 @@ function appendLog(list, entry, max) { list.unshift(entry); if (list.length > ma
 
 // ---------- session resolution ----------
 function session(req) { return readSession(req.headers.cookie); }
-function ownerSession(req) { const s = session(req); return s && s.r === "owner" ? s : null; }
+function devSession(req) { const s = session(req); return s && s.r === "dev" ? s : null; }
+// Owner session carries the agency id. Returns the agency, or null.
+function ownerSession(req) { const s = session(req); if (!s || s.r !== "owner") return null; const ag = getAgency(s.id); return ag || null; }
 function agentSession(req) {
   const s = session(req); if (!s || s.r !== "agent") return null;
   const a = getAgent(s.id); if (!a) return null;
@@ -315,84 +318,140 @@ async function handleAdmin(agent, sub, method, body, req) {
   return { status: 404, data: { error: "Not found" } };
 }
 
+// shared: build an agent patch from a request body
+function agentPatch(body) {
+  const patch = {};
+  if (body.profile) patch.profile = body.profile;
+  if (typeof body.active === "boolean") patch.active = body.active;
+  if (body.password) patch.password = String(body.password);
+  return patch;
+}
+function agencyLeads(agencyId) {
+  const leads = [];
+  for (const a of listAgents(agencyId)) for (const q of a.quotes) leads.push({ ...q, agent: a.profile.name, agentSlug: a.slug, agentId: a.id });
+  leads.sort((x, y) => y.t - x.t);
+  return leads.slice(0, 500);
+}
+
 // ====================================================================
-// OWNER API  (/api/owner/*)
+// OWNER API  (/api/owner/*)  — scoped to the owner's own agency
 // ====================================================================
-const ownerLock = { n: 0, t: Date.now() };
+const ownerLock = new Map();
 async function handleOwner(sub, method, body, req) {
-  const owner = getOwner();
-  if (sub === "me" && method === "GET") { const s = ownerSession(req); return s ? { status: 200, data: { ok: true, email: owner.email, name: owner.name, brand: owner.brand, mustChange: !!owner.mustChange } } : { status: 401, data: { ok: false } }; }
-  if (method !== "POST" && method !== "PATCH" && method !== "DELETE" && method !== "GET") return { status: 405, data: { error: "Method not allowed" } };
+  if (sub === "me" && method === "GET") { const ag = ownerSession(req); return ag ? { status: 200, data: { ok: true, email: ag.ownerEmail, agency: ag.name, brand: ag.brand, mustChange: !!ag.ownerMustChange } } : { status: 401, data: { ok: false } }; }
   if (method !== "GET" && !sameOrigin(req)) return { status: 403, data: { error: "Not allowed" } };
 
   if (sub === "login" && method === "POST") {
-    if (Date.now() - ownerLock.t > 15 * 60e3) { ownerLock.n = 0; ownerLock.t = Date.now(); }
-    if (ownerLock.n >= 8) return { status: 429, data: { error: "Too many attempts. Try again later." } };
     const email = String(body.email || "").trim().toLowerCase();
+    const lk = ownerLock.get(email) || { n: 0, t: Date.now() };
+    if (Date.now() - lk.t > 15 * 60e3) { lk.n = 0; lk.t = Date.now(); }
+    if (lk.n >= 8) return { status: 429, data: { error: "Too many attempts. Try again later." } };
     await new Promise((r) => setTimeout(r, 300));
-    if (email === owner.email && checkPass(String(body.passcode || ""), owner.passHash)) {
-      ownerLock.n = 0;
-      return { status: 200, data: { ok: true, mustChange: !!owner.mustChange }, cookie: makeSessionCookie("owner", "owner") };
+    const ag = getAgencyByOwnerEmail(email);
+    if (ag && ag.ownerPassHash && checkPass(String(body.passcode || ""), ag.ownerPassHash)) {
+      ownerLock.delete(email);
+      return { status: 200, data: { ok: true, mustChange: !!ag.ownerMustChange }, cookie: makeSessionCookie("owner", ag.id) };
     }
-    ownerLock.n++;
+    lk.n++; ownerLock.set(email, lk);
     return { status: 401, data: { error: "Email or password is incorrect." } };
   }
   if (sub === "logout" && method === "POST") return { status: 200, data: { ok: true }, cookie: clearCookie };
 
-  // everything below requires owner auth
-  if (!ownerSession(req)) return { status: 401, data: { error: "Please sign in." } };
+  const ag = ownerSession(req);
+  if (!ag) return { status: 401, data: { error: "Please sign in." } };
 
   if (sub === "data" && method === "GET") {
-    const agents = listAgents().map(agentSummary);
+    const agents = listAgents(ag.id).map(agentSummary);
     const totals = agents.reduce((t, a) => ({ agents: t.agents + 1, newQuotes: t.newQuotes + a.newQuotes, newRequests: t.newRequests + a.newRequests, views: t.views + a.views, sold: t.sold + a.sold }), { agents: 0, newQuotes: 0, newRequests: 0, views: 0, sold: 0 });
-    return { status: 200, data: { owner: { email: owner.email, name: owner.name, brand: owner.brand, mustChange: !!owner.mustChange }, agents, totals, stateNames: STATE_NAMES } };
+    return { status: 200, data: { owner: { email: ag.ownerEmail, agency: ag.name, brand: ag.brand, mustChange: !!ag.ownerMustChange }, agents, totals, stateNames: STATE_NAMES, platformBrand: platformBrand() } };
   }
-
   if (sub === "agents" && method === "POST") {
-    try {
-      const { agent, tempPassword } = createAgent({ name: body.name, email: body.email, phone: body.phone, npn: body.npn, states: body.states, title: body.title, password: body.password });
-      return { status: 200, data: { ok: true, agent: agentSummary(agent), slug: agent.slug, tempPassword } };
-    } catch (e) { return { status: 400, data: { error: e.message } }; }
+    try { const { agent, tempPassword } = createAgent(ag.id, body); return { status: 200, data: { ok: true, agent: agentSummary(agent), slug: agent.slug, tempPassword } }; }
+    catch (e) { return { status: 400, data: { error: e.message } }; }
   }
-
   const am = sub.match(/^agents\/([a-z0-9]+)$/i);
   if (am) {
-    const id = am[1];
-    if (!getAgent(id)) return { status: 404, data: { error: "Agent not found." } };
-    if (method === "PATCH") {
-      const patch = {};
-      if (body.profile) patch.profile = body.profile;
-      if (typeof body.active === "boolean") patch.active = body.active;
-      if (body.password) patch.password = String(body.password);
-      try { const a = updateAgent(id, patch); return { status: 200, data: { ok: true, agent: agentSummary(a) } }; }
-      catch (e) { return { status: 400, data: { error: e.message } }; }
-    }
-    if (method === "DELETE") { deleteAgent(id); return { status: 200, data: { ok: true } }; }
+    const a = getAgent(am[1]);
+    if (!a || a.agencyId !== ag.id) return { status: 404, data: { error: "Agent not found." } };
+    if (method === "PATCH") { try { const u = updateAgent(a.id, agentPatch(body)); return { status: 200, data: { ok: true, agent: agentSummary(u) } }; } catch (e) { return { status: 400, data: { error: e.message } }; } }
+    if (method === "DELETE") { deleteAgent(a.id); return { status: 200, data: { ok: true } }; }
   }
-
-  // one agent's full detail for the owner's master view
   const dm = sub.match(/^agent\/([a-z0-9]+)\/detail$/i);
   if (dm && method === "GET") {
-    const a = getAgent(dm[1]); if (!a) return { status: 404, data: { error: "Agent not found." } };
+    const a = getAgent(dm[1]); if (!a || a.agencyId !== ag.id) return { status: 404, data: { error: "Agent not found." } };
     return { status: 200, data: { profile: normalizeProfile(a.profile), slug: a.slug, active: a.active, links: a.links, quotes: a.quotes, requests: a.requests, visits: a.visits.slice(0, 200), security: a.security.slice(0, 100) } };
   }
+  if (sub === "leads" && method === "GET") return { status: 200, data: { leads: agencyLeads(ag.id) } };
+  if (sub === "passcode" && method === "POST") {
+    if (!checkPass(String(body.current || ""), ag.ownerPassHash)) return { status: 401, data: { error: "Current password is incorrect." } };
+    if (String(body.next || "").length < 8) return { status: 400, data: { error: "New password must be at least 8 characters." } };
+    setOwnerPass(ag.id, String(body.next)); return { status: 200, data: { ok: true } };
+  }
+  return { status: 404, data: { error: "Not found" } };
+}
 
-  // aggregated inbound leads (quotes + appointments) across the whole team
+// ====================================================================
+// DEVELOPER API  (/api/dev/*)  — platform control over all agencies
+// ====================================================================
+const devLock = { n: 0, t: Date.now() };
+async function handleDev(sub, method, body, req) {
+  const dev = getDeveloper();
+  if (sub === "me" && method === "GET") { return devSession(req) ? { status: 200, data: { ok: true, email: dev.email, name: dev.name, brand: dev.platformBrand, mustChange: !!dev.mustChange } } : { status: 401, data: { ok: false } }; }
+  if (method !== "GET" && !sameOrigin(req)) return { status: 403, data: { error: "Not allowed" } };
+
+  if (sub === "login" && method === "POST") {
+    if (Date.now() - devLock.t > 15 * 60e3) { devLock.n = 0; devLock.t = Date.now(); }
+    if (devLock.n >= 8) return { status: 429, data: { error: "Too many attempts. Try again later." } };
+    await new Promise((r) => setTimeout(r, 300));
+    if (String(body.email || "").trim().toLowerCase() === dev.email && checkPass(String(body.passcode || ""), dev.passHash)) {
+      devLock.n = 0; return { status: 200, data: { ok: true, mustChange: !!dev.mustChange }, cookie: makeSessionCookie("dev", "dev") };
+    }
+    devLock.n++; return { status: 401, data: { error: "Email or password is incorrect." } };
+  }
+  if (sub === "logout" && method === "POST") return { status: 200, data: { ok: true }, cookie: clearCookie };
+
+  if (!devSession(req)) return { status: 401, data: { error: "Please sign in." } };
+
+  if (sub === "data" && method === "GET") {
+    const agencies = listAgencies().map(agencySummary);
+    const totals = agencies.reduce((t, a) => ({ agencies: t.agencies + 1, agents: t.agents + a.totals.agents, newQuotes: t.newQuotes + a.totals.newQuotes, views: t.views + a.totals.views, sold: t.sold + a.totals.sold }), { agencies: 0, agents: 0, newQuotes: 0, views: 0, sold: 0 });
+    return { status: 200, data: { dev: { email: dev.email, name: dev.name, brand: dev.platformBrand, mustChange: !!dev.mustChange }, agencies, totals, stateNames: STATE_NAMES } };
+  }
+  if (sub === "agencies" && method === "POST") {
+    try { const { agency, ownerPassword } = createAgency(body); return { status: 200, data: { ok: true, agency: agencySummary(agency), ownerPassword } }; }
+    catch (e) { return { status: 400, data: { error: e.message } }; }
+  }
+  const gm = sub.match(/^agencies\/([a-z0-9]+)$/i);
+  if (gm) {
+    if (!getAgency(gm[1])) return { status: 404, data: { error: "Agency not found." } };
+    if (method === "PATCH") { try { const { agency, ownerPassword } = updateAgency(gm[1], body); return { status: 200, data: { ok: true, agency: agencySummary(agency), ownerPassword } }; } catch (e) { return { status: 400, data: { error: e.message } }; } }
+    if (method === "DELETE") { deleteAgency(gm[1]); return { status: 200, data: { ok: true } }; }
+  }
+  // agents within a specific agency
+  const al = sub.match(/^agencies\/([a-z0-9]+)\/agents$/i);
+  if (al) {
+    if (!getAgency(al[1])) return { status: 404, data: { error: "Agency not found." } };
+    if (method === "GET") return { status: 200, data: { agents: listAgents(al[1]).map(agentSummary) } };
+    if (method === "POST") { try { const { agent, tempPassword } = createAgent(al[1], body); return { status: 200, data: { ok: true, agent: agentSummary(agent), slug: agent.slug, tempPassword } }; } catch (e) { return { status: 400, data: { error: e.message } }; } }
+  }
+  const am2 = sub.match(/^agents\/([a-z0-9]+)$/i);
+  if (am2) {
+    if (!getAgent(am2[1])) return { status: 404, data: { error: "Agent not found." } };
+    if (method === "PATCH") { try { const u = updateAgent(am2[1], agentPatch(body)); return { status: 200, data: { ok: true, agent: agentSummary(u) } }; } catch (e) { return { status: 400, data: { error: e.message } }; } }
+    if (method === "DELETE") { deleteAgent(am2[1]); return { status: 200, data: { ok: true } }; }
+  }
+  // platform-wide leads across every agency
   if (sub === "leads" && method === "GET") {
     const leads = [];
-    for (const a of listAgents()) for (const q of a.quotes) leads.push({ ...q, agent: a.profile.name, agentSlug: a.slug, agentId: a.id });
+    for (const a of listAgents()) { const ag = getAgency(a.agencyId); for (const q of a.quotes) leads.push({ ...q, agent: a.profile.name, agency: ag ? ag.name : "—", agentSlug: a.slug }); }
     leads.sort((x, y) => y.t - x.t);
-    return { status: 200, data: { leads: leads.slice(0, 500) } };
+    return { status: 200, data: { leads: leads.slice(0, 800) } };
   }
-
   if (sub === "passcode" && method === "POST") {
-    if (!checkPass(String(body.current || ""), owner.passHash)) return { status: 401, data: { error: "Current password is incorrect." } };
-    const next = String(body.next || "");
-    if (next.length < 8) return { status: 400, data: { error: "New password must be at least 8 characters." } };
-    setOwnerPass(next);
-    return { status: 200, data: { ok: true } };
+    if (!checkPass(String(body.current || ""), dev.passHash)) return { status: 401, data: { error: "Current password is incorrect." } };
+    if (String(body.next || "").length < 8) return { status: 400, data: { error: "New password must be at least 8 characters." } };
+    setDeveloperPass(String(body.next)); return { status: 200, data: { ok: true } };
   }
-
   return { status: 404, data: { error: "Not found" } };
 }
 
@@ -419,6 +478,9 @@ function renderCardPage(agent, req) {
     "%%APPTITLE%%": esc(P.brand || "Meridian"),
   };
   for (const [k, v] of Object.entries(tags)) html = html.replaceAll(k, v);
+  // Co-branding: subtle "Powered by Meridian OS" on every agency card.
+  const powered = `<div style="text-align:center;padding:16px 0 30px;font:600 11px/1 Inter,system-ui,sans-serif;letter-spacing:2.5px;color:#8f7426;opacity:.75">POWERED BY ${esc(platformBrand().toUpperCase())}</div>`;
+  html = html.replace("</body>", powered + "</body>");
   return html;
 }
 function renderAdminPage(agent) {
@@ -450,7 +512,13 @@ const server = http.createServer(async (req, res) => {
     if (p === "/manifest.webmanifest" || p === "/admin.webmanifest") return serveStatic(res, path.join(PUB, "manifest.webmanifest"), "no-cache");
     if (p === "/health") return sendJSON(res, 200, { ok: true });
 
-    // owner API
+    // developer API + owner API
+    if (p.startsWith("/api/dev/")) {
+      const sub = p.slice("/api/dev/".length);
+      const body = (method === "GET") ? {} : await readBody(req);
+      const r = await handleDev(sub, method, body, req);
+      return sendJSON(res, r.status, r.data, r.cookie ? { "set-cookie": r.cookie } : {});
+    }
     if (p.startsWith("/api/owner/")) {
       const sub = p.slice("/api/owner/".length);
       const body = (method === "GET") ? {} : await readBody(req);
@@ -458,7 +526,8 @@ const server = http.createServer(async (req, res) => {
       return sendJSON(res, r.status, r.data, r.cookie ? { "set-cookie": r.cookie } : {});
     }
 
-    // owner dashboard page
+    // dashboards
+    if (p === "/dev" || p === "/developer") return serveStatic(res, path.join(PUB, "dev.html"), "no-cache");
     if (p === "/" || p === "/owner") return serveStatic(res, path.join(PUB, "owner.html"), "no-cache");
 
     // per-agent routes: /a/:slug ...
@@ -468,10 +537,12 @@ const server = http.createServer(async (req, res) => {
       const rest = am[2] || "";
       const agent = getAgentBySlug(slug);
       if (!agent) { res.writeHead(404, { "content-type": "text/html" }).end("<h1>Card not found</h1>"); return; }
-      // Agent off-boarded / deactivated: never leak the card or its leads.
+      // Agent off-boarded, or their whole agency suspended: never leak the card or its leads.
       // Redirect to the central corporate landing page if configured, else show a neutral notice.
-      if (!agent.active && !rest.startsWith("/api/auth") && !rest.startsWith("/admin")) {
-        const corp = process.env.CORP_LANDING_URL;
+      const ag = agencyOf(agent);
+      const live = agent.active && (!ag || ag.active);
+      if (!live && !rest.startsWith("/api/auth") && !rest.startsWith("/admin")) {
+        const corp = (ag && ag.corpLanding) || process.env.CORP_LANDING_URL;
         if (corp && (rest === "" || rest === "/" || rest === "/card.png")) {
           res.writeHead(302, { location: corp, "cache-control": "no-store" }).end(); return;
         }

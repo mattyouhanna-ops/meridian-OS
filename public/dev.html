@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meridian OS — Developer</title>
+<meta name="theme-color" content="#0b0b0c">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0b0c;--panel:#141416;--panel2:#1a1a1d;--line:#2a2a2e;--gold:#d4af37;--gold2:#f1d78a;--dim:#8f7426;--text:#f3efe6;--muted:#a9a397;--ok:#7fc79a;--danger:#e46b6b;--warn:#e7b24c;--r:16px}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#17160f,#0b0b0c 60%);color:var(--text);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--gold2)}
+.wrap{max-width:1120px;margin:0 auto;padding:20px 16px 90px}
+.top{display:flex;align-items:center;gap:12px;padding:10px 0 18px}
+.crest{width:40px;height:40px}
+.brand{font-family:'Cormorant Garamond',serif;font-size:25px;font-weight:700}
+.brand small{display:block;font-family:Inter;font-size:10px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;font-weight:600}
+.sp{flex:1}
+.btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px 14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+.btn:hover{border-color:var(--dim)}
+.btn.gold{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#231c00;border:none}
+.btn.sm{padding:7px 11px;font-size:13px;border-radius:10px}
+.btn.ghost{background:transparent}
+.btn.danger{color:#ffd0d0;border-color:#5e2222}.btn.warn{color:#ffe6b8;border-color:#5e4a22}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:16px}
+h2{font-family:'Cormorant Garamond',serif;font-size:22px;margin:0 0 4px}
+.muted{color:var(--muted);font-size:14px}
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
+input,select,textarea{width:100%;background:#0e0e10;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:12px;font-size:16px;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:var(--dim)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.tile b{display:block;font-size:26px;font-family:'Cormorant Garamond',serif;color:var(--gold2)}
+.tile span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.agency{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;background:var(--panel2)}
+.agency .hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dot{width:12px;height:12px;border-radius:50%;flex:none}
+.nm{font-weight:700;font-size:17px}
+.chip{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.chip.on{color:#bff0d0;border-color:#2c5e3f}.chip.off{color:#ffc9c9;border-color:#5e2c2c}.chip.gold{color:var(--gold2);border-color:var(--dim)}
+.acts{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.sub{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.agent{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#121214}
+.agent .r1{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.link-url{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--gold2);word-break:break-all;background:#0e0e10;border:1px solid var(--line);border-radius:8px;padding:7px;margin:7px 0}
+.stategrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:6px;max-height:160px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:10px;background:#0e0e10}
+.stategrid label{display:flex;align-items:center;gap:5px;margin:0;font-size:13px;color:var(--text);cursor:pointer}.stategrid input{width:auto}
+.gate{max-width:420px;margin:8vh auto}
+.err{color:#ffb4b4;font-size:14px;margin-top:8px;min-height:1em}
+.lead{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;background:var(--panel2)}
+.lead .t{font-size:12px;color:var(--muted)}
+.hide{display:none!important}
+.flexb{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.banner{background:linear-gradient(180deg,#2a2410,#1a1708);border:1px solid var(--dim);border-radius:12px;padding:12px 14px;margin:10px 0;font-size:14px}
+.tabrow{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:600;font-size:14px}
+.tab.active{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#231c00;border:none}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#111;border:1px solid var(--dim);color:var(--text);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:50}
+.toast.show{opacity:1}
+textarea{min-height:120px;resize:vertical}
+@media(max-width:820px){.tiles{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img class="crest" src="/logo.svg" alt="">
+    <div class="brand">Meridian OS<small>Developer Console</small></div>
+    <div class="sp"></div>
+    <button class="btn ghost sm hide" id="signout">Sign out</button>
+  </div>
+
+  <div id="gate" class="gate">
+    <div class="card">
+      <h2>Developer sign in</h2>
+      <p class="muted">The top of the platform. Manage every agency and agent.</p>
+      <label>Email</label><input id="l_email" type="email" autocomplete="username">
+      <label>Password</label><input id="l_pass" type="password" autocomplete="current-password">
+      <div class="err" id="l_err"></div>
+      <button class="btn gold" id="l_go" style="width:100%;margin-top:6px">Sign in</button>
+    </div>
+  </div>
+
+  <div id="app" class="hide">
+    <div id="pwBanner" class="banner hide">⚠️ You're on a default password. <a href="#" id="pwLink">Change it now</a>.</div>
+    <div class="tabrow">
+      <div class="tab active" data-tab="agencies">Agencies</div>
+      <div class="tab" data-tab="inbox">Platform inbox</div>
+      <div class="tab" data-tab="settings">Settings</div>
+    </div>
+
+    <section id="tab-agencies">
+      <div class="tiles" id="tiles"></div>
+      <div class="card">
+        <div class="flexb"><h2>Agencies</h2><button class="btn sm" id="addAgencyBtn">+ New agency</button></div>
+        <div id="addAgency" class="hide" style="margin:10px 0 4px">
+          <div class="row">
+            <div><label>Agency name</label><input id="ag_name" placeholder="Summit Insurance Group"></div>
+            <div><label>Brand accent color</label><input id="ag_accent" type="color" value="#d4af37" style="height:46px;padding:4px"></div>
+          </div>
+          <div class="row">
+            <div><label>Owner email (optional — gives them a login)</label><input id="ag_owner" type="email" placeholder="owner@agency.com"></div>
+            <div><label>Corporate landing URL (for off-boarded agents)</label><input id="ag_corp" placeholder="https://agency.com"></div>
+          </div>
+          <div class="err" id="ag_err"></div>
+          <button class="btn gold sm" id="ag_go" style="margin-top:10px">Create agency</button>
+          <div id="ag_result" class="hide" style="margin-top:12px"></div>
+        </div>
+        <div id="agencies"></div>
+      </div>
+    </section>
+
+    <section id="tab-inbox" class="hide">
+      <div class="card">
+        <div class="flexb"><h2>Platform inbox</h2><button class="btn sm" id="refreshLeads">↻ Refresh</button></div>
+        <p class="muted">Every quote and appointment across every agency.</p>
+        <div id="leads"></div>
+      </div>
+    </section>
+
+    <section id="tab-settings" class="hide">
+      <div class="card">
+        <h2>Change developer password</h2>
+        <label>Current password</label><input id="pc_cur" type="password">
+        <label>New password (8+)</label><input id="pc_new" type="password">
+        <div class="err" id="pc_err"></div>
+        <button class="btn gold" id="pc_go" style="margin-top:10px">Update password</button>
+      </div>
+      <div class="card"><h2>Account</h2><p class="muted">Signed in as <b id="who"></b> · Platform: <b id="pbrand"></b></p><button class="btn ghost sm" id="signout2">Sign out</button></div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const api=(u,o)=>fetch(u,Object.assign({headers:{'content-type':'application/json'},cache:'no-store'},o));
+let STATE_NAMES={}, DATA=null, ORIGIN=location.origin;
+const openAgencies=new Set();
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._);t._=setTimeout(()=>t.classList.remove('show'),2200);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+const first=n=>String(n||'').trim().split(/\s+/)[0]||'there';
+
+async function boot(){ const me=await api('/api/dev/me'); if(me.ok){const d=await me.json(); if(d.ok) return loadDash();} showLogin(); }
+function showLogin(){$('gate').classList.remove('hide');$('app').classList.add('hide');$('signout').classList.add('hide');}
+function showApp(){$('gate').classList.add('hide');$('app').classList.remove('hide');$('signout').classList.remove('hide');}
+
+$('l_go').onclick=async()=>{ $('l_err').textContent='';
+  const r=await(await api('/api/dev/login',{method:'POST',body:JSON.stringify({email:$('l_email').value.trim(),passcode:$('l_pass').value})})).json();
+  if(r.ok) loadDash(); else $('l_err').textContent=r.error||'Sign in failed.'; };
+$('l_pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('l_go').click();});
+
+async function loadDash(){
+  const r=await(await api('/api/dev/data')).json();
+  if(r.error){showLogin();return;}
+  DATA=r; STATE_NAMES=r.stateNames||{}; showApp();
+  $('who').textContent=r.dev.email; $('pbrand').textContent=r.dev.brand;
+  $('pwBanner').classList.toggle('hide',!r.dev.mustChange);
+  renderTiles(); renderAgencies();
+}
+function renderTiles(){ const t=DATA.totals;
+  $('tiles').innerHTML=[['Agencies',t.agencies],['Agents',t.agents],['New quotes',t.newQuotes],['Views',t.views],['Policies sold',t.sold]]
+    .map(([l,v])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join(''); }
+
+function renderAgencies(){
+  const box=$('agencies');
+  if(!DATA.agencies.length){box.innerHTML='<p class="muted">No agencies yet.</p>';return;}
+  box.innerHTML=DATA.agencies.map(a=>{
+    const t=a.totals, accent=a.brand&&a.brand.accent||'#d4af37';
+    return `<div class="agency" data-id="${a.id}">
+      <div class="hd">
+        <span class="dot" style="background:${esc(accent)}"></span>
+        <span class="nm">${esc(a.name)}</span>
+        <span class="chip ${a.active?'on':'off'}">${a.active?'Active':'Suspended'}</span>
+        ${a.hasOwner?'<span class="chip">Owner login</span>':'<span class="chip">You manage</span>'}
+        ${t.newQuotes?`<span class="chip gold">${t.newQuotes} new</span>`:''}
+        <span class="sp"></span>
+        <span class="muted" style="font-size:12px">${t.agents} agents · ${t.views} views · ${t.sold} sold</span>
+      </div>
+      <div class="acts">
+        <button class="btn sm" data-act="manage">${openAgencies.has(a.id)?'Hide agents':'Manage agents'}</button>
+        <button class="btn sm ghost" data-act="owner">${a.hasOwner?'Reset owner login':'Add owner login'}</button>
+        <button class="btn sm ${a.active?'warn':''}" data-act="suspend">${a.active?'Suspend':'Activate'}</button>
+        <button class="btn sm danger" data-act="del">Delete</button>
+      </div>
+      <div class="ownerbox hide" style="margin-top:8px"></div>
+      <div class="sub agents-wrap ${openAgencies.has(a.id)?'':'hide'}"></div>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('.agency').forEach(el=>{
+    const id=el.dataset.id, a=DATA.agencies.find(x=>x.id===id);
+    el.querySelectorAll('.hd ~ .acts [data-act], .acts [data-act]').forEach(b=>b.onclick=()=>agencyAction(b.dataset.act,a,el));
+    if(openAgencies.has(id)) loadAgents(a,el);
+  });
+}
+
+async function agencyAction(act,a,el){
+  if(act==='manage'){ if(openAgencies.has(a.id)){openAgencies.delete(a.id);} else {openAgencies.add(a.id);} renderAgencies(); return; }
+  if(act==='suspend'){ await api('/api/dev/agencies/'+a.id,{method:'PATCH',body:JSON.stringify({active:!a.active})}); toast(a.active?'Suspended — all its cards now redirect':'Activated'); loadDash(); return; }
+  if(act==='del'){ if(confirm('Delete '+a.name+' and ALL its agents? This cannot be undone.')){ await api('/api/dev/agencies/'+a.id,{method:'DELETE'}); openAgencies.delete(a.id); toast('Agency deleted'); loadDash(); } return; }
+  if(act==='owner'){
+    const email=prompt('Owner email for '+a.name+' (they get a login):',a.ownerEmail||''); if(!email) return;
+    const r=await(await api('/api/dev/agencies/'+a.id,{method:'PATCH',body:JSON.stringify({ownerEmail:email,resetOwner:true})})).json();
+    const ob=el.querySelector('.ownerbox'); ob.classList.remove('hide');
+    if(r.ownerPassword){ const txt=`Owner login for ${a.name}:\nURL: ${ORIGIN}/owner\nEmail: ${email}\nPassword: ${r.ownerPassword}`;
+      ob.innerHTML=`<div class="banner">Owner login created. Send these:</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`;
+      ob.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); }
+    loadDash(); return;
+  }
+}
+
+// ----- agents within an agency -----
+async function loadAgents(a,el){
+  const wrap=el.querySelector('.agents-wrap'); wrap.classList.remove('hide');
+  const r=await(await api('/api/dev/agencies/'+a.id+'/agents')).json();
+  const agents=r.agents||[];
+  wrap.innerHTML=`<div class="flexb"><b>Agents · ${esc(a.name)}</b><button class="btn sm" data-add>+ Add agent</button></div>
+    <div class="addwrap hide" style="margin:8px 0"></div>
+    <div class="list">${agents.length?agents.map(x=>agentRow(x,a)).join(''):'<p class="muted">No agents yet.</p>'}</div>`;
+  wrap.querySelector('[data-add]').onclick=()=>toggleAdd(wrap,a);
+  wrap.querySelectorAll('.agent').forEach(row=>{
+    const aid=row.dataset.id, ag=agents.find(z=>z.id===aid);
+    row.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>agentAction(b.dataset.act,ag,a,row));
+  });
+}
+function agentRow(x,a){
+  const card=ORIGIN+'/a/'+x.slug;
+  return `<div class="agent" data-id="${x.id}">
+    <div class="r1"><b>${esc(x.name)}</b><span class="chip ${x.active?'on':'off'}">${x.active?'On':'Off'}</span>
+    ${x.newQuotes?`<span class="chip gold">${x.newQuotes} new</span>`:''}<span class="sp"></span>
+    <span class="muted" style="font-size:12px">${x.views} views · ${(x.states||[]).join(', ')||'—'}</span></div>
+    <div class="link-url">${esc(card)}</div>
+    <div class="acts">
+      <button class="btn sm" data-act="open">Card</button>
+      <button class="btn sm" data-act="dash">Dashboard</button>
+      <button class="btn sm ghost" data-act="welcome">Welcome msg</button>
+      <button class="btn sm ghost" data-act="reset">Reset pw</button>
+      <button class="btn sm ${x.active?'warn':''}" data-act="toggle">${x.active?'Deactivate':'Activate'}</button>
+      <button class="btn sm danger" data-act="del">Delete</button>
+    </div><div class="msgbox hide" style="margin-top:7px"></div></div>`;
+}
+function toggleAdd(wrap,a){
+  const w=wrap.querySelector('.addwrap'); w.classList.toggle('hide');
+  if(!w.dataset.built){ w.dataset.built='1';
+    w.innerHTML=`<div class="row"><div><label>Name</label><input class="n_name"></div><div><label>Email</label><input class="n_email" type="email"></div></div>
+      <div class="row"><div><label>Phone</label><input class="n_phone"></div><div><label>NPN (optional)</label><input class="n_npn"></div></div>
+      <label>Licensed states</label><div class="stategrid n_states">${Object.keys(STATE_NAMES).sort().map(c=>`<label><input type="checkbox" value="${c}">${c}</label>`).join('')}</div>
+      <div class="err n_err"></div><button class="btn gold sm n_go" style="margin-top:8px">Create agent</button><div class="n_result hide" style="margin-top:8px"></div>`;
+    w.querySelector('.n_go').onclick=()=>createAgent(w,a,wrap);
+  }
+}
+async function createAgent(w,a,wrap){
+  w.querySelector('.n_err').textContent='';
+  const states=[...w.querySelectorAll('.n_states input:checked')].map(i=>i.value);
+  const body={name:w.querySelector('.n_name').value.trim(),email:w.querySelector('.n_email').value.trim(),phone:w.querySelector('.n_phone').value.trim(),npn:w.querySelector('.n_npn').value.trim(),states};
+  if(!body.name||!body.email){w.querySelector('.n_err').textContent='Name and email required.';return;}
+  const r=await(await api('/api/dev/agencies/'+a.id+'/agents',{method:'POST',body:JSON.stringify(body)})).json();
+  if(r.error){w.querySelector('.n_err').textContent=r.error;return;}
+  const ag={id:r.agent.id,name:r.agent.name,email:r.agent.email,slug:r.slug};
+  const txt=welcomeText(ag,r.tempPassword);
+  const res=w.querySelector('.n_result'); res.classList.remove('hide');
+  res.innerHTML=`<div class="banner">✅ ${esc(ag.name)} created — send their welcome message:</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`;
+  res.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied'));
+  toast('Agent created'); loadDash();
+}
+function welcomeText(a,pass){ const card=ORIGIN+'/a/'+a.slug;
+  return `Hey ${first(a.name)} — your Meridian card is ready.\n\n1) Open ${card}/admin\n2) Sign in: ${a.email} / ${pass}\n3) Change your password, check your info, done.\n\nYour card to text out: ${card}\nTip: open it on your phone → Share → Add to Home Screen.`; }
+async function agentAction(act,x,a,row){
+  const card=ORIGIN+'/a/'+x.slug, box=row.querySelector('.msgbox');
+  if(act==='open') window.open(card,'_blank');
+  else if(act==='dash') window.open(card+'/admin','_blank');
+  else if(act==='welcome'){ box.classList.remove('hide'); const txt=welcomeText(x,'(their current password)'); box.innerHTML=`<textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`; box.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); }
+  else if(act==='reset'){ if(!confirm('Reset '+x.name+"'s password?"))return; const pass='Meridian-'+['Oak','Gold','Ridge','Vale','Stone','North'][Math.floor(Math.random()*6)]+'-'+Math.floor(1000+Math.random()*9000);
+    const r=await(await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({password:pass})})).json();
+    if(r.ok){ box.classList.remove('hide'); const txt=welcomeText(x,pass); box.innerHTML=`<div class="banner">New password set.</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`; box.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); toast('Password reset'); } }
+  else if(act==='toggle'){ await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({active:!x.active})}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); }
+  else if(act==='del'){ if(confirm('Delete '+x.name+'?')){ await api('/api/dev/agents/'+x.id,{method:'DELETE'}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); toast('Agent deleted'); } }
+}
+
+// ----- create agency -----
+$('addAgencyBtn').onclick=()=>$('addAgency').classList.toggle('hide');
+$('ag_go').onclick=async()=>{ $('ag_err').textContent='';
+  const body={name:$('ag_name').value.trim(),accent:$('ag_accent').value,ownerEmail:$('ag_owner').value.trim()||undefined,corpLanding:$('ag_corp').value.trim()||undefined};
+  if(!body.name){$('ag_err').textContent='Agency name required.';return;}
+  const r=await(await api('/api/dev/agencies',{method:'POST',body:JSON.stringify(body)})).json();
+  if(r.error){$('ag_err').textContent=r.error;return;}
+  const res=$('ag_result'); res.classList.remove('hide');
+  let msg=`✅ ${esc(r.agency.name)} created.`;
+  if(r.ownerPassword){ const txt=`Owner login for ${r.agency.name}:\nURL: ${ORIGIN}/owner\nEmail: ${body.ownerEmail}\nPassword: ${r.ownerPassword}`;
+    res.innerHTML=`<div class="banner">${msg} Owner login:</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`;
+    res.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); }
+  else res.innerHTML=`<div class="banner">${msg} You manage it directly — open its agents below.</div>`;
+  ['ag_name','ag_owner','ag_corp'].forEach(x=>$(x).value='');
+  toast('Agency created'); loadDash();
+};
+
+// ----- leads -----
+async function loadLeads(){ const r=await(await api('/api/dev/leads')).json(); const box=$('leads');
+  if(!r.leads||!r.leads.length){box.innerHTML='<p class="muted">No leads yet.</p>';return;}
+  box.innerHTML=r.leads.map(q=>{ const kind=q.kind==='appointment'?'📅 Appointment':'💬 Quote'; const bits=[q.product,q.coverage,q.budget,q.when].filter(Boolean).join(' · ');
+    return `<div class="lead"><div class="flexb"><b>${kind}${q.name?' — '+esc(q.name):''}</b><span class="chip ${q.status==='new'?'gold':''}">${esc(q.status)}</span></div>
+      <div class="t">${esc(q.agency)} › ${esc(q.agent)} · ${new Date(q.t).toLocaleString()}</div>
+      ${bits?`<div style="margin-top:4px">${esc(bits)}</div>`:''}
+      ${q.phone||q.email?`<div class="muted" style="margin-top:4px">${esc([q.phone,q.email].filter(Boolean).join(' · '))}</div>`:''}</div>`;}).join('');
+}
+
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
+  const n=t.dataset.tab; ['agencies','inbox','settings'].forEach(s=>$('tab-'+s).classList.toggle('hide',s!==n)); if(n==='inbox')loadLeads(); });
+$('refreshLeads').onclick=loadLeads;
+$('pwLink').onclick=e=>{e.preventDefault();document.querySelector('[data-tab=settings]').click();};
+$('pc_go').onclick=async()=>{ $('pc_err').textContent='';
+  const r=await(await api('/api/dev/passcode',{method:'POST',body:JSON.stringify({current:$('pc_cur').value,next:$('pc_new').value})})).json();
+  if(r.ok){$('pc_cur').value='';$('pc_new').value='';$('pwBanner').classList.add('hide');toast('Password updated');} else $('pc_err').textContent=r.error||'Could not update.'; };
+async function signOut(){await api('/api/dev/logout',{method:'POST'});showLogin();}
+$('signout').onclick=signOut;$('signout2').onclick=signOut;
+boot();
+</script>
+</body>
+</html>
