@@ -186,11 +186,13 @@ function renderAgencies(){
       </div>
       <div class="acts">
         <button class="btn sm" data-act="manage">${openAgencies.has(a.id)?'Hide agents':'Manage agents'}</button>
+        <button class="btn sm ghost" data-act="notify">🔔 Alert recipients${(a.alertEmails&&a.alertEmails.length||a.alertSms&&a.alertSms.length)?' ('+((a.alertEmails||[]).length+(a.alertSms||[]).length)+')':''}</button>
         <button class="btn sm ghost" data-act="owner">${a.hasOwner?'Reset owner login':'Add owner login'}</button>
         <button class="btn sm ${a.active?'warn':''}" data-act="suspend">${a.active?'Suspend':'Activate'}</button>
         <button class="btn sm danger" data-act="del">Delete</button>
       </div>
       <div class="ownerbox hide" style="margin-top:8px"></div>
+      <div class="notifybox hide" style="margin-top:8px"></div>
       <div class="sub agents-wrap ${openAgencies.has(a.id)?'':'hide'}"></div>
     </div>`;
   }).join('');
@@ -205,6 +207,23 @@ async function agencyAction(act,a,el){
   if(act==='manage'){ if(openAgencies.has(a.id)){openAgencies.delete(a.id);} else {openAgencies.add(a.id);} renderAgencies(); return; }
   if(act==='suspend'){ await api('/api/dev/agencies/'+a.id,{method:'PATCH',body:JSON.stringify({active:!a.active})}); toast(a.active?'Suspended — all its cards now redirect':'Activated'); loadDash(); return; }
   if(act==='del'){ if(confirm('Delete '+a.name+' and ALL its agents? This cannot be undone.')){ await api('/api/dev/agencies/'+a.id,{method:'DELETE'}); openAgencies.delete(a.id); toast('Agency deleted'); loadDash(); } return; }
+  if(act==='notify'){
+    const box=el.querySelector('.notifybox'); box.classList.remove('hide');
+    box.innerHTML=`<div class="banner">People copied on <b>every</b> lead in ${esc(a.name)} — on top of the agent and you.</div>
+      <label>Extra emails (one per line)</label><textarea class="nx_emails" rows="3" placeholder="manager@agency.com">${esc((a.alertEmails||[]).join('\n'))}</textarea>
+      <label>Extra texts — one per line as phone@carrier-gateway</label><textarea class="nx_sms" rows="2" placeholder="2481234567@vtext.com">${esc((a.alertSms||[]).join('\n'))}</textarea>
+      <p class="muted" style="font-size:12px">Gateways: Verizon @vtext.com · AT&T @txt.att.net · T-Mobile @tmomail.net · Cricket @sms.cricketwireless.net</p>
+      <div class="acts"><button class="btn gold sm nx_save">Save</button><button class="btn sm ghost nx_cancel">Cancel</button></div>`;
+    box.querySelector('.nx_cancel').onclick=()=>{box.classList.add('hide');box.innerHTML='';};
+    box.querySelector('.nx_save').onclick=async()=>{
+      const emails=box.querySelector('.nx_emails').value.split('\n').map(s=>s.trim()).filter(Boolean);
+      const sms=box.querySelector('.nx_sms').value.split('\n').map(s=>s.trim()).filter(Boolean);
+      const r=await(await api('/api/dev/agencies/'+a.id,{method:'PATCH',body:JSON.stringify({alertEmails:emails,alertSms:sms})})).json();
+      if(r.error){ toast(r.error); return; }
+      toast('Saved'); box.classList.add('hide'); box.innerHTML=''; loadDash();
+    };
+    return;
+  }
   if(act==='owner'){
     const email=prompt('Owner email for '+a.name+' (they get a login):',a.ownerEmail||''); if(!email) return;
     const r=await(await api('/api/dev/agencies/'+a.id,{method:'PATCH',body:JSON.stringify({ownerEmail:email,resetOwner:true})})).json();

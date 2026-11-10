@@ -158,7 +158,8 @@ async function handleQuote(agent, body, req) {
   const label = kind === "appointment" ? `Appointment request${entry.when ? " for " + entry.when : ""}` : `Quote request: ${entry.product || "general"}`;
   appendLog(agent.security, { t: Date.now(), ...w, event: `${label}${entry.name ? " — " + entry.name : ""}` }, 300);
   save();
-  alertNewLead(agent, entry); // fire-and-forget email + SMS alert (no-op unless configured)
+  const ag = agencyOf(agent);
+  alertNewLead(agent, entry, ag ? { emails: ag.alertEmails || [], sms: ag.alertSms || [] } : {}); // fire-and-forget email + SMS alert (no-op unless configured)
   return { ok: true };
 }
 
