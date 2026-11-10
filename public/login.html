@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Meridian OS — Sign in</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b0b0c">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:22px;
+  font-family:Inter,system-ui,-apple-system,sans-serif;color:#e9e9ec;
+  background:radial-gradient(900px 500px at 50% -10%,rgba(212,175,55,.16),transparent 60%),#0b0b0c}
+.card{width:100%;max-width:380px;background:linear-gradient(180deg,#141416,#0e0e10);
+  border:1px solid #2a2a2e;border-radius:20px;padding:30px 26px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.crest{width:56px;height:56px;margin:0 auto 14px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,#1a1a1d,#0c0c0e);border:1px solid #3a2f12;
+  font-weight:800;font-size:22px;color:#f1d78a;letter-spacing:1px}
+h1{margin:0 0 4px;text-align:center;font-size:21px;font-weight:800}
+.sub{margin:0 0 22px;text-align:center;font-size:13px;color:#8a8a90}
+label{display:block;font-size:12px;color:#a9a9af;margin:14px 0 6px;letter-spacing:.3px}
+input{width:100%;background:#0e0e10;border:1px solid #2e2e33;border-radius:12px;color:#fff;
+  padding:13px 14px;font-size:15px;outline:none}
+input:focus{border-color:#d4af37}
+.btn{margin-top:20px;width:100%;border:none;border-radius:12px;padding:14px;font-weight:700;font-size:15px;cursor:pointer;
+  background:linear-gradient(180deg,#f1d78a,#d4af37);color:#231c00}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.6}
+.err{margin-top:12px;color:#ff8f8f;font-size:13px;text-align:center;min-height:16px}
+.foot{margin-top:22px;text-align:center;color:#6b6b70;font-size:10.5px;letter-spacing:.6px}
+.hint{margin-top:16px;text-align:center;font-size:12px;color:#7a7a80;line-height:1.6}
+.load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0b0b0c;z-index:5}
+.spin{width:30px;height:30px;border:3px solid #2a2a2e;border-top-color:#d4af37;border-radius:50%;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="load" id="load"><div class="spin"></div></div>
+
+<form class="card" id="card" hidden autocomplete="on">
+  <div class="crest">M</div>
+  <h1>Sign in</h1>
+  <p class="sub">One login for your whole team</p>
+
+  <label for="email">Email</label>
+  <input id="email" type="email" autocomplete="username" inputmode="email" placeholder="you@email.com" required>
+
+  <label for="pass">Password</label>
+  <input id="pass" type="password" autocomplete="current-password" placeholder="Your password" required>
+
+  <button class="btn" id="go" type="submit">Sign in</button>
+  <div class="err" id="err"></div>
+
+  <div class="hint">Developers, agency owners, and agents all sign in here — you'll land on your own dashboard automatically.</div>
+  <div class="foot">POWERED BY MERIDIAN OS</div>
+</form>
+
+<script>
+const $=id=>document.getElementById(id);
+async function route(url){ location.replace(url); }
+
+// On open: if already signed in, go straight to the right dashboard.
+(async()=>{
+  try{
+    const r=await fetch('/api/whoami',{credentials:'same-origin'});
+    const j=await r.json();
+    if(j && j.role && j.url){ return route(j.url); }
+  }catch(e){}
+  $('load').hidden=true; $('card').hidden=false;
+  $('email').focus();
+})();
+
+$('card').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  $('err').textContent='';
+  const email=$('email').value.trim(), pass=$('pass').value;
+  if(!email||!pass){ $('err').textContent='Enter your email and password.'; return; }
+  $('go').disabled=true; $('go').textContent='Signing in…';
+  try{
+    const r=await fetch('/api/login',{method:'POST',credentials:'same-origin',
+      headers:{'content-type':'application/json'},body:JSON.stringify({email,passcode:pass})});
+    const j=await r.json();
+    if(j.ok && j.url){ route(j.url); return; }
+    $('err').textContent=j.error||'Could not sign in.';
+  }catch(e){ $('err').textContent='Network error — try again.'; }
+  $('go').disabled=false; $('go').textContent='Sign in';
+});
+</script>
+</body>
+</html>

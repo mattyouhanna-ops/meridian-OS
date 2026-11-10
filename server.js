@@ -15,7 +15,7 @@ import { STATE_NAMES, statesFor } from "./lib/states.js";
 import {
   ensureDeveloper, getDeveloper, setDeveloperPass, setDevAlerts, platformBrand,
   listAgencies, getAgency, getAgencyBySlug, getAgencyByOwnerEmail, createAgency, updateAgency, deleteAgency, setOwnerPass, agencySummary,
-  listAgents, getAgent, getAgentBySlug, createAgent, updateAgent, deleteAgent, agentSummary, agencyOf,
+  listAgents, getAgent, getAgentBySlug, getAgentByEmail, createAgent, updateAgent, deleteAgent, agentSummary, agencyOf,
 } from "./lib/model.js";
 import { cardPNG } from "./lib/og.js";
 import { alertNewLead, sendEmail, welcomeEmailHTML } from "./lib/notify.js";
@@ -560,6 +560,37 @@ const server = http.createServer(async (req, res) => {
     if (p === "/api/push/vapid" && method === "GET") return sendJSON(res, 200, { key: await vapidPublicKey() });
     if (p === "/health") return sendJSON(res, 200, { ok: true });
 
+    // ---- Unified "three-in-one" front door ----
+    // One login for everyone; routes each person to their own dashboard by role.
+    if (p === "/api/whoami" && method === "GET") {
+      const s = session(req);
+      if (s && s.r === "dev" && devSession(req)) return sendJSON(res, 200, { role: "dev", url: "/dev" });
+      if (s && s.r === "owner") { const ag = ownerSession(req); if (ag) return sendJSON(res, 200, { role: "owner", url: "/owner" }); }
+      if (s && s.r === "agent") { const a = agentSession(req); if (a) return sendJSON(res, 200, { role: "agent", url: "/a/" + a.slug + "/admin" }); }
+      return sendJSON(res, 200, { role: null });
+    }
+    if (p === "/api/login" && method === "POST") {
+      if (!sameOrigin(req)) return sendJSON(res, 403, { error: "Not allowed" });
+      const body = await readBody(req);
+      const email = String(body.email || "").trim().toLowerCase();
+      const pass = String(body.passcode || body.password || "");
+      await new Promise((r) => setTimeout(r, 300));
+      if (!email || !pass) return sendJSON(res, 400, { error: "Enter your email and password." });
+      // 1) developer
+      const dev = getDeveloper();
+      if (dev && email === dev.email && checkPass(pass, dev.passHash))
+        return sendJSON(res, 200, { ok: true, role: "dev", url: "/dev", mustChange: !!dev.mustChange }, { "set-cookie": makeSessionCookie("dev", "dev") });
+      // 2) agency owner
+      const ag = getAgencyByOwnerEmail(email);
+      if (ag && ag.ownerPassHash && checkPass(pass, ag.ownerPassHash))
+        return sendJSON(res, 200, { ok: true, role: "owner", url: "/owner", mustChange: !!ag.ownerMustChange }, { "set-cookie": makeSessionCookie("owner", ag.id) });
+      // 3) agent
+      const agent = getAgentByEmail(email);
+      if (agent && agent.passHash && checkPass(pass, agent.passHash))
+        return sendJSON(res, 200, { ok: true, role: "agent", url: "/a/" + agent.slug + "/admin", mustChange: !!agent.mustChange }, { "set-cookie": makeSessionCookie("agent", agent.id) });
+      return sendJSON(res, 401, { error: "Email or password is incorrect." });
+    }
+
     // developer API + owner API
     if (p.startsWith("/api/dev/")) {
       const sub = p.slice("/api/dev/".length);
@@ -576,7 +607,8 @@ const server = http.createServer(async (req, res) => {
 
     // dashboards
     if (p === "/dev" || p === "/developer") return serveStatic(res, path.join(PUB, "dev.html"), "no-cache");
-    if (p === "/" || p === "/owner") return serveStatic(res, path.join(PUB, "owner.html"), "no-cache");
+    if (p === "/" || p === "/login" || p === "/go") return serveStatic(res, path.join(PUB, "login.html"), "no-cache");
+    if (p === "/owner") return serveStatic(res, path.join(PUB, "owner.html"), "no-cache");
 
     // per-agent routes: /a/:slug ...
     const am = p.match(/^\/a\/([a-z0-9-]+)(\/.*)?$/i);

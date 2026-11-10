@@ -2,7 +2,7 @@
   "name": "Meridian Life Group",
   "short_name": "Meridian",
   "description": "Meridian Life Group — verify my license, call, text, or email.",
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0b0b0c",
   "theme_color": "#0b0b0c",
