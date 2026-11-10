@@ -142,6 +142,8 @@ const $=id=>document.getElementById(id);
 const api=(u,o)=>fetch(u,Object.assign({headers:{'content-type':'application/json'},cache:'no-store'},o));
 let STATE_NAMES={}, DATA=null, ORIGIN=location.origin;
 const openAgencies=new Set();
+const CARRIER_OPTS=[['','— mobile carrier (enables free texts) —'],['verizon','Verizon'],['att','AT&T'],['tmobile','T-Mobile'],['metro','Metro by T-Mobile'],['cricket','Cricket'],['boost','Boost Mobile'],['uscellular','US Cellular'],['googlefi','Google Fi'],['xfinity','Xfinity Mobile'],['visible','Visible'],['mint','Mint Mobile'],['straighttalk','Straight Talk']];
+function carrierSelect(cls,sel){ return `<select class="${cls}">`+CARRIER_OPTS.map(([v,l])=>`<option value="${v}" ${v===(sel||'')?'selected':''}>${l}</option>`).join('')+`</select>`; }
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._);t._=setTimeout(()=>t.classList.remove('show'),2200);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 const first=n=>String(n||'').trim().split(/\s+/)[0]||'there';
@@ -250,7 +252,8 @@ function toggleAdd(wrap,a){
   if(!w.dataset.built){ w.dataset.built='1';
     w.innerHTML=`<div class="row"><div><label>Name</label><input class="n_name"></div><div><label>Email</label><input class="n_email" type="email"></div></div>
       <div class="row"><div><label>Phone</label><input class="n_phone"></div><div><label>NPN (optional)</label><input class="n_npn"></div></div>
-      <label>Licensed states</label><div class="stategrid n_states">${Object.keys(STATE_NAMES).sort().map(c=>`<label><input type="checkbox" value="${c}">${c}</label>`).join('')}</div>
+      <label>Mobile carrier (for free text alerts)</label>${carrierSelect('n_carrier','')}
+      <label style="margin-top:10px">Licensed states</label><div class="stategrid n_states">${Object.keys(STATE_NAMES).sort().map(c=>`<label><input type="checkbox" value="${c}">${c}</label>`).join('')}</div>
       <div class="err n_err"></div><button class="btn gold sm n_go" style="margin-top:8px">Create agent</button><div class="n_result hide" style="margin-top:8px"></div>`;
     w.querySelector('.n_go').onclick=()=>createAgent(w,a,wrap);
   }
@@ -258,7 +261,7 @@ function toggleAdd(wrap,a){
 async function createAgent(w,a,wrap){
   w.querySelector('.n_err').textContent='';
   const states=[...w.querySelectorAll('.n_states input:checked')].map(i=>i.value);
-  const body={name:w.querySelector('.n_name').value.trim(),email:w.querySelector('.n_email').value.trim(),phone:w.querySelector('.n_phone').value.trim(),npn:w.querySelector('.n_npn').value.trim(),states};
+  const body={name:w.querySelector('.n_name').value.trim(),email:w.querySelector('.n_email').value.trim(),phone:w.querySelector('.n_phone').value.trim(),npn:w.querySelector('.n_npn').value.trim(),carrier:w.querySelector('.n_carrier').value,states};
   if(!body.name||!body.email){w.querySelector('.n_err').textContent='Name and email required.';return;}
   const r=await(await api('/api/dev/agencies/'+a.id+'/agents',{method:'POST',body:JSON.stringify(body)})).json();
   if(r.error){w.querySelector('.n_err').textContent=r.error;return;}
@@ -279,7 +282,8 @@ function showEditAgent(x,a,row){
     <div class="row"><div><label>Name</label><input class="e_name"></div><div><label>Title</label><input class="e_title"></div></div>
     <div class="row"><div><label>Phone</label><input class="e_phone"></div><div><label>Email (their login)</label><input class="e_email" type="email"></div></div>
     <label>NPN / license #</label><input class="e_npn">
-    <label>Licensed states</label><div class="stategrid e_states">${Object.keys(STATE_NAMES).sort().map(c=>`<label><input type="checkbox" value="${c}" ${states.has(c)?'checked':''}>${c}</label>`).join('')}</div>
+    <label>Mobile carrier (for free text alerts)</label>${carrierSelect('e_carrier',x.carrier)}
+    <label style="margin-top:10px">Licensed states</label><div class="stategrid e_states">${Object.keys(STATE_NAMES).sort().map(c=>`<label><input type="checkbox" value="${c}" ${states.has(c)?'checked':''}>${c}</label>`).join('')}</div>
     <div class="err e_err"></div>
     <div class="acts"><button class="btn gold sm e_save">Save changes</button><button class="btn sm ghost e_cancel">Cancel</button></div>`;
   box.querySelector('.e_name').value=x.name||''; box.querySelector('.e_title').value=x.title||'';
@@ -290,7 +294,8 @@ function showEditAgent(x,a,row){
     const profile={name:box.querySelector('.e_name').value.trim(),title:box.querySelector('.e_title').value.trim(),phone:box.querySelector('.e_phone').value.trim(),email:box.querySelector('.e_email').value.trim(),npn:box.querySelector('.e_npn').value.trim(),states:[...box.querySelectorAll('.e_states input:checked')].map(i=>i.value)};
     if(!profile.name||!profile.phone||!profile.email){box.querySelector('.e_err').textContent='Name, phone and email are required.';return;}
     const btn=box.querySelector('.e_save'); btn.disabled=true; btn.textContent='Saving…';
-    const r=await(await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({profile})})).json();
+    const carrier=box.querySelector('.e_carrier').value;
+    const r=await(await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({profile,carrier})})).json();
     if(r.error){ btn.disabled=false; btn.textContent='Save changes'; box.querySelector('.e_err').textContent=r.error; return; }
     toast('Saved ✓'); box.classList.add('hide'); box.innerHTML='';
     const el=row.closest('.agency'); loadAgents(a,el); loadDash();

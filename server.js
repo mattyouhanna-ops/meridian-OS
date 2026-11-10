@@ -349,6 +349,7 @@ async function handleAdmin(agent, sub, method, body, req) {
 function agentPatch(body) {
   const patch = {};
   if (body.profile) patch.profile = body.profile;
+  if (typeof body.carrier === "string") patch.carrier = body.carrier;
   if (typeof body.active === "boolean") patch.active = body.active;
   if (body.password) patch.password = String(body.password);
   return patch;

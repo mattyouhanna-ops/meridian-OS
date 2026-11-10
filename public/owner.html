@@ -125,6 +125,8 @@
           <div><label>Phone</label><input id="a_phone" placeholder="(555) 123-4567"></div>
           <div><label>NPN / license # (optional)</label><input id="a_npn" placeholder="12345678"></div>
         </div>
+        <label>Mobile carrier (for free text alerts)</label>
+        <select id="a_carrier"><option value="">— carrier —</option><option value="verizon">Verizon</option><option value="att">AT&T</option><option value="tmobile">T-Mobile</option><option value="metro">Metro by T-Mobile</option><option value="cricket">Cricket</option><option value="boost">Boost Mobile</option><option value="uscellular">US Cellular</option><option value="googlefi">Google Fi</option><option value="xfinity">Xfinity Mobile</option><option value="visible">Visible</option><option value="mint">Mint Mobile</option><option value="straighttalk">Straight Talk</option></select>
         <label>Licensed states (tap to toggle)</label>
         <div class="stategrid" id="a_states"></div>
         <div class="err" id="a_err"></div>
@@ -291,7 +293,7 @@ function buildStateGrid(){
 $('a_go').onclick=async()=>{
   $('a_err').textContent='';
   const states=[...$('a_states').querySelectorAll('input:checked')].map(i=>i.value);
-  const body={name:$('a_name').value.trim(),email:$('a_email').value.trim(),phone:$('a_phone').value.trim(),npn:$('a_npn').value.trim(),states};
+  const body={name:$('a_name').value.trim(),email:$('a_email').value.trim(),phone:$('a_phone').value.trim(),npn:$('a_npn').value.trim(),carrier:$('a_carrier').value,states};
   if(!body.name||!body.email){ $('a_err').textContent='Name and email are required.'; return; }
   $('a_go').disabled=true;$('a_go').textContent='Creating…';
   try{
