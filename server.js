@@ -19,6 +19,7 @@ import {
 } from "./lib/model.js";
 import { cardPNG } from "./lib/og.js";
 import { alertNewLead, sendEmail, welcomeEmailHTML } from "./lib/notify.js";
+import { vapidPublicKey, addSubscription, pushToAgent } from "./lib/push.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUB = path.join(HERE, "public");
@@ -165,6 +166,15 @@ async function handleQuote(agent, body, req) {
   const emails = [...new Set([...(ag?.alertEmails || []), ...(dev.alertEmails || [])])];
   const sms = [...new Set([...(ag?.alertSms || []), ...(dev.alertSms || [])])];
   alertNewLead(agent, entry, { emails, sms }, originOf(req)); // fire-and-forget; branded HTML + dashboard link
+  // Free app-like push notification to the agent's phone
+  const who2 = entry.name ? " from " + entry.name : "";
+  const bits2 = [entry.product, entry.coverage, entry.budget].filter(Boolean).join(" · ");
+  pushToAgent(agent, {
+    title: entry.kind === "appointment" ? "New appointment" + who2 : "New quote" + who2,
+    body: bits2 || "Tap to view and respond.",
+    url: `${originOf(req)}/a/${agent.slug}/admin`,
+    tag: "lead",
+  }).catch(() => {});
   return { ok: true };
 }
 
@@ -346,6 +356,7 @@ async function handleAdmin(agent, sub, method, body, req) {
     return { status: 200, data: { ok: true } };
   }
   if (sub === "onboarded" && method === "POST") { agent.mustChange = false; save(); return { status: 200, data: { ok: true } }; }
+  if (sub === "push-subscribe" && method === "POST") { addSubscription(agent, body.subscription); return { status: 200, data: { ok: true } }; }
   if (sub === "signout-all" && method === "POST") { agent.sessionsValidAfter = Date.now(); save(); return { status: 200, data: { ok: true } }; }
 
   return { status: 404, data: { error: "Not found" } };
@@ -545,6 +556,8 @@ const server = http.createServer(async (req, res) => {
     if (p === "/favicon.ico") return serveStatic(res, path.join(PUB, "favicon.ico"));
     if (["/logo.svg", "/apple-touch-icon.png", "/favicon-32.png", "/icon-192.png", "/icon-512.png"].includes(p)) return serveStatic(res, path.join(PUB, p.slice(1)));
     if (p === "/manifest.webmanifest" || p === "/admin.webmanifest") return serveStatic(res, path.join(PUB, "manifest.webmanifest"), "no-cache");
+    if (p === "/sw.js") { try { const buf = fs.readFileSync(path.join(PUB, "sw.js")); return res.writeHead(200, { "content-type": "text/javascript", "cache-control": "no-cache", "service-worker-allowed": "/" }).end(buf); } catch { return res.writeHead(404).end(); } }
+    if (p === "/api/push/vapid" && method === "GET") return sendJSON(res, 200, { key: await vapidPublicKey() });
     if (p === "/health") return sendJSON(res, 200, { ok: true });
 
     // developer API + owner API

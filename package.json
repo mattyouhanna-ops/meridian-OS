@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "sharp": "^0.33.5",
-    "nodemailer": "^6.9.14"
+    "nodemailer": "^6.9.14",
+    "web-push": "^3.6.7"
   }
 }

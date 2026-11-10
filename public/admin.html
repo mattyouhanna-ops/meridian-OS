@@ -613,7 +613,7 @@ async function loadDash(){
   $('whoami').textContent=S.email;
   fillProfile(); fillVisibility(); baseline();
   renderClients(); loadActivity(); pollRequests(); pollQuotes(); applyTab(); schedulePreview();
-  if(S.mustChange) showWizard();
+  if(S.mustChange) showWizard(); else ensurePush();
 }
 
 // ================= FIRST-LOGIN ONBOARDING WIZARD =================
@@ -653,9 +653,48 @@ $('w_infoGo').addEventListener('click',async()=>{
   S.profile=r.profile; fillProfile(); baseline(); wizStep=3; renderWiz();
 });
 $('wizOpenCard').addEventListener('click',()=>window.open(location.origin+AB+'/','_blank'));
-$('wizFinish').addEventListener('click',async()=>{ await api(AB+'/api/admin/onboarded',{method:'POST',body:'{}'}).catch(()=>{}); closeWizard(); toast('You’re live 🎉'); });
+$('wizFinish').addEventListener('click',async()=>{ await api(AB+'/api/admin/onboarded',{method:'POST',body:'{}'}).catch(()=>{}); closeWizard(); toast('You’re live 🎉'); ensurePush(); });
 $('wizStart').addEventListener('click',()=>{ wizStep=1; renderWiz(); });
 $('wizSkipInfo').addEventListener('click',()=>{ wizStep=3; renderWiz(); });
+
+// ================= NOTIFICATION GATE (web push) =================
+function urlB64ToUint8(b64){ const pad='='.repeat((4-b64.length%4)%4); const s=(b64+pad).replace(/-/g,'+').replace(/_/g,'/'); const raw=atob(s); const a=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i); return a; }
+function pgShow(html){ $('pgBody').innerHTML=html; $('pushGate').hidden=false; }
+function pgHide(){ $('pushGate').hidden=true; }
+async function pushSubscribe(reg){
+  try{
+    const k=await (await api(AB+'/api/push/vapid')).json();
+    if(!k.key){ pgHide(); return true; } // push not configured on server — don't block
+    const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8(k.key)});
+    await api(AB+'/api/admin/push-subscribe',{method:'POST',body:JSON.stringify({subscription:sub})});
+    return true;
+  }catch(e){ return false; }
+}
+async function ensurePush(){
+  const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent);
+  const standalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+  const supported=('serviceWorker'in navigator)&&('PushManager'in window)&&('Notification'in window);
+  // iPhone requires the app be added to the Home Screen for notifications to work at all
+  if(isIOS&&!standalone){
+    return pgShow('<div class="pg-ic">📲</div><h2>Add Meridian to your Home Screen</h2><p>To get instant lead alerts on your phone, add this app to your home screen first.</p><ol class="pg-steps"><li>Tap the <b>Share</b> button in your browser</li><li>Tap <b>Add to Home Screen</b></li><li>Open <b>Meridian</b> from your home screen and sign in again</li></ol><button class="pg-btn" onclick="location.reload()">I’ve added it — reload</button>');
+  }
+  if(!supported){
+    return pgShow('<div class="pg-ic">✉️</div><h2>Notifications not supported here</h2><p>This browser can’t show push alerts, but you’ll still get every lead by email.</p><button class="pg-btn" onclick="pgHide()">Continue</button>');
+  }
+  let reg; try{ reg=await navigator.serviceWorker.register('/sw.js'); }catch(e){ return pgShow('<div class="pg-ic">✉️</div><h2>Couldn’t start notifications</h2><p>You’ll still get every lead by email.</p><button class="pg-btn" onclick="pgHide()">Continue</button>'); }
+  const perm=Notification.permission;
+  if(perm==='granted'){ await pushSubscribe(reg); return pgHide(); }
+  if(perm==='denied'){
+    return pgShow('<div class="pg-ic">🔔</div><h2>Turn on notifications</h2><p>Notifications are blocked. To get instant lead alerts, enable them:</p><ol class="pg-steps"><li>Open your phone <b>Settings</b></li><li>Find <b>Meridian</b> (or your browser)</li><li>Turn <b>Notifications</b> on</li></ol><button class="pg-btn" onclick="ensurePush()">I turned it on — retry</button>');
+  }
+  // permission 'default' — ask
+  pgShow('<div class="pg-ic">🔔</div><h2>Turn on lead alerts</h2><p>Get an instant notification on your phone the moment a client sends a quote or books a time.</p><button class="pg-btn" id="pgAllow">Enable notifications</button>');
+  const btn=$('pgAllow'); if(btn) btn.onclick=async()=>{
+    const r=await Notification.requestPermission();
+    if(r==='granted'){ const ok=await pushSubscribe(reg); pgHide(); }
+    else { ensurePush(); }
+  };
+}
 
 // ---------- tabs ----------
 function applyTab(){
@@ -1053,5 +1092,21 @@ window.addEventListener('beforeunload',e=>{ if(!$('app').hidden && isDirty()){ e
 
 boot();
 </script>
+<div id="pushGate" hidden style="position:fixed;inset:0;z-index:10000;background:rgba(6,6,7,.94);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;font-family:Inter,system-ui,sans-serif">
+  <div style="max-width:380px;width:100%;background:linear-gradient(180deg,#141416,#0e0e10);border:1px solid #2a2a2e;border-radius:18px;padding:30px 24px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.6)">
+    <div style="height:3px;width:60px;margin:0 auto 20px;border-radius:3px;background:linear-gradient(90deg,#f1d78a,#d4af37)"></div>
+    <div id="pgBody" style="color:#e9e9ec"></div>
+    <div style="margin-top:18px;color:#6b6b70;font-size:11px;letter-spacing:.5px">POWERED BY MERIDIAN OS</div>
+  </div>
+</div>
+<style>
+#pushGate .pg-ic{font-size:40px;line-height:1;margin-bottom:10px}
+#pushGate h2{margin:0 0 8px;font-size:19px;color:#fff;font-weight:700}
+#pushGate p{margin:0 0 4px;font-size:14px;color:#b5b5ba;line-height:1.5}
+#pushGate .pg-steps{text-align:left;margin:14px 0 4px;padding-left:20px;color:#c9c9ce;font-size:13.5px;line-height:1.7}
+#pushGate .pg-steps b{color:#f1d78a}
+#pushGate .pg-btn{margin-top:18px;width:100%;background:linear-gradient(180deg,#f1d78a,#d4af37);color:#231c00;border:none;padding:13px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
+#pushGate .pg-btn:active{transform:translateY(1px)}
+</style>
 </body>
 </html>
