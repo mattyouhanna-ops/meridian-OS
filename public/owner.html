@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Meridian — Owner Dashboard</title>
+<title>Meridian OS — Owner Dashboard</title>
 <meta name="theme-color" content="#0b0b0c">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="apple-mobile-web-app-title" content="Meridian">
+<meta name="apple-mobile-web-app-title" content="Meridian OS">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -74,7 +74,7 @@
 <div class="wrap">
   <div class="top">
     <img class="crest" src="/logo.svg" alt="">
-    <div class="brand">Meridian<small>Owner Dashboard</small></div>
+    <div class="brand">Meridian OS<small>Owner Dashboard</small></div>
     <div class="sp"></div>
     <button class="btn ghost sm hide" id="signout">Sign out</button>
   </div>
@@ -94,6 +94,7 @@
   <!-- APP -->
   <div id="app" class="hide">
     <div id="pwBanner" class="banner hide">⚠️ You're using a default password. <a href="#" id="pwChangeLink">Change it now</a> to secure your dashboard.</div>
+    <div id="licBanner" class="banner hide" style="border-color:#7a2d2d;background:linear-gradient(180deg,#2a1414,#1a0c0c)"></div>
 
     <div class="tabrow">
       <div class="tab active" data-tab="team">Team</div>
@@ -204,10 +205,26 @@ async function loadDash(){
   DATA=r; STATE_NAMES=r.stateNames||{}; showApp();
   $('who').textContent=r.owner.email;
   $('pwBanner').classList.toggle('hide',!r.owner.mustChange);
+  applyLicense(r.license);
   renderTiles(); renderAgents(); buildStateGrid();
   const cu=localStorage.getItem('meridian_community'); if(cu) $('c_url').value=cu;
 }
 
+let LICENSED=true;
+function applyLicense(lic){
+  const b=$('licBanner'); LICENSED = !lic || lic.licensed;
+  const plat=(lic&&lic.platform)||'Meridian OS';
+  if(!lic){ b.classList.add('hide'); return; }
+  if(!lic.licensed){
+    b.classList.remove('hide');
+    b.innerHTML=`🔒 <b>Your ${esc(plat)} license has lapsed.</b> You can still view everything, but adding or editing agents is locked until your platform administrator renews it. Please reach out to get reactivated.`;
+  } else if(typeof lic.daysLeft==='number' && lic.daysLeft<=7){
+    b.classList.remove('hide'); b.style.borderColor='#7a5a2d'; b.style.background='linear-gradient(180deg,#2a2410,#1a1708)';
+    b.innerHTML=`⏳ Your ${esc(plat)} license renews in <b>${lic.daysLeft} day${lic.daysLeft===1?'':'s'}</b>. Contact your platform administrator before then to stay active.`;
+  } else { b.classList.add('hide'); }
+  // reflect lock state on the add-agent button if present
+  const addBtn=document.getElementById('addAgentBtn'); if(addBtn){ addBtn.disabled=!LICENSED; addBtn.style.opacity=LICENSED?'':'.5'; }
+}
 function renderTiles(){
   const t=DATA.totals;
   $('tiles').innerHTML=[

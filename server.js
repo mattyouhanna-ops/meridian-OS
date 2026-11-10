@@ -15,6 +15,7 @@ import { STATE_NAMES, statesFor } from "./lib/states.js";
 import {
   ensureDeveloper, getDeveloper, setDeveloperPass, setDevAlerts, platformBrand,
   listAgencies, getAgency, getAgencyBySlug, getAgencyByOwnerEmail, createAgency, updateAgency, deleteAgency, setOwnerPass, agencySummary,
+  agencyLicensed, licenseDaysLeft, setAgencyLicense,
   listAgents, getAgent, getAgentBySlug, getAgentByEmail, createAgent, updateAgent, deleteAgent, agentSummary, agencyOf,
 } from "./lib/model.js";
 import { cardPNG } from "./lib/og.js";
@@ -383,7 +384,7 @@ function agencyLeads(agencyId) {
 // ====================================================================
 const ownerLock = new Map();
 async function handleOwner(sub, method, body, req) {
-  if (sub === "me" && method === "GET") { const ag = ownerSession(req); return ag ? { status: 200, data: { ok: true, email: ag.ownerEmail, agency: ag.name, brand: ag.brand, mustChange: !!ag.ownerMustChange } } : { status: 401, data: { ok: false } }; }
+  if (sub === "me" && method === "GET") { const ag = ownerSession(req); return ag ? { status: 200, data: { ok: true, email: ag.ownerEmail, agency: ag.name, brand: ag.brand, mustChange: !!ag.ownerMustChange, licensed: agencyLicensed(ag), daysLeft: licenseDaysLeft(ag) } } : { status: 401, data: { ok: false } }; }
   if (method !== "GET" && !sameOrigin(req)) return { status: 403, data: { error: "Not allowed" } };
 
   if (sub === "login" && method === "POST") {
@@ -405,10 +406,18 @@ async function handleOwner(sub, method, body, req) {
   const ag = ownerSession(req);
   if (!ag) return { status: 401, data: { error: "Please sign in." } };
 
+  const licensed = agencyLicensed(ag);
+  const license = { licensed, daysLeft: licenseDaysLeft(ag), licenseUntil: ag.licenseUntil || null, platform: platformBrand() };
+  // When the lease has lapsed, the owner can sign in and look, but can't make
+  // changes until the developer renews it — forces them back to the developer.
+  const needsRenewal = () => ({ status: 403, data: { error: `Your ${platformBrand()} license needs to be renewed. Contact your platform administrator to continue.`, locked: true, license } });
+  // Lock the owner's management actions (adding, editing, removing agents) when the lease has lapsed.
+  if (!licensed && ((sub === "agents" && method === "POST") || (/^agents\/[a-z0-9]+$/i.test(sub) && method !== "GET"))) return needsRenewal();
+
   if (sub === "data" && method === "GET") {
     const agents = listAgents(ag.id).map(agentSummary);
     const totals = agents.reduce((t, a) => ({ agents: t.agents + 1, newQuotes: t.newQuotes + a.newQuotes, newRequests: t.newRequests + a.newRequests, views: t.views + a.views, sold: t.sold + a.sold }), { agents: 0, newQuotes: 0, newRequests: 0, views: 0, sold: 0 });
-    return { status: 200, data: { owner: { email: ag.ownerEmail, agency: ag.name, brand: ag.brand, mustChange: !!ag.ownerMustChange }, agents, totals, stateNames: STATE_NAMES, platformBrand: platformBrand() } };
+    return { status: 200, data: { owner: { email: ag.ownerEmail, agency: ag.name, brand: ag.brand, mustChange: !!ag.ownerMustChange }, agents, totals, stateNames: STATE_NAMES, platformBrand: platformBrand(), license } };
   }
   if (sub === "agents" && method === "POST") {
     try { const { agent, tempPassword } = createAgent(ag.id, body); const emailed = await emailAgentWelcome(agent, tempPassword, req); return { status: 200, data: { ok: true, agent: agentSummary(agent), slug: agent.slug, tempPassword, emailed } }; }
@@ -485,6 +494,13 @@ async function handleDev(sub, method, body, req) {
     if (!getAgent(am2[1])) return { status: 404, data: { error: "Agent not found." } };
     if (method === "PATCH") { try { const u = updateAgent(am2[1], agentPatch(body)); return { status: 200, data: { ok: true, agent: agentSummary(u) } }; } catch (e) { return { status: 400, data: { error: e.message } }; } }
     if (method === "DELETE") { deleteAgent(am2[1]); return { status: 200, data: { ok: true } }; }
+  }
+  // developer renews / extends / clears an agency's license lease
+  const lm = sub.match(/^agencies\/([a-z0-9]+)\/license$/i);
+  if (lm && method === "POST") {
+    if (!getAgency(lm[1])) return { status: 404, data: { error: "Agency not found." } };
+    try { const a = setAgencyLicense(lm[1], { days: Number(body.days) || 0, until: Number(body.until) || 0, clear: !!body.clear }); return { status: 200, data: { ok: true, agency: agencySummary(a) } }; }
+    catch (e) { return { status: 400, data: { error: e.message } }; }
   }
   // platform-wide leads across every agency
   if (sub === "leads" && method === "GET") {

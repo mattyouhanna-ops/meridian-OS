@@ -189,6 +189,7 @@ function renderAgencies(){
         <span class="nm">${esc(a.name)}</span>
         <span class="chip ${a.active?'on':'off'}">${a.active?'Active':'Suspended'}</span>
         ${a.hasOwner?'<span class="chip">Owner login</span>':'<span class="chip">You manage</span>'}
+        ${a.licenseUntil===null?'<span class="chip">Open license</span>':(a.daysLeft<=0?'<span class="chip off">🔒 License expired</span>':`<span class="chip${a.daysLeft<=7?' gold':''}">🔑 ${a.daysLeft}d left</span>`)}
         ${t.newQuotes?`<span class="chip gold">${t.newQuotes} new</span>`:''}
         <span class="sp"></span>
         <span class="muted" style="font-size:12px">${t.agents} agents · ${t.views} views · ${t.sold} sold</span>
@@ -197,9 +198,11 @@ function renderAgencies(){
         <button class="btn sm" data-act="manage">${openAgencies.has(a.id)?'Hide agents':'Manage agents'}</button>
         <button class="btn sm ghost" data-act="notify">🔔 Alert recipients${(a.alertEmails&&a.alertEmails.length||a.alertSms&&a.alertSms.length)?' ('+((a.alertEmails||[]).length+(a.alertSms||[]).length)+')':''}</button>
         <button class="btn sm ghost" data-act="owner">${a.hasOwner?'Reset owner login':'Add owner login'}</button>
+        <button class="btn sm ghost" data-act="license">🔑 License</button>
         <button class="btn sm ${a.active?'warn':''}" data-act="suspend">${a.active?'Suspend':'Activate'}</button>
         <button class="btn sm danger" data-act="del">Delete</button>
       </div>
+      <div class="licensebox hide" style="margin-top:8px"></div>
       <div class="ownerbox hide" style="margin-top:8px"></div>
       <div class="notifybox hide" style="margin-top:8px"></div>
       <div class="sub agents-wrap ${openAgencies.has(a.id)?'':'hide'}"></div>
@@ -231,6 +234,25 @@ async function agencyAction(act,a,el){
       if(r.error){ toast(r.error); return; }
       toast('Saved'); box.classList.add('hide'); box.innerHTML=''; loadDash();
     };
+    return;
+  }
+  if(act==='license'){
+    const box=el.querySelector('.licensebox'); box.classList.remove('hide');
+    const until=a.licenseUntil?new Date(a.licenseUntil).toLocaleDateString():'—';
+    const status=a.licenseUntil===null?'Open — no expiry':(a.daysLeft<=0?('Expired '+(-a.daysLeft)+' days ago'):(a.daysLeft+' days left, through '+until));
+    box.innerHTML=`<div class="banner"><b>${esc(a.name)} license:</b> ${status}.<br>Owners run day to day only while this is active. When it lapses they can still sign in and look, but they're locked out of adding or editing agents until you renew — so they come back to you.</div>
+      <div class="acts">
+        <button class="btn sm gold" data-d="30">Renew +30 days</button>
+        <button class="btn sm" data-d="90">+90 days</button>
+        <button class="btn sm" data-d="365">+1 year</button>
+        <button class="btn sm ghost" data-open="1">Set open (no expiry)</button>
+        <button class="btn sm warn" data-exp="1">Expire now</button>
+        <button class="btn sm ghost lc_cancel">Close</button>
+      </div>`;
+    box.querySelector('.lc_cancel').onclick=()=>{box.classList.add('hide');box.innerHTML='';};
+    box.querySelectorAll('[data-d]').forEach(b=>b.onclick=async()=>{ await api('/api/dev/agencies/'+a.id+'/license',{method:'POST',body:JSON.stringify({days:Number(b.dataset.d)})}); toast('License renewed +'+b.dataset.d+' days'); box.classList.add('hide'); loadDash(); });
+    box.querySelector('[data-open]').onclick=async()=>{ await api('/api/dev/agencies/'+a.id+'/license',{method:'POST',body:JSON.stringify({clear:true})}); toast('License set to open'); box.classList.add('hide'); loadDash(); };
+    box.querySelector('[data-exp]').onclick=async()=>{ if(!confirm('Expire '+a.name+" now? The owner will be locked out of changes until you renew."))return; await api('/api/dev/agencies/'+a.id+'/license',{method:'POST',body:JSON.stringify({until:Date.now()-1000})}); toast('License expired'); box.classList.add('hide'); loadDash(); };
     return;
   }
   if(act==='owner'){

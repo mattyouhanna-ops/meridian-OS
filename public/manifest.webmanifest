@@ -1,7 +1,7 @@
 {
-  "name": "Meridian Life Group",
-  "short_name": "Meridian",
-  "description": "Meridian Life Group — verify my license, call, text, or email.",
+  "name": "Meridian OS",
+  "short_name": "Meridian OS",
+  "description": "Meridian OS — sign in to your dashboard.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0b0b0c",
