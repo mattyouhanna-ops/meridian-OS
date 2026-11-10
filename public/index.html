@@ -628,5 +628,12 @@
     window.addEventListener('pageshow',()=>fetchCard(false));
   }
 </script>
+<script>
+(function(){ var V=null;
+  function check(){ fetch('/api/version',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ if(V&&j.v&&j.v!==V){ location.reload(); } V=j.v; }).catch(function(){}); }
+  check();
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') check(); });
+})();
+</script>
 </body>
 </html>

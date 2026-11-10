@@ -349,7 +349,7 @@
         <button class="tab on" data-tab="admin" role="tab">My Admin</button>
         <button class="tab" data-tab="clients" role="tab">Clients<span class="nb" id="reqBadge" hidden>0</span></button>
       </nav>
-      <div class="topr"><a href="/" target="_blank" rel="noopener" class="btn sm ghost">View card ↗</a><button class="btn sm ghost" id="signout">Sign out</button></div>
+      <div class="topr"><a id="viewCardLink" href="#" target="_blank" rel="noopener" class="btn sm ghost">View card ↗</a><button class="btn sm ghost" id="signout">Sign out</button></div>
     </header>
 
     <!-- ============ TAB 1: MY ADMIN ============ -->
@@ -505,6 +505,13 @@
 <script>
 const $=id=>document.getElementById(id);
 const AB=window.AB||'';
+(function(){ var vc=document.getElementById('viewCardLink'); if(vc) vc.href=location.origin+AB+'/'; })();
+// Auto-update: refresh to the newest version when the app is reopened after a deploy.
+(function(){ var V=null;
+  function check(){ fetch('/api/version',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ if(V&&j.v&&j.v!==V){ location.reload(); } V=j.v; }).catch(function(){}); }
+  check();
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') check(); });
+})();
 const api=(u,o)=>fetch(u,Object.assign({headers:{'content-type':'application/json'},cache:'no-store'},o));
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1700);}
 function initials(n){const p=(n||'').trim().split(/\s+/);return (((p[0]||'')[0]||'')+((p.length>1?p[p.length-1][0]:'')||''))||'✦';}
@@ -574,7 +581,7 @@ $('s_go').addEventListener('click',async()=>{
   }catch(e){ err('Could not reach the server. Check your internet and try again.'); }
   finally{ $('s_go').textContent='Create my card';$('s_go').disabled=false; }
 });
-function fillRecovLinks(){ $('linkCard').textContent=location.origin+AB+'/'; $('linkAdmin').textContent=location.origin+AB+'/admin'; }
+function fillRecovLinks(){ $('linkCard').textContent=location.origin+AB+'/'; $('linkAdmin').textContent=location.origin+AB+'/admin'; const vc=$('viewCardLink'); if(vc) vc.href=location.origin+AB+'/'; }
 $('recovCopy').addEventListener('click',()=>{navigator.clipboard.writeText($('recovCode').textContent).then(()=>toast('Recovery code copied'));});
 $('linkCardCopy').addEventListener('click',()=>navigator.clipboard.writeText(location.origin+AB+'/').then(()=>toast('Card link copied')));
 $('linkAdminCopy').addEventListener('click',()=>navigator.clipboard.writeText(location.origin+AB+'/admin').then(()=>toast('Dashboard link copied')));

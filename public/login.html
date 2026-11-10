@@ -178,6 +178,14 @@ $('vRequest').addEventListener('submit',async e=>{
   }catch(e){ $('reqErr').textContent='Network error — try again.'; }
   $('reqGo').disabled=false; $('reqGo').textContent='Send request';
 });
+
+// Auto-update: if a new version is deployed, refresh when the app is reopened.
+(function(){ var V=null;
+  function check(){ fetch('/api/version',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ if(V&&j.v&&j.v!==V){ location.reload(); } V=j.v; }).catch(function(){}); }
+  check();
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') check(); });
+  if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.update();});}).catch(function(){}); }
+})();
 </script>
 </body>
 </html>

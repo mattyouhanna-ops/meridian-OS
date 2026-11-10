@@ -27,6 +27,8 @@ import { vapidPublicKey, addSubscription, pushToAgent } from "./lib/push.js";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUB = path.join(HERE, "public");
 const PORT = process.env.PORT || 3000;
+// Build id so installed (home-screen) apps can detect a new deploy and refresh.
+const BUILD = process.env.RAILWAY_GIT_COMMIT_SHA || process.env.BUILD_ID || String(Date.now());
 
 ensureDeveloper(); // seed developer + Meridian (agency #1) on first boot
 
@@ -596,6 +598,7 @@ const server = http.createServer(async (req, res) => {
     if (p === "/sw.js") { try { const buf = fs.readFileSync(path.join(PUB, "sw.js")); return res.writeHead(200, { "content-type": "text/javascript", "cache-control": "no-cache", "service-worker-allowed": "/" }).end(buf); } catch { return res.writeHead(404).end(); } }
     if (p === "/api/push/vapid" && method === "GET") return sendJSON(res, 200, { key: await vapidPublicKey() });
     if (p === "/health") return sendJSON(res, 200, { ok: true });
+    if (p === "/api/version") return sendJSON(res, 200, { v: BUILD });
 
     // ---- Unified "three-in-one" front door ----
     // One login for everyone; routes each person to their own dashboard by role.
