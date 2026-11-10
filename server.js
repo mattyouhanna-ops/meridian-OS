@@ -18,7 +18,7 @@ import {
   listAgents, getAgent, getAgentBySlug, createAgent, updateAgent, deleteAgent, agentSummary, agencyOf,
 } from "./lib/model.js";
 import { cardPNG } from "./lib/og.js";
-import { alertNewLead } from "./lib/notify.js";
+import { alertNewLead, sendEmail } from "./lib/notify.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUB = path.join(HERE, "public");
@@ -45,6 +45,23 @@ function sameOrigin(req) {
   const origin = req.headers.origin;
   if (!origin) return false;
   try { return new URL(origin).host === req.headers.host; } catch { return false; }
+}
+function originOf(req) { const proto = (req.headers["x-forwarded-proto"] || "https").split(",")[0]; return `${proto}://${req.headers.host}`; }
+const firstName = (n) => String(n || "").trim().split(/\s+/)[0] || "there";
+
+// Auto-send a welcome email to a new agent (no-op unless email is configured). Returns true if sent.
+async function emailAgentWelcome(agent, tempPass, req) {
+  const card = `${originOf(req)}/a/${agent.slug}`;
+  const subject = `Your ${agent.profile.brand || "Meridian"} card is ready`;
+  const text = `Hey ${firstName(agent.profile.name)} — your digital business card is ready.\n\n` +
+    `1) Open ${card}/admin\n2) Sign in with: ${agent.profile.email} / ${tempPass}\n3) Set your own password, confirm your info, and you're live.\n\n` +
+    `Your card to text out: ${card}\nTip: open it on your phone, Share → Add to Home Screen for the icon.\n\nPowered by ${platformBrand()}`;
+  return await sendEmail(agent.profile.email, subject, text);
+}
+async function emailOwnerWelcome(agency, email, pass, req) {
+  const subject = `You're set up on ${platformBrand()} — ${agency.name}`;
+  const text = `Your agency dashboard is ready.\n\n1) Open ${originOf(req)}/owner\n2) Sign in with: ${email} / ${pass}\n3) Change your password and add your agents.\n\nPowered by ${platformBrand()}`;
+  return await sendEmail(email, subject, text);
 }
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json", ".json": "application/json" };
 function serveStatic(res, file, cache = "public, max-age=3600") {
@@ -313,6 +330,16 @@ async function handleAdmin(agent, sub, method, body, req) {
     appendLog(agent.security, { t: Date.now(), ...w, event: "Passcode changed" }, 300); save();
     return { status: 200, data: { ok: true } };
   }
+  // First-login: set the initial password. Allowed only while mustChange is true (session already authenticated).
+  if (sub === "firstpass" && method === "POST") {
+    if (!agent.mustChange) return { status: 409, data: { error: "Password already set." } };
+    const next = String(body.next || "");
+    if (next.length < 6) return { status: 400, data: { error: "Password must be at least 6 characters." } };
+    agent.passHash = hashPass(next); agent.mustChange = false;
+    appendLog(agent.security, { t: Date.now(), ...w, event: "Set password (onboarding)" }, 300); save();
+    return { status: 200, data: { ok: true } };
+  }
+  if (sub === "onboarded" && method === "POST") { agent.mustChange = false; save(); return { status: 200, data: { ok: true } }; }
   if (sub === "signout-all" && method === "POST") { agent.sessionsValidAfter = Date.now(); save(); return { status: 200, data: { ok: true } }; }
 
   return { status: 404, data: { error: "Not found" } };
@@ -366,7 +393,7 @@ async function handleOwner(sub, method, body, req) {
     return { status: 200, data: { owner: { email: ag.ownerEmail, agency: ag.name, brand: ag.brand, mustChange: !!ag.ownerMustChange }, agents, totals, stateNames: STATE_NAMES, platformBrand: platformBrand() } };
   }
   if (sub === "agents" && method === "POST") {
-    try { const { agent, tempPassword } = createAgent(ag.id, body); return { status: 200, data: { ok: true, agent: agentSummary(agent), slug: agent.slug, tempPassword } }; }
+    try { const { agent, tempPassword } = createAgent(ag.id, body); const emailed = await emailAgentWelcome(agent, tempPassword, req); return { status: 200, data: { ok: true, agent: agentSummary(agent), slug: agent.slug, tempPassword, emailed } }; }
     catch (e) { return { status: 400, data: { error: e.message } }; }
   }
   const am = sub.match(/^agents\/([a-z0-9]+)$/i);
@@ -418,13 +445,13 @@ async function handleDev(sub, method, body, req) {
     return { status: 200, data: { dev: { email: dev.email, name: dev.name, brand: dev.platformBrand, mustChange: !!dev.mustChange }, agencies, totals, stateNames: STATE_NAMES } };
   }
   if (sub === "agencies" && method === "POST") {
-    try { const { agency, ownerPassword } = createAgency(body); return { status: 200, data: { ok: true, agency: agencySummary(agency), ownerPassword } }; }
+    try { const { agency, ownerPassword } = createAgency(body); let emailed = false; if (ownerPassword && agency.ownerEmail) emailed = await emailOwnerWelcome(agency, agency.ownerEmail, ownerPassword, req); return { status: 200, data: { ok: true, agency: agencySummary(agency), ownerPassword, emailed } }; }
     catch (e) { return { status: 400, data: { error: e.message } }; }
   }
   const gm = sub.match(/^agencies\/([a-z0-9]+)$/i);
   if (gm) {
     if (!getAgency(gm[1])) return { status: 404, data: { error: "Agency not found." } };
-    if (method === "PATCH") { try { const { agency, ownerPassword } = updateAgency(gm[1], body); return { status: 200, data: { ok: true, agency: agencySummary(agency), ownerPassword } }; } catch (e) { return { status: 400, data: { error: e.message } }; } }
+    if (method === "PATCH") { try { const { agency, ownerPassword } = updateAgency(gm[1], body); let emailed = false; if (ownerPassword && agency.ownerEmail) emailed = await emailOwnerWelcome(agency, agency.ownerEmail, ownerPassword, req); return { status: 200, data: { ok: true, agency: agencySummary(agency), ownerPassword, emailed } }; } catch (e) { return { status: 400, data: { error: e.message } }; } }
     if (method === "DELETE") { deleteAgency(gm[1]); return { status: 200, data: { ok: true } }; }
   }
   // agents within a specific agency
@@ -432,7 +459,7 @@ async function handleDev(sub, method, body, req) {
   if (al) {
     if (!getAgency(al[1])) return { status: 404, data: { error: "Agency not found." } };
     if (method === "GET") return { status: 200, data: { agents: listAgents(al[1]).map(agentSummary) } };
-    if (method === "POST") { try { const { agent, tempPassword } = createAgent(al[1], body); return { status: 200, data: { ok: true, agent: agentSummary(agent), slug: agent.slug, tempPassword } }; } catch (e) { return { status: 400, data: { error: e.message } }; } }
+    if (method === "POST") { try { const { agent, tempPassword } = createAgent(al[1], body); const emailed = await emailAgentWelcome(agent, tempPassword, req); return { status: 200, data: { ok: true, agent: agentSummary(agent), slug: agent.slug, tempPassword, emailed } }; } catch (e) { return { status: 400, data: { error: e.message } }; } }
   }
   const am2 = sub.match(/^agents\/([a-z0-9]+)$/i);
   if (am2) {

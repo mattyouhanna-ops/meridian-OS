@@ -218,6 +218,53 @@
 </style>
 </head>
 <body>
+<div id="wiz" hidden style="position:fixed;inset:0;z-index:9999;background:rgba(6,6,7,.92);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:18px;font-family:Inter,system-ui,sans-serif">
+  <div style="width:100%;max-width:460px;background:#141416;border:1px solid #2a2a2e;border-radius:20px;padding:26px 24px;color:#f3efe6;box-shadow:0 30px 80px rgba(0,0,0,.6)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><img src="/logo.svg" style="width:34px;height:34px"><b style="font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;color:#f1d78a">Meridian</b></div>
+    <div id="wizDots" style="display:flex;gap:6px;margin:14px 0 18px"></div>
+
+    <div id="wizPanel0">
+      <h2 style="font-family:Georgia,serif;font-size:26px;margin:0 0 6px;color:#f1d78a">Welcome, <span id="wizName">there</span> 👋</h2>
+      <p style="color:#a9a397;line-height:1.6">Your digital business card is ready. Let's get you set up in under a minute — a password, a quick look at your info, and you're live.</p>
+      <button id="wizStart" class="btn" style="width:100%;margin-top:16px;background:linear-gradient(180deg,#f1d78a,#d4af37);color:#231c00;border:none;padding:13px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer">Get started</button>
+    </div>
+
+    <div id="wizPanel1" hidden>
+      <h2 style="font-family:Georgia,serif;font-size:23px;margin:0 0 4px;color:#f1d78a">Set your password</h2>
+      <p style="color:#a9a397;font-size:14px">This replaces the temporary one you signed in with.</p>
+      <input id="w_pass" type="password" placeholder="New password" autocomplete="new-password" style="width:100%;margin-top:12px;background:#0e0e10;border:1px solid #2a2a2e;border-radius:10px;color:#f3efe6;padding:12px;font-size:16px">
+      <input id="w_pass2" type="password" placeholder="Confirm password" autocomplete="new-password" style="width:100%;margin-top:10px;background:#0e0e10;border:1px solid #2a2a2e;border-radius:10px;color:#f3efe6;padding:12px;font-size:16px">
+      <div id="w_passErr" style="color:#ffb4b4;font-size:14px;margin-top:8px;min-height:1em"></div>
+      <button id="w_passGo" class="btn" style="width:100%;margin-top:10px;background:linear-gradient(180deg,#f1d78a,#d4af37);color:#231c00;border:none;padding:13px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer">Set password & continue</button>
+    </div>
+
+    <div id="wizPanel2" hidden>
+      <h2 style="font-family:Georgia,serif;font-size:23px;margin:0 0 4px;color:#f1d78a">Confirm your info</h2>
+      <p style="color:#a9a397;font-size:14px">We pre-filled this — just check it's right. You can change it anytime.</p>
+      <div style="display:grid;gap:8px;margin-top:12px">
+        <input id="w_name" placeholder="Full name" style="background:#0e0e10;border:1px solid #2a2a2e;border-radius:10px;color:#f3efe6;padding:11px;font-size:16px">
+        <input id="w_title" placeholder="Title" style="background:#0e0e10;border:1px solid #2a2a2e;border-radius:10px;color:#f3efe6;padding:11px;font-size:16px">
+        <input id="w_phone" placeholder="Phone" style="background:#0e0e10;border:1px solid #2a2a2e;border-radius:10px;color:#f3efe6;padding:11px;font-size:16px">
+        <input id="w_email" placeholder="Email" style="background:#0e0e10;border:1px solid #2a2a2e;border-radius:10px;color:#f3efe6;padding:11px;font-size:16px">
+        <input id="w_npn" placeholder="NPN / license # (optional)" style="background:#0e0e10;border:1px solid #2a2a2e;border-radius:10px;color:#f3efe6;padding:11px;font-size:16px">
+      </div>
+      <div id="w_infoErr" style="color:#ffb4b4;font-size:14px;margin-top:8px;min-height:1em"></div>
+      <button id="w_infoGo" class="btn" style="width:100%;margin-top:10px;background:linear-gradient(180deg,#f1d78a,#d4af37);color:#231c00;border:none;padding:13px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer">Looks good →</button>
+      <button id="wizSkipInfo" style="width:100%;margin-top:8px;background:transparent;border:none;color:#a9a397;font-size:13px;cursor:pointer">Skip — I'll do this later</button>
+    </div>
+
+    <div id="wizPanel3" hidden>
+      <h2 style="font-family:Georgia,serif;font-size:23px;margin:0 0 4px;color:#f1d78a">You're live 🎉</h2>
+      <p style="color:#a9a397;font-size:14px">This is your card — text it to anyone and it unfurls as your business card.</p>
+      <div id="wizCardLink2" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#f1d78a;word-break:break-all;background:#0e0e10;border:1px solid #2a2a2e;border-radius:8px;padding:9px;margin:10px 0"></div>
+      <button id="wizOpenCard" class="btn" style="width:100%;background:#1a1a1d;border:1px solid #2a2a2e;color:#f3efe6;padding:11px;border-radius:12px;font-weight:600;cursor:pointer">Open my card</button>
+      <div style="background:#1a1708;border:1px solid #8f7426;border-radius:12px;padding:12px 14px;margin:12px 0;font-size:13px;color:#f3efe6;line-height:1.6">
+        <b style="color:#f1d78a">📱 Add it to your home screen</b><br>Open your card on your phone → tap <b>Share</b> → <b>Add to Home Screen</b>. You'll get the Meridian icon, one tap away.
+      </div>
+      <button id="wizFinish" class="btn" style="width:100%;background:linear-gradient(180deg,#f1d78a,#d4af37);color:#231c00;border:none;padding:13px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer">Go to my dashboard</button>
+    </div>
+  </div>
+</div>
 <div class="wrap">
 
   <!-- ================= GATE: setup / login / forgot ================= -->
@@ -566,7 +613,49 @@ async function loadDash(){
   $('whoami').textContent=S.email;
   fillProfile(); fillVisibility(); baseline();
   renderClients(); loadActivity(); pollRequests(); pollQuotes(); applyTab(); schedulePreview();
+  if(S.mustChange) showWizard();
 }
+
+// ================= FIRST-LOGIN ONBOARDING WIZARD =================
+let wizStep=0;
+const wizTotal=4;
+function showWizard(){ $('wizName').textContent=(S.profile.name||'there').split(' ')[0]; wizStep=0; $('wiz').hidden=false; renderWiz(); }
+function closeWizard(){ $('wiz').hidden=true; }
+function renderWiz(){
+  for(let i=0;i<wizTotal;i++){ $('wizPanel'+i).hidden=(i!==wizStep); }
+  $('wizDots').innerHTML=Array.from({length:wizTotal},(_,i)=>`<span style="width:8px;height:8px;border-radius:50%;background:${i<=wizStep?'#d4af37':'#3a3a3e'}"></span>`).join('');
+  if(wizStep===2){ // prefill confirm-info
+    $('w_name').value=S.profile.name||''; $('w_phone').value=S.profile.phone||''; $('w_email').value=S.profile.email||'';
+    $('w_npn').value=S.profile.npn||''; $('w_title').value=S.profile.title||'';
+  }
+  if(wizStep===3){ $('wizCardLink2').textContent=location.origin+AB+'/'; }
+}
+// Step 1: set password
+$('w_passGo').addEventListener('click',async()=>{
+  $('w_passErr').textContent='';
+  const p=$('w_pass').value, c=$('w_pass2').value;
+  if(p.length<6){ $('w_passErr').textContent='At least 6 characters.'; return; }
+  if(p!==c){ $('w_passErr').textContent='Passwords don’t match.'; return; }
+  $('w_passGo').disabled=true; $('w_passGo').textContent='Saving…';
+  const r=await (await api(AB+'/api/admin/firstpass',{method:'POST',body:JSON.stringify({next:p})})).json();
+  $('w_passGo').disabled=false; $('w_passGo').textContent='Set password & continue';
+  if(r.ok){ S.mustChange=false; wizStep=2; renderWiz(); } else $('w_passErr').textContent=r.error||'Could not set password.';
+});
+// Step 2: confirm info
+$('w_infoGo').addEventListener('click',async()=>{
+  $('w_infoErr').textContent='';
+  const prof={...S.profile, name:$('w_name').value.trim(), title:$('w_title').value.trim(), phone:$('w_phone').value.trim(), email:$('w_email').value.trim(), npn:$('w_npn').value.trim()};
+  if(!prof.name||!prof.phone||!prof.email){ $('w_infoErr').textContent='Name, phone and email are required.'; return; }
+  $('w_infoGo').disabled=true; $('w_infoGo').textContent='Saving…';
+  const r=await (await api(AB+'/api/admin/profile',{method:'POST',body:JSON.stringify({profile:prof})})).json();
+  $('w_infoGo').disabled=false; $('w_infoGo').textContent='Looks good →';
+  if(r.error){ $('w_infoErr').textContent=r.error; return; }
+  S.profile=r.profile; fillProfile(); baseline(); wizStep=3; renderWiz();
+});
+$('wizOpenCard').addEventListener('click',()=>window.open(location.origin+AB+'/','_blank'));
+$('wizFinish').addEventListener('click',async()=>{ await api(AB+'/api/admin/onboarded',{method:'POST',body:'{}'}).catch(()=>{}); closeWizard(); toast('You’re live 🎉'); });
+$('wizStart').addEventListener('click',()=>{ wizStep=1; renderWiz(); });
+$('wizSkipInfo').addEventListener('click',()=>{ wizStep=3; renderWiz(); });
 
 // ---------- tabs ----------
 function applyTab(){

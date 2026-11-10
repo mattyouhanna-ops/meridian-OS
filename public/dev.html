@@ -264,7 +264,8 @@ async function createAgent(w,a,wrap){
   const ag={id:r.agent.id,name:r.agent.name,email:r.agent.email,slug:r.slug};
   const txt=welcomeText(ag,r.tempPassword);
   const res=w.querySelector('.n_result'); res.classList.remove('hide');
-  res.innerHTML=`<div class="banner">✅ ${esc(ag.name)} created — send their welcome message:</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`;
+  const sent=r.emailed?`📧 Welcome email sent to ${esc(ag.email)}. Backup copy:`:'Send their welcome message:';
+  res.innerHTML=`<div class="banner">✅ ${esc(ag.name)} created — ${sent}</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`;
   res.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied'));
   toast('Agent created'); loadDash();
 }
@@ -292,7 +293,8 @@ $('ag_go').onclick=async()=>{ $('ag_err').textContent='';
   const res=$('ag_result'); res.classList.remove('hide');
   let msg=`✅ ${esc(r.agency.name)} created.`;
   if(r.ownerPassword){ const txt=`Owner login for ${r.agency.name}:\nURL: ${ORIGIN}/owner\nEmail: ${body.ownerEmail}\nPassword: ${r.ownerPassword}`;
-    res.innerHTML=`<div class="banner">${msg} Owner login:</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`;
+    const sent=r.emailed?` 📧 Sent to ${esc(body.ownerEmail)}. Backup:`:' Owner login:';
+    res.innerHTML=`<div class="banner">${msg}${sent}</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`;
     res.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); }
   else res.innerHTML=`<div class="banner">${msg} You manage it directly — open its agents below.</div>`;
   ['ag_name','ag_owner','ag_corp'].forEach(x=>$(x).value='');
