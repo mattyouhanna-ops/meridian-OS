@@ -16,6 +16,7 @@ import {
   ensureDeveloper, getDeveloper, setDeveloperPass, setDevAlerts, platformBrand,
   listAgencies, getAgency, getAgencyBySlug, getAgencyByOwnerEmail, createAgency, updateAgency, deleteAgency, setOwnerPass, agencySummary,
   agencyLicensed, licenseDaysLeft, setAgencyLicense,
+  agentLocked, agentLoginFail, agentLoginOk, ownerLocked, ownerLoginFail, ownerLoginOk,
   listAgents, getAgent, getAgentBySlug, getAgentByEmail, createAgent, updateAgent, deleteAgent, agentSummary, agencyOf,
   listAccountRequests, addAccountRequest, setAccountRequestStatus,
 } from "./lib/model.js";
@@ -32,6 +33,13 @@ ensureDeveloper(); // seed developer + Meridian (agency #1) on first boot
 // ---------- small helpers ----------
 const sendJSON = (res, status, data, headers = {}) =>
   res.writeHead(status, { "content-type": "application/json", "cache-control": "no-store", ...headers }).end(JSON.stringify(data));
+
+// Locked-out response body. who = 'agent' | 'owner'.
+function lockedBody(until, who) {
+  const hrs = Math.max(1, Math.ceil((until - Date.now()) / 3600e3));
+  const contact = who === "agent" ? "your agency owner or the Meridian OS admin" : "the Meridian OS admin";
+  return { error: `Too many failed attempts — this account is locked for security. Try again in about ${hrs}h, or ask ${contact} to unlock you.`, locked: true, until };
+}
 
 function readBody(req) {
   return new Promise((resolve) => {
@@ -206,20 +214,19 @@ async function handleAgentAuth(agent, action, method, body, req) {
 
   if (action === "login") {
     const w = who(req);
-    const lk = loginLocks.get(agent.id) || { n: 0, t: Date.now() };
-    if (Date.now() - lk.t > 15 * 60e3) { lk.n = 0; lk.t = Date.now(); }
-    if (lk.n >= 6) return { status: 429, data: { error: "Too many attempts. Try again in 15 minutes." } };
+    const until0 = agentLocked(agent);
+    if (until0) return { status: 423, data: lockedBody(until0, "agent") };
     const email = String(body.email || "").trim().toLowerCase();
     const pass = String(body.passcode || "");
     await new Promise((r) => setTimeout(r, 300));
     if (email === agent.profile.email && checkPass(pass, agent.passHash)) {
-      loginLocks.delete(agent.id);
+      agentLoginOk(agent.id);
       appendLog(agent.security, { t: Date.now(), ...w, event: "Signed in (" + email + ")" }, 300); save();
       return { status: 200, data: { ok: true, mustChange: !!agent.mustChange }, cookie: makeSessionCookie("agent", agent.id) };
     }
-    lk.n++; loginLocks.set(agent.id, lk);
+    const lu = agentLoginFail(agent.id);
     appendLog(agent.security, { t: Date.now(), ...w, event: "Wrong passcode" }, 300); save();
-    return { status: 401, data: { error: "Email or passcode is incorrect." } };
+    return lu ? { status: 423, data: lockedBody(lu, "agent") } : { status: 401, data: { error: "Email or passcode is incorrect." } };
   }
   return { status: 404, data: { error: "Not found" } };
 }
@@ -371,6 +378,7 @@ function agentPatch(body) {
   if (typeof body.carrier === "string") patch.carrier = body.carrier;
   if (typeof body.active === "boolean") patch.active = body.active;
   if (body.password) patch.password = String(body.password);
+  if (body.unlock) patch.unlock = true;
   return patch;
 }
 function agencyLeads(agencyId) {
@@ -390,16 +398,18 @@ async function handleOwner(sub, method, body, req) {
 
   if (sub === "login" && method === "POST") {
     const email = String(body.email || "").trim().toLowerCase();
-    const lk = ownerLock.get(email) || { n: 0, t: Date.now() };
-    if (Date.now() - lk.t > 15 * 60e3) { lk.n = 0; lk.t = Date.now(); }
-    if (lk.n >= 8) return { status: 429, data: { error: "Too many attempts. Try again later." } };
     await new Promise((r) => setTimeout(r, 300));
     const ag = getAgencyByOwnerEmail(email);
-    if (ag && ag.ownerPassHash && checkPass(String(body.passcode || ""), ag.ownerPassHash)) {
-      ownerLock.delete(email);
-      return { status: 200, data: { ok: true, mustChange: !!ag.ownerMustChange }, cookie: makeSessionCookie("owner", ag.id) };
+    if (ag && ag.ownerPassHash) {
+      const until0 = ownerLocked(ag);
+      if (until0) return { status: 423, data: lockedBody(until0, "owner") };
+      if (checkPass(String(body.passcode || ""), ag.ownerPassHash)) {
+        ownerLoginOk(ag.id);
+        return { status: 200, data: { ok: true, mustChange: !!ag.ownerMustChange }, cookie: makeSessionCookie("owner", ag.id) };
+      }
+      const lu = ownerLoginFail(ag.id);
+      return lu ? { status: 423, data: lockedBody(lu, "owner") } : { status: 401, data: { error: "Email or password is incorrect." } };
     }
-    lk.n++; ownerLock.set(email, lk);
     return { status: 401, data: { error: "Email or password is incorrect." } };
   }
   if (sub === "logout" && method === "POST") return { status: 200, data: { ok: true }, cookie: clearCookie };
@@ -608,12 +618,22 @@ const server = http.createServer(async (req, res) => {
         return sendJSON(res, 200, { ok: true, role: "dev", url: "/dev", mustChange: !!dev.mustChange }, { "set-cookie": makeSessionCookie("dev", "dev") });
       // 2) agency owner
       const ag = getAgencyByOwnerEmail(email);
-      if (ag && ag.ownerPassHash && checkPass(pass, ag.ownerPassHash))
-        return sendJSON(res, 200, { ok: true, role: "owner", url: "/owner", mustChange: !!ag.ownerMustChange }, { "set-cookie": makeSessionCookie("owner", ag.id) });
+      if (ag && ag.ownerPassHash) {
+        const until = ownerLocked(ag);
+        if (until) return sendJSON(res, 423, lockedBody(until, "owner"));
+        if (checkPass(pass, ag.ownerPassHash)) { ownerLoginOk(ag.id); return sendJSON(res, 200, { ok: true, role: "owner", url: "/owner", mustChange: !!ag.ownerMustChange }, { "set-cookie": makeSessionCookie("owner", ag.id) }); }
+        const lu = ownerLoginFail(ag.id);
+        return lu ? sendJSON(res, 423, lockedBody(lu, "owner")) : sendJSON(res, 401, { error: "Email or password is incorrect." });
+      }
       // 3) agent
       const agent = getAgentByEmail(email);
-      if (agent && agent.passHash && checkPass(pass, agent.passHash))
-        return sendJSON(res, 200, { ok: true, role: "agent", url: "/a/" + agent.slug + "/admin", mustChange: !!agent.mustChange }, { "set-cookie": makeSessionCookie("agent", agent.id) });
+      if (agent && agent.passHash) {
+        const until = agentLocked(agent);
+        if (until) return sendJSON(res, 423, lockedBody(until, "agent"));
+        if (checkPass(pass, agent.passHash)) { agentLoginOk(agent.id); return sendJSON(res, 200, { ok: true, role: "agent", url: "/a/" + agent.slug + "/admin", mustChange: !!agent.mustChange }, { "set-cookie": makeSessionCookie("agent", agent.id) }); }
+        const lu = agentLoginFail(agent.id);
+        return lu ? sendJSON(res, 423, lockedBody(lu, "agent")) : sendJSON(res, 401, { error: "Email or password is incorrect." });
+      }
       return sendJSON(res, 401, { error: "Email or password is incorrect." });
     }
     // Public "request an account" — stored for the developer to approve. Never auto-creates access.

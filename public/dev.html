@@ -211,6 +211,7 @@ function renderAgencies(){
         <span class="nm">${esc(a.name)}</span>
         <span class="chip ${a.active?'on':'off'}">${a.active?'Active':'Suspended'}</span>
         ${a.hasOwner?'<span class="chip">Owner login</span>':'<span class="chip">You manage</span>'}
+        ${a.ownerLocked?'<span class="chip off">🔒 Owner locked</span>':''}
         ${a.licenseUntil===null?'<span class="chip">Open license</span>':(a.daysLeft<=0?'<span class="chip off">🔒 License expired</span>':`<span class="chip${a.daysLeft<=7?' gold':''}">🔑 ${a.daysLeft}d left</span>`)}
         ${t.newQuotes?`<span class="chip gold">${t.newQuotes} new</span>`:''}
         <span class="sp"></span>
@@ -220,6 +221,7 @@ function renderAgencies(){
       <div class="acts">
         <button class="btn sm ghost" data-act="notify">🔔 Alert recipients${(a.alertEmails&&a.alertEmails.length||a.alertSms&&a.alertSms.length)?' ('+((a.alertEmails||[]).length+(a.alertSms||[]).length)+')':''}</button>
         <button class="btn sm ghost" data-act="owner">${a.hasOwner?'Reset owner login':'Add owner login'}</button>
+        ${a.ownerLocked?'<button class="btn sm gold" data-act="unlockOwner">🔓 Unlock owner</button>':''}
         <button class="btn sm ghost" data-act="license">🔑 License</button>
         <button class="btn sm ${a.active?'warn':''}" data-act="suspend">${a.active?'Suspend':'Activate'}</button>
         <button class="btn sm danger" data-act="del">Delete</button>
@@ -240,6 +242,7 @@ function renderAgencies(){
 async function agencyAction(act,a,el){
   if(act==='manage'){ if(openAgencies.has(a.id)){openAgencies.delete(a.id);} else {openAgencies.add(a.id);} renderAgencies(); return; }
   if(act==='suspend'){ await api('/api/dev/agencies/'+a.id,{method:'PATCH',body:JSON.stringify({active:!a.active})}); toast(a.active?'Suspended — all its cards now redirect':'Activated'); loadDash(); return; }
+  if(act==='unlockOwner'){ await api('/api/dev/agencies/'+a.id,{method:'PATCH',body:JSON.stringify({unlockOwner:true})}); toast('Owner login unlocked'); loadDash(); return; }
   if(act==='del'){ if(confirm('Delete '+a.name+' and ALL its agents? This cannot be undone.')){ await api('/api/dev/agencies/'+a.id,{method:'DELETE'}); openAgencies.delete(a.id); toast('Agency deleted'); loadDash(); } return; }
   if(act==='notify'){
     const box=el.querySelector('.notifybox'); box.classList.remove('hide');
@@ -306,11 +309,13 @@ function agentRow(x,a){
   const card=ORIGIN+'/a/'+x.slug;
   return `<div class="agent" data-id="${x.id}">
     <div class="r1"><b>${esc(x.name)}</b><span class="chip ${x.active?'on':'off'}">${x.active?'On':'Off'}</span>
+    ${x.locked?'<span class="chip off">🔒 Locked</span>':''}
     ${x.newQuotes?`<span class="chip gold">${x.newQuotes} new</span>`:''}<span class="sp"></span>
     <span class="muted" style="font-size:12px">${x.views} views · ${(x.states||[]).join(', ')||'—'}</span></div>
     <div class="link-url">${esc(card)}</div>
     <div class="credline">🔑 <b>Login:</b> ${esc(x.email)} · ${x.issuedPass?`password <code>${esc(x.issuedPass)}</code> <span class="muted">(temp — not changed yet)</span>`:'<span class="muted">custom password set — use “Reset pw” to issue a new one</span>'}</div>
     <div class="acts">
+      ${x.locked?'<button class="btn sm gold" data-act="unlock">🔓 Unlock</button>':''}
       <button class="btn sm" data-act="edit">✏️ Edit info</button>
       <button class="btn sm" data-act="open">Card</button>
       <button class="btn sm" data-act="dash">Dashboard</button>
@@ -383,6 +388,7 @@ async function agentAction(act,x,a,row){
   else if(act==='reset'){ if(!confirm('Reset '+x.name+"'s password?"))return; const pass='Meridian-'+['Oak','Gold','Ridge','Vale','Stone','North'][Math.floor(Math.random()*6)]+'-'+Math.floor(1000+Math.random()*9000);
     const r=await(await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({password:pass})})).json();
     if(r.ok){ box.classList.remove('hide'); const txt=welcomeText(x,pass); box.innerHTML=`<div class="banner">New password set.</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`; box.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); toast('Password reset'); } }
+  else if(act==='unlock'){ await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({unlock:true})}); const el=row.closest('.agency'); loadAgents(a,el); toast(x.name+' unlocked'); }
   else if(act==='toggle'){ await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({active:!x.active})}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); }
   else if(act==='del'){ if(confirm('Delete '+x.name+'?')){ await api('/api/dev/agents/'+x.id,{method:'DELETE'}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); toast('Agent deleted'); } }
 }
