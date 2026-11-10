@@ -1,0 +1,14 @@
+{
+  "name": "meridian-team",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Meridian Life Group — team card platform with owner dashboard and per-agent digital business cards.",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "sharp": "^0.33.5"
+  }
+}

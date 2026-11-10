@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deploy Meridian Team to Railway</title>
+<style>
+body{margin:0;background:#0b0b0c;color:#f3efe6;font-family:Inter,system-ui,-apple-system,sans-serif;line-height:1.6}
+.wrap{max-width:760px;margin:0 auto;padding:28px 20px 90px}
+h1{font-family:Georgia,serif;font-size:30px;margin:0 0 4px;color:#f1d78a}
+.sub{color:#a9a397;margin:0 0 26px}
+h2{font-family:Georgia,serif;color:#f1d78a;font-size:22px;margin:30px 0 8px;border-top:1px solid #2a2a2e;padding-top:22px}
+.step{background:#141416;border:1px solid #2a2a2e;border-radius:14px;padding:16px 18px;margin:12px 0}
+.n{display:inline-block;min-width:26px;height:26px;line-height:26px;text-align:center;background:linear-gradient(180deg,#f1d78a,#d4af37);color:#231c00;border-radius:50%;font-weight:700;margin-right:8px}
+code{background:#0e0e10;border:1px solid #2a2a2e;border-radius:6px;padding:2px 7px;font-family:ui-monospace,Menlo,monospace;font-size:14px;color:#f1d78a;word-break:break-all}
+.k{display:block;background:#0e0e10;border:1px solid #2a2a2e;border-radius:10px;padding:12px;margin:10px 0;font-family:ui-monospace,Menlo,monospace;font-size:13px;color:#f1d78a;white-space:pre-wrap;word-break:break-all}
+.tip{background:linear-gradient(180deg,#2a2410,#1a1708);border:1px solid #8f7426;border-radius:12px;padding:12px 16px;margin:14px 0;font-size:15px}
+b{color:#fff}
+a{color:#f1d78a}
+</style></head><body><div class="wrap">
+<h1>Put the team app on Railway</h1>
+<p class="sub">One app for everyone. You get an owner dashboard; each agent gets a card + their own dashboard. ~15 minutes, no coding.</p>
+
+<div class="tip">💡 You do <b>not</b> need a database. This app stores everything in a file on a Railway <b>Volume</b> (one click, below). Keep the Volume and your data is safe across updates.</div>
+
+<h2>Part 1 — Get the code onto GitHub</h2>
+<div class="step"><span class="n">1</span>Go to <a href="https://github.com/new" target="_blank">github.com/new</a> and create a repository (name it <code>meridian-team</code>). Keep it Private. Click <b>Create</b>.</div>
+<div class="step"><span class="n">2</span>On the new repo page, click <b>uploading an existing file</b>. Drag in <b>everything inside the <code>meridian-team</code> folder</b> (server.js, package.json, the <code>lib</code>, <code>public</code> folders, etc.). Click <b>Commit changes</b>.
+<div class="tip">On a phone? Easiest is to do this part on a computer. If you can't, send me the folder and I can help you get it into GitHub, or we use Railway's CLI instead — just ask.</div></div>
+
+<h2>Part 2 — Deploy on Railway</h2>
+<div class="step"><span class="n">3</span>Go to <a href="https://railway.app" target="_blank">railway.app</a> and sign in with the account your boss gave you.</div>
+<div class="step"><span class="n">4</span>Click <b>New Project → Deploy from GitHub repo</b> → choose <code>meridian-team</code>. Railway builds it automatically (it reads <code>package.json</code> and runs it). Wait for the green <b>Deployed</b>.</div>
+<div class="step"><span class="n">5</span><b>Add storage so nothing is lost.</b> In the service, click <b>Variables</b> tab is next; first open the <b>Settings → Volumes</b> (or right-click the service → <b>Attach Volume</b>). Create a volume and set the <b>Mount path</b> to:
+<span class="k">/data</span></div>
+<div class="step"><span class="n">6</span>Open the <b>Variables</b> tab and add these (click <b>New Variable</b> for each):
+<span class="k">DATA_DIR = /data
+OWNER_EMAIL = mathewadvisement@gmail.com
+OWNER_PASSWORD = (pick a strong password)
+OWNER_NAME = Mathew Youhanna
+OWNER_BRAND = Meridian Life Group</span>
+Railway sets <code>PORT</code> for you — don't add it. After saving, Railway redeploys.</div>
+<div class="step"><span class="n">7</span>Open <b>Settings → Networking → Generate Domain</b>. You'll get a public URL like <code>meridian-team-production.up.railway.app</code>. That's your platform.</div>
+
+<h2>Part 3 — First sign-in</h2>
+<div class="step"><span class="n">8</span>Open <code>your-url/</code> (the root). Sign in with the <b>OWNER_EMAIL</b> and <b>OWNER_PASSWORD</b> you set. Go to <b>Settings</b> and change your password.</div>
+
+<h2>Part 4 — Add your agents</h2>
+<div class="step"><span class="n">9</span>Click <b>Add agent</b>. Enter their name, email, phone, NPN, and tap their licensed states. Click <b>Create agent</b>.</div>
+<div class="step"><span class="n">10</span>You'll get a <b>welcome message with their password</b> — copy it and send it to them. It has their card link, their dashboard link, and their login. Done. Repeat for everyone.</div>
+
+<div class="tip">✅ <b>Every agent automatically gets:</b> their own card at <code>your-url/a/their-name</code>, a texted-link preview that unfurls as their own black/gold Meridian business card, and the Meridian crest as their home-screen icon. Nothing to generate per person — the server does it.</div>
+
+<h2>How the team uses it</h2>
+<div class="step"><b>Agents:</b> open their card link on their phone → Share → <b>Add to Home Screen</b> (Meridian crest icon). They text their link to clients; it unfurls as their business card. They log into their dashboard to see who viewed it, quotes, and appointments.</div>
+<div class="step"><b>You (owner):</b> the <b>Team</b> tab shows every agent and their activity; <b>Team inbox</b> shows every quote/appointment across the whole team; you can reset a password, deactivate, or delete anyone.</div>
+
+<h2>Updating later</h2>
+<div class="step">When I send you an updated version, upload the changed files to the same GitHub repo (or replace the folder). Railway redeploys automatically. Your Volume keeps all agent data.</div>
+
+<p style="color:#a9a397;margin-top:30px">Stuck on any step? Tell me which number and what you see — I'll get you through it.</p>
+</div></body></html>

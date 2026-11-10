@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meridian — Owner Dashboard</title>
+<meta name="theme-color" content="#0b0b0c">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Meridian">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--black:#0b0b0c;--panel:#141416;--panel2:#1b1b1e;--line:#2a2a2e;--gold:#d4af37;--gold2:#f1d78a;--gold-dim:#8f7426;--text:#f3efe6;--muted:#a9a397;--ok:#7fc79a;--warn:#e7b24c;--danger:#e46b6b;--radius:16px}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#17160f,#0b0b0c 60%);color:var(--text);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--gold2)}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 16px 80px}
+  .top{display:flex;align-items:center;gap:12px;padding:10px 0 20px}
+  .crest{width:42px;height:42px}
+  .brand{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;letter-spacing:.3px}
+  .brand small{display:block;font-family:Inter;font-size:11px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;font-weight:600}
+  .sp{flex:1}
+  .btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px 14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
+  .btn:hover{border-color:var(--gold-dim)}
+  .btn.gold{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#231c00;border:none}
+  .btn.sm{padding:7px 11px;font-size:13px;border-radius:10px}
+  .btn.ghost{background:transparent}
+  .btn.danger{color:#ffd0d0;border-color:#5e2222}
+  .btn.warn{color:#ffe6b8;border-color:#5e4a22}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+  h2{font-family:'Cormorant Garamond',serif;font-size:22px;margin:0 0 4px}
+  .muted{color:var(--muted);font-size:14px}
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
+  input,select,textarea{width:100%;background:#0e0e10;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:12px;font-size:16px;font-family:inherit}
+  input:focus,textarea:focus{outline:none;border-color:var(--gold-dim)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .tile b{display:block;font-size:28px;font-family:'Cormorant Garamond',serif;color:var(--gold2)}
+  .tile span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .agent{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;background:var(--panel2)}
+  .agent .hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .agent .nm{font-weight:700;font-size:16px}
+  .chip{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .chip.on{color:#bff0d0;border-color:#2c5e3f}
+  .chip.off{color:#ffc9c9;border-color:#5e2c2c}
+  .chip.gold{color:var(--gold2);border-color:var(--gold-dim)}
+  .link-url{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--gold2);word-break:break-all;background:#0e0e10;border:1px solid var(--line);border-radius:8px;padding:8px;margin:8px 0}
+  .acts{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+  .stategrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:190px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:10px;background:#0e0e10}
+  .stategrid label{display:flex;align-items:center;gap:5px;margin:0;font-size:13px;color:var(--text);cursor:pointer}
+  .stategrid input{width:auto}
+  .gate{max-width:420px;margin:8vh auto}
+  .err{color:#ffb4b4;font-size:14px;margin-top:10px;min-height:1em}
+  .ok{color:var(--ok)}
+  .lead{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;background:var(--panel2)}
+  .lead .t{font-size:12px;color:var(--muted)}
+  .hide{display:none!important}
+  .flexb{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .banner{background:linear-gradient(180deg,#2a2410,#1a1708);border:1px solid var(--gold-dim);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14px}
+  .tabrow{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .tab{padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:600;font-size:14px}
+  .tab.active{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#231c00;border:none}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#111;border:1px solid var(--gold-dim);color:var(--text);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+  @media(max-width:720px){.tiles{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img class="crest" src="/logo.svg" alt="">
+    <div class="brand">Meridian<small>Owner Dashboard</small></div>
+    <div class="sp"></div>
+    <button class="btn ghost sm hide" id="signout">Sign out</button>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="gate" class="gate">
+    <div class="card">
+      <h2>Owner sign in</h2>
+      <p class="muted">Control every agent's card from one place.</p>
+      <label>Email</label><input id="l_email" type="email" autocomplete="username" placeholder="you@email.com">
+      <label>Password</label><input id="l_pass" type="password" autocomplete="current-password" placeholder="Your owner password">
+      <div class="err" id="l_err"></div>
+      <button class="btn gold" id="l_go" style="width:100%;margin-top:6px">Sign in</button>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="hide">
+    <div id="pwBanner" class="banner hide">⚠️ You're using a default password. <a href="#" id="pwChangeLink">Change it now</a> to secure your dashboard.</div>
+
+    <div class="tabrow">
+      <div class="tab active" data-tab="team">Team</div>
+      <div class="tab" data-tab="add">Add agent</div>
+      <div class="tab" data-tab="leads">Team inbox</div>
+      <div class="tab" data-tab="community">Community</div>
+      <div class="tab" data-tab="settings">Settings</div>
+    </div>
+
+    <!-- TEAM -->
+    <section id="tab-team">
+      <div class="tiles" id="tiles"></div>
+      <div class="card">
+        <div class="flexb"><h2>Agents</h2><button class="btn sm" id="refresh">↻ Refresh</button></div>
+        <div id="agents"></div>
+      </div>
+    </section>
+
+    <!-- ADD -->
+    <section id="tab-add" class="hide">
+      <div class="card">
+        <h2>Add an agent</h2>
+        <p class="muted">Creates their card + dashboard instantly. You'll get a ready-to-send welcome message with their password.</p>
+        <div class="row">
+          <div><label>Full name</label><input id="a_name" placeholder="Jane Agent"></div>
+          <div><label>Email (their login)</label><input id="a_email" type="email" placeholder="jane@email.com"></div>
+        </div>
+        <div class="row">
+          <div><label>Phone</label><input id="a_phone" placeholder="(555) 123-4567"></div>
+          <div><label>NPN / license # (optional)</label><input id="a_npn" placeholder="12345678"></div>
+        </div>
+        <label>Licensed states (tap to toggle)</label>
+        <div class="stategrid" id="a_states"></div>
+        <div class="err" id="a_err"></div>
+        <button class="btn gold" id="a_go" style="margin-top:12px">Create agent</button>
+        <div id="a_result" class="hide" style="margin-top:14px"></div>
+      </div>
+    </section>
+
+    <!-- LEADS -->
+    <section id="tab-leads" class="hide">
+      <div class="card">
+        <div class="flexb"><h2>Team inbox</h2><button class="btn sm" id="refreshLeads">↻ Refresh</button></div>
+        <p class="muted">Every quote and appointment request across all agents, newest first.</p>
+        <div id="leads"></div>
+      </div>
+    </section>
+
+    <!-- COMMUNITY -->
+    <section id="tab-community" class="hide">
+      <div class="card">
+        <h2>Community</h2>
+        <p class="muted">A hook is ready for when your owner's community platform goes live. Set the link and every agent card can point members to it.</p>
+        <label>Community URL (saved locally for now)</label>
+        <input id="c_url" placeholder="https://community.example.com">
+        <button class="btn sm" id="c_save" style="margin-top:10px">Save link</button>
+        <p class="muted" style="margin-top:12px">When you're ready to fully wire this in (shared login / embedded cards / member sync), we connect it to this dashboard.</p>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" class="hide">
+      <div class="card">
+        <h2>Change owner password</h2>
+        <label>Current password</label><input id="pc_cur" type="password">
+        <label>New password (8+ characters)</label><input id="pc_new" type="password">
+        <div class="err" id="pc_err"></div>
+        <button class="btn gold" id="pc_go" style="margin-top:10px">Update password</button>
+      </div>
+      <div class="card">
+        <h2>Account</h2>
+        <p class="muted">Signed in as <b id="who"></b>.</p>
+        <button class="btn ghost sm" id="signout2">Sign out</button>
+      </div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const api=(u,o)=>fetch(u,Object.assign({headers:{'content-type':'application/json'},cache:'no-store'},o));
+let STATE_NAMES={}, DATA=null, ORIGIN=location.origin;
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._);t._=setTimeout(()=>t.classList.remove('show'),2200);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+const first=n=>String(n||'').trim().split(/\s+/)[0]||'there';
+
+async function boot(){
+  const me=await api('/api/owner/me');
+  if(me.ok){ const d=await me.json(); if(d.ok){ return loadDash(); } }
+  showLogin();
+}
+function showLogin(){ $('gate').classList.remove('hide'); $('app').classList.add('hide'); $('signout').classList.add('hide'); }
+function showApp(){ $('gate').classList.add('hide'); $('app').classList.remove('hide'); $('signout').classList.remove('hide'); }
+
+$('l_go').onclick=async()=>{
+  $('l_err').textContent='';
+  const r=await (await api('/api/owner/login',{method:'POST',body:JSON.stringify({email:$('l_email').value.trim(),passcode:$('l_pass').value})})).json();
+  if(r.ok){ loadDash(); } else $('l_err').textContent=r.error||'Sign in failed.';
+};
+$('l_pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('l_go').click();});
+
+async function loadDash(){
+  const r=await (await api('/api/owner/data')).json();
+  if(r.error){ showLogin(); return; }
+  DATA=r; STATE_NAMES=r.stateNames||{}; showApp();
+  $('who').textContent=r.owner.email;
+  $('pwBanner').classList.toggle('hide',!r.owner.mustChange);
+  renderTiles(); renderAgents(); buildStateGrid();
+  const cu=localStorage.getItem('meridian_community'); if(cu) $('c_url').value=cu;
+}
+
+function renderTiles(){
+  const t=DATA.totals;
+  $('tiles').innerHTML=[
+    ['Agents',t.agents],['New quotes',t.newQuotes],['Access requests',t.newRequests],['Policies sold',t.sold]
+  ].map(([l,v])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join('');
+}
+
+function renderAgents(){
+  const box=$('agents');
+  if(!DATA.agents.length){ box.innerHTML='<p class="muted">No agents yet. Use “Add agent” to create your first one.</p>'; return; }
+  box.innerHTML=DATA.agents.map(a=>{
+    const card=ORIGIN+'/a/'+a.slug, adm=card+'/admin';
+    const st=(a.states||[]).join(', ')||'—';
+    return `<div class="agent" data-id="${a.id}">
+      <div class="hd">
+        <span class="nm">${esc(a.name)}</span>
+        <span class="chip ${a.active?'on':'off'}">${a.active?'Active':'Off'}</span>
+        ${a.newQuotes?`<span class="chip gold">${a.newQuotes} new quote${a.newQuotes>1?'s':''}</span>`:''}
+        ${a.newRequests?`<span class="chip gold">${a.newRequests} request${a.newRequests>1?'s':''}</span>`:''}
+        <span class="sp"></span>
+        <span class="muted" style="font-size:12px">${a.views} views · ${a.clients} clients · ${st}</span>
+      </div>
+      <div class="link-url">${esc(card)}</div>
+      <div class="acts">
+        <button class="btn sm" data-act="open">Open card</button>
+        <button class="btn sm" data-act="dash">Their dashboard</button>
+        <button class="btn sm ghost" data-act="copy">Copy link</button>
+        <button class="btn sm ghost" data-act="welcome">Welcome message</button>
+        <button class="btn sm ghost" data-act="reset">Reset password</button>
+        <button class="btn sm ${a.active?'warn':''}" data-act="toggle">${a.active?'Deactivate':'Activate'}</button>
+        <button class="btn sm danger" data-act="del">Delete</button>
+      </div>
+      <div class="msgbox hide" style="margin-top:8px"></div>
+    </div>`;
+  }).join('');
+  box.querySelectorAll('.agent').forEach(el=>{
+    const id=el.dataset.id, a=DATA.agents.find(x=>x.id===id);
+    const card=ORIGIN+'/a/'+a.slug, adm=card+'/admin', box2=el.querySelector('.msgbox');
+    el.querySelectorAll('[data-act]').forEach(b=>b.onclick=async()=>{
+      const act=b.dataset.act;
+      if(act==='open') window.open(card,'_blank');
+      else if(act==='dash') window.open(adm,'_blank');
+      else if(act==='copy') navigator.clipboard.writeText(card).then(()=>toast('Card link copied'));
+      else if(act==='welcome'){ showWelcome(box2,a,null); }
+      else if(act==='reset'){
+        if(!confirm('Reset '+a.name+"'s password? Their current one stops working.")) return;
+        doReset(id,a,box2);
+      }
+      else if(act==='toggle'){ await api('/api/owner/agents/'+id,{method:'PATCH',body:JSON.stringify({active:!a.active})}); loadDash(); }
+      else if(act==='del'){ if(confirm('Delete '+a.name+' and all their data? This cannot be undone.')){ await api('/api/owner/agents/'+id,{method:'DELETE'}); loadDash(); toast('Agent deleted'); } }
+    });
+  });
+}
+
+// Password reset needs the plaintext to show the owner, so generate here and send it.
+async function doReset(id,a,box2){
+  const pass=genPass();
+  const r=await (await api('/api/owner/agents/'+id,{method:'PATCH',body:JSON.stringify({password:pass})})).json();
+  if(r.ok){ showWelcome(box2,a,pass); toast('Password reset'); }
+}
+function genPass(){ const w=['Oak','Pine','Gold','Ridge','Harbor','Vale','Stone','River','North','Summit'];const a=w[Math.floor(Math.random()*w.length)];const n=Math.floor(1000+Math.random()*9000);return 'Meridian-'+a+'-'+n; }
+
+function welcomeText(a,pass){
+  const card=ORIGIN+'/a/'+a.slug;
+  const p=pass?`\n2) Sign in: ${a.email} / ${pass}`:`\n2) Sign in with your email: ${a.email}`;
+  return `Hey ${first(a.name)} — your Meridian card is ready.\n\n1) Open ${card}/admin${p}\n3) Change your password, check your info, and you're live.\n\nYour card to text out: ${card}\nTip: open it on your phone, Share → Add to Home Screen for the Meridian icon.`;
+}
+function showWelcome(box2,a,pass){
+  box2.classList.remove('hide');
+  const txt=welcomeText(a,pass);
+  box2.innerHTML=`<textarea rows="8" readonly style="font-size:13px">${esc(txt)}</textarea>
+    <div class="acts"><button class="btn sm gold" data-copy>Copy message</button>${pass?'':'<button class="btn sm" data-newpass>Reset password &amp; include it</button>'}</div>`;
+  box2.querySelector('[data-copy]').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Welcome message copied'));
+  const np=box2.querySelector('[data-newpass]'); if(np) np.onclick=()=>doReset(a.id,a,box2);
+}
+
+// ----- Add agent -----
+function buildStateGrid(){
+  const g=$('a_states'); if(g.dataset.built) return;
+  g.innerHTML=Object.keys(STATE_NAMES).sort().map(c=>`<label><input type="checkbox" value="${c}">${c}</label>`).join('');
+  g.dataset.built='1';
+}
+$('a_go').onclick=async()=>{
+  $('a_err').textContent='';
+  const states=[...$('a_states').querySelectorAll('input:checked')].map(i=>i.value);
+  const body={name:$('a_name').value.trim(),email:$('a_email').value.trim(),phone:$('a_phone').value.trim(),npn:$('a_npn').value.trim(),states};
+  if(!body.name||!body.email){ $('a_err').textContent='Name and email are required.'; return; }
+  $('a_go').disabled=true;$('a_go').textContent='Creating…';
+  try{
+    const r=await (await api('/api/owner/agents',{method:'POST',body:JSON.stringify(body)})).json();
+    if(r.error){ $('a_err').textContent=r.error; }
+    else{
+      const a={id:r.agent.id,name:r.agent.name,email:r.agent.email,slug:r.slug};
+      const card=ORIGIN+'/a/'+r.slug;
+      const txt=welcomeText(a,r.tempPassword);
+      $('a_result').classList.remove('hide');
+      $('a_result').innerHTML=`<div class="banner">✅ <b>${esc(r.agent.name)}</b> created. Card: <a href="${card}" target="_blank">${esc(card)}</a></div>
+        <label>Welcome message (password included — send it to them)</label>
+        <textarea rows="8" readonly style="font-size:13px">${esc(txt)}</textarea>
+        <button class="btn gold sm" id="wcopy" style="margin-top:8px">Copy welcome message</button>`;
+      $('wcopy').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied — send it to '+first(a.name)));
+      ['a_name','a_email','a_phone','a_npn'].forEach(x=>$(x).value='');
+      $('a_states').querySelectorAll('input:checked').forEach(i=>i.checked=false);
+      toast('Agent created');
+    }
+  }catch(e){ $('a_err').textContent='Could not reach the server.'; }
+  finally{ $('a_go').disabled=false;$('a_go').textContent='Create agent'; }
+};
+
+// ----- Leads -----
+async function loadLeads(){
+  const r=await (await api('/api/owner/leads')).json();
+  const box=$('leads');
+  if(!r.leads||!r.leads.length){ box.innerHTML='<p class="muted">No quotes or appointments yet.</p>'; return; }
+  box.innerHTML=r.leads.map(q=>{
+    const kind=q.kind==='appointment'?'📅 Appointment':'💬 Quote';
+    const bits=[q.product,q.coverage,q.budget,q.when].filter(Boolean).join(' · ');
+    return `<div class="lead"><div class="flexb"><b>${kind}${q.name?' — '+esc(q.name):''}</b><span class="chip ${q.status==='new'?'gold':''}">${esc(q.status)}</span></div>
+      <div class="t">${esc(q.agent)} · ${new Date(q.t).toLocaleString()}</div>
+      ${bits?`<div style="margin-top:4px">${esc(bits)}</div>`:''}
+      ${q.phone||q.email?`<div class="muted" style="margin-top:4px">${esc([q.phone,q.email].filter(Boolean).join(' · '))}</div>`:''}
+      ${q.note?`<div class="muted" style="margin-top:4px">“${esc(q.note)}”</div>`:''}</div>`;
+  }).join('');
+}
+
+// ----- tabs -----
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  const name=t.dataset.tab;
+  ['team','add','leads','community','settings'].forEach(s=>$('tab-'+s).classList.toggle('hide',s!==name));
+  if(name==='leads') loadLeads();
+});
+
+$('refresh').onclick=loadDash;
+$('refreshLeads').onclick=loadLeads;
+$('c_save').onclick=()=>{ localStorage.setItem('meridian_community',$('c_url').value.trim()); toast('Saved'); };
+$('pwChangeLink').onclick=e=>{e.preventDefault();document.querySelector('[data-tab=settings]').click();};
+$('pc_go').onclick=async()=>{
+  $('pc_err').textContent='';
+  const r=await (await api('/api/owner/passcode',{method:'POST',body:JSON.stringify({current:$('pc_cur').value,next:$('pc_new').value})})).json();
+  if(r.ok){ $('pc_cur').value='';$('pc_new').value='';toast('Password updated');$('pwBanner').classList.add('hide'); }
+  else $('pc_err').textContent=r.error||'Could not update.';
+};
+async function signOut(){ await api('/api/owner/logout',{method:'POST'}); showLogin(); }
+$('signout').onclick=signOut; $('signout2').onclick=signOut;
+
+boot();
+</script>
+</body>
+</html>

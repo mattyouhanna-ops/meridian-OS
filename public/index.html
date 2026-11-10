@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>%%TITLE%%</title>
+<meta name="theme-color" content="#0b0b0c">
+<meta property="og:type" content="website">
+<meta property="og:title" content="%%TITLE%%">
+<meta property="og:description" content="%%DESC%%">
+<meta property="og:image" content="%%OGIMG%%">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Meridian Life Group business card">
+<meta property="og:url" content="%%OGURL%%">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="%%TITLE%%">
+<meta name="twitter:description" content="%%DESC%%">
+<meta name="twitter:image" content="%%OGIMG%%">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="%%APPTITLE%%">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<script>window.AB="%%AB%%";</script>
+<meta name="description" content="Licensed life insurance and annuity agent. Verify my license on official state records.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#0b0b0c; --panel:#141416; --panel2:#1b1b1e; --line:#2a2a2e;
+    --gold:#d4af37; --gold2:#f1d78a; --gold-dim:#8f7426;
+    --text:#f3efe6; --muted:#a9a397; --ok:#7fc79a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--black);color:var(--text);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  body{min-height:100vh;display:flex;justify-content:center;padding:28px 16px 48px;
+    background:radial-gradient(ellipse at top, #1d1a10 0%, var(--black) 55%)}
+  .card{width:100%;max-width:440px}
+  .gold-text{background:linear-gradient(135deg,var(--gold2),var(--gold) 45%,var(--gold-dim));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:22px}
+  .brand img{width:38px;height:38px}
+  .brand span{font-family:"Cormorant Garamond",serif;font-weight:700;font-size:15px;letter-spacing:.32em;text-transform:uppercase}
+  .hero{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:22px;padding:30px 24px 24px;text-align:center;position:relative;overflow:hidden}
+  .hero:before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .avatar{width:104px;height:104px;border-radius:50%;margin:0 auto 16px;padding:3px;background:linear-gradient(135deg,var(--gold2),var(--gold-dim))}
+  .avatar div{width:100%;height:100%;border-radius:50%;background:var(--black);display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-size:40px;font-weight:600;color:var(--gold2);overflow:hidden}
+  h1{font-family:"Cormorant Garamond",serif;font-size:34px;font-weight:700;line-height:1.1;letter-spacing:.01em}
+  .title{margin-top:6px;font-size:13px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+  .badge{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:6px 12px;border-radius:999px;border:1px solid #2f4a38;background:#13201a;color:var(--ok);font-size:12px;font-weight:600}
+  .badge svg{width:14px;height:14px}
+  .contact-lines{margin-top:16px;font-size:14px;color:var(--muted);line-height:1.7}
+  .contact-lines b{color:var(--text);font-weight:500}
+  section{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px}
+  h2{font-family:"Cormorant Garamond",serif;font-size:23px;font-weight:700;margin-bottom:4px}
+  .sub{font-size:13.5px;color:var(--muted);line-height:1.55}
+  .ids{display:grid;gap:10px;margin:16px 0}
+  .id{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:12px;background:var(--black);border:1px solid var(--line)}
+  .id small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+  .id strong{font-size:17px;font-weight:600;letter-spacing:.04em;color:var(--gold2);font-variant-numeric:tabular-nums}
+  .copy{flex:none;border:1px solid var(--gold-dim);background:transparent;color:var(--gold);font:600 12px Inter,sans-serif;padding:7px 12px;border-radius:9px;cursor:pointer}
+  .copy.done{color:var(--ok);border-color:#2f4a38}
+  .verify-btn{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;text-decoration:none;color:var(--black);background:linear-gradient(135deg,var(--gold2),var(--gold));margin-top:10px;font-weight:700}
+  .verify-btn.alt{background:transparent;color:var(--text);border:1px solid var(--gold-dim)}
+  .verify-btn svg{width:22px;height:22px;flex:none}
+  .verify-btn span{flex:1;line-height:1.3}
+  .verify-btn em{display:block;font-style:normal;font-weight:500;font-size:12px;opacity:.75}
+  .vblock{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .ids + .vblock{border-top:0;padding-top:0}
+  .lr-title{font-weight:700;font-size:14px;color:var(--gold2);letter-spacing:.02em}
+  .warn{margin-top:12px;padding:10px 12px;border-radius:10px;background:#1d1608;border:1px solid #3a2f12;font-size:12.5px}
+  .hl{color:var(--text);font-weight:600}
+  .chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+  .chip{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;border-radius:12px;background:var(--black);border:1px solid var(--line);text-decoration:none;color:var(--text);transition:border-color .15s}
+  .chip:hover{border-color:var(--gold)}
+  .chip b{font-size:16px;font-weight:700;color:var(--gold2);letter-spacing:.05em}
+  .chip span{font-size:10.5px;color:var(--muted);text-align:center;line-height:1.2}
+  .ask{font-family:"Cormorant Garamond",serif;font-size:24px;font-weight:700;color:var(--gold2);margin:4px 0 12px}
+  #picker .chip{cursor:pointer;font-family:Inter,sans-serif;padding:14px 4px}
+  #picker .chip b{font-size:19px}
+  #picker .chip span{font-size:11.5px}
+  .bigsteps{padding-left:22px;font-size:17px;line-height:1.6;color:var(--text);display:grid;gap:8px}
+  .bigsteps b{color:var(--gold2)}
+  .bigbtn{margin-top:16px;padding:18px;font-size:18px;justify-content:center}
+  .bigbtn span{flex:none}
+  .linkbtn{margin-top:14px;background:none;border:1px solid var(--line);color:var(--text);font:600 15px Inter,sans-serif;padding:12px 14px;border-radius:12px;width:100%;cursor:pointer}
+  .bar{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(11,11,12,.96);border-top:1px solid var(--gold-dim);backdrop-filter:blur(8px);z-index:50;max-width:100%}
+  .bar .act{padding:12px 6px;font-size:15px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--black);border:none;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:14px;text-decoration:none;font-weight:600}
+  .bar .act svg{stroke:var(--black);width:22px;height:22px}
+  body{padding-bottom:110px}
+  [data-f]{display:none!important}
+  [hidden]{display:none!important}
+  #livelock{position:fixed;inset:0;z-index:2147483647;background:#0b0b0c;display:flex;align-items:center;justify-content:center;padding:24px}
+  .ll-box{max-width:420px;width:100%;text-align:center;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:20px;padding:30px 24px}
+  .ll-mono{width:72px;height:72px;margin:0 auto 14px;border-radius:50%;background:linear-gradient(135deg,var(--gold2),var(--gold-dim));display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-weight:700;font-size:30px;color:var(--black)}
+  #livelock h2{font-family:"Cormorant Garamond",serif;font-size:26px;color:var(--gold2);margin-bottom:8px}
+  #livelock p{color:var(--muted);font-size:15px;line-height:1.5;margin-bottom:16px}
+  .qin{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--black);color:var(--text);font:500 15px Inter,system-ui,sans-serif;margin-bottom:10px}
+  .qin:focus{outline:2px solid var(--gold-dim);border-color:var(--gold-dim)}
+  #llSend{width:100%;justify-content:center}
+  .ll-done{color:var(--ok)!important}
+  .revoked{margin-top:16px;padding:16px;border-radius:14px;background:#1d1608;border:1px solid #3a2f12;font-size:15px;line-height:1.5}
+  .loading{margin-top:18px;color:var(--muted);font-size:14px;text-align:center}
+  .steps{margin-top:12px;padding-left:18px;font-size:13.5px;color:var(--muted);line-height:1.65}
+  .steps b{color:var(--text);font-weight:600}
+  .products{display:grid;gap:10px;margin-top:14px}
+  .prod{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:var(--black);border:1px solid var(--line)}
+  .prod i{flex:none;width:8px;height:8px;margin-top:7px;border-radius:50%;background:var(--gold)}
+  .prod b{display:block;font-size:15px;font-weight:600}
+  .prod span{font-size:13px;color:var(--muted)}
+  .promise{list-style:none;margin-top:14px;display:grid;gap:12px;font-size:13.5px;line-height:1.5;color:var(--muted)}
+  .promise li{display:flex;gap:10px}
+  .promise li:before{content:"✓";color:var(--gold);font-weight:700}
+  .promise b{color:var(--text);font-weight:600}
+  .share{display:flex;gap:10px;margin-top:16px}
+  .share button{flex:1;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:600 13px Inter,sans-serif;cursor:pointer}
+  .share button:hover{border-color:var(--gold-dim)}
+  footer{margin-top:22px;text-align:center;font-size:11.5px;color:#6f6a60;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--gold);color:var(--black);font-weight:700;font-size:13px;padding:10px 16px;border-radius:10px;transition:.2s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .setup-note{max-width:440px;margin:60px auto;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:30px 24px}
+  .setup-note a{color:var(--gold2)}
+
+  /* ---- refinements ---- */
+  html{scroll-behavior:smooth}
+  a,button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  :focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(212,175,55,.0)}50%{box-shadow:0 0 28px 2px rgba(212,175,55,.28)}}
+  .card>*{animation:rise .55s cubic-bezier(.2,.7,.2,1) both}
+  .card>*:nth-child(2){animation-delay:.05s}.card>*:nth-child(3){animation-delay:.12s}.card>*:nth-child(4){animation-delay:.18s}.card>*:nth-child(5){animation-delay:.24s}.card>*:nth-child(6){animation-delay:.3s}
+  .avatar{animation:glow 4s ease-in-out infinite}
+  .hero{box-shadow:0 18px 50px -20px rgba(212,175,55,.25)}
+  .hero-actions{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin-top:18px}
+  .hbtn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 10px;border-radius:12px;font:700 14px Inter,sans-serif;cursor:pointer;border:1px solid var(--gold-dim);background:transparent;color:var(--gold2);transition:transform .12s,border-color .15s}
+  .hbtn.pri{background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--black);border:none}
+  .hbtn svg{width:17px;height:17px}
+  .hbtn:active,.bar .act:active,.verify-btn:active,.chip:active{transform:scale(.97)}
+  .bar{max-width:440px;margin:0 auto;border-radius:18px 18px 0 0;border:1px solid var(--gold-dim);border-bottom:0}
+  .bar .act{transition:transform .12s;font-size:14px}
+  .verify-btn{transition:transform .12s,filter .15s}
+  .verify-btn:hover{filter:brightness(1.06)}
+  .chip{transition:border-color .15s,transform .12s,background .15s}
+  .chip:hover{background:#17170f}
+  .chip.mine{border-color:var(--gold);background:#1a170c}
+  .statefind{width:100%;margin:12px 0 0;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--black);color:var(--text);font:500 15px Inter,sans-serif}
+  .statefind:focus{outline:2px solid var(--gold-dim);border-color:var(--gold-dim)}
+  .nostate{grid-column:1/-1;text-align:center;font-size:13.5px;color:var(--muted);padding:10px}
+  .prod{transition:border-color .15s}
+  .prod:hover{border-color:var(--gold-dim)}
+  .prod .soon{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold2);border:1px solid var(--gold-dim);vertical-align:middle}
+  .prod.isSoon{opacity:.82;border-style:dashed}
+  button.prod{width:100%;text-align:left;cursor:pointer;color:var(--text);font-family:inherit}
+  button.prod:active{transform:scale(.99)}
+  .prod .q{display:inline-flex;align-items:center;gap:4px;margin-top:7px;font-size:12px;font-weight:700;color:var(--gold2)}
+  .book{margin-top:14px}
+  #quote{position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;padding:0}
+  .q-box{max-width:460px;width:100%;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--gold-dim);border-radius:20px 20px 0 0;padding:24px 22px calc(24px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto}
+  .q-box h3{font-family:"Cormorant Garamond",serif;font-size:24px;color:var(--gold2);margin-bottom:4px}
+  .q-box .psub{color:var(--muted);font-size:13.5px;margin-bottom:14px}
+  .q-box input,.q-box textarea,.q-box select{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--black);color:var(--text);font:500 15px Inter,system-ui,sans-serif;margin-bottom:10px}
+  .q-box textarea{min-height:60px;resize:vertical}
+  .q-box input:focus,.q-box textarea:focus,.q-box select:focus{outline:none;border-color:var(--gold)}
+  .qlabel{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 6px}
+  .q-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .q-send{width:100%;justify-content:center}
+  .q-alt{display:flex;gap:10px;margin-top:10px}
+  .q-alt a{flex:1;text-align:center;padding:12px;border-radius:12px;border:1px solid var(--gold-dim);color:var(--text);text-decoration:none;font-weight:600;font-size:14px}
+  .q-cancel{background:none;border:none;color:var(--muted);font:600 14px Inter,sans-serif;cursor:pointer;width:100%;margin-top:12px;padding:8px}
+  .q-done{text-align:center;padding:10px 0}
+  .q-done .okk{color:var(--ok);font-weight:700;font-size:17px}
+  .toast{bottom:104px;z-index:60}
+  .badge{animation:rise .6s .2s both}
+  .trust{display:inline-flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+  .trust .t{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1px solid #2f4a38;background:#13201a;color:var(--ok);font-size:13px;font-weight:700}
+  .trust .t.g{border-color:#3a2f12;background:#1a1408;color:var(--gold2)}
+  .trust svg{width:15px;height:15px}
+  @keyframes shimmer{0%{background-position:-420px 0}100%{background-position:420px 0}}
+  .sk{background:linear-gradient(90deg,#1a1a1e 25%,#26262c 37%,#1a1a1e 63%);background-size:820px 100%;animation:shimmer 1.4s linear infinite;border-radius:10px}
+  #skelHero{display:none}
+  body.pending #skelHero{display:block}
+  body.pending .avatar,body.pending #nameText,body.pending #titleText,body.pending .trust,body.pending .contact-lines,body.pending .hero-actions,body.pending #loading{display:none!important}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body class="pending">
+<main class="card">
+
+  <div class="brand">
+    <img src="/logo.svg" alt="" width="38" height="38" style="flex:none">
+    <span class="gold-text" id="brandText"></span>
+  </div>
+
+  <div class="hero">
+    <div class="avatar"><div id="mono"></div></div>
+    <h1 id="nameText"></h1>
+    <div class="title" id="titleText"></div>
+    <div class="trust">
+      <span class="t" data-f="states"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span id="badgeText">Verify below</span></span>
+      <span class="t g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>State-regulated agent</span>
+    </div>
+
+    <div class="contact-lines">
+      <div data-f="phone"><b id="phoneText"></b></div>
+      <div data-f="email"><b id="emailText"></b></div>
+    </div>
+    <div class="hero-actions" data-f="contact">
+      <button class="hbtn pri" id="saveContact" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Save contact</button>
+      <button class="hbtn" id="shareCard" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v14"/></svg>Share</button>
+    </div>
+    <div class="loading" id="loading">Loading…</div>
+    <div id="skelHero">
+      <div class="sk" style="width:104px;height:104px;border-radius:50%;margin:0 auto 16px"></div>
+      <div class="sk" style="width:200px;height:30px;margin:0 auto 10px"></div>
+      <div class="sk" style="width:140px;height:14px;margin:0 auto 16px"></div>
+      <div class="sk" style="width:170px;height:30px;border-radius:999px;margin:0 auto 16px"></div>
+      <div class="sk" style="width:180px;height:14px;margin:0 auto 7px"></div>
+      <div class="sk" style="width:210px;height:14px;margin:0 auto"></div>
+    </div>
+  </div>
+
+  <section id="verify" data-f="any">
+    <h2 class="gold-text">Don't take my word for it. Check.</h2>
+    <p class="sub">Anyone can make a website, but a state license can't be faked. <b class="hl">Look me up on the official government records below.</b> It takes one minute.</p>
+
+    <div class="ids" data-f="npn">
+      <div class="id"><div><small>NPN (National Producer Number)</small><strong id="npn"></strong></div><button class="copy" data-copy="npn">Copy</button></div>
+    </div>
+
+    <div id="picker" data-f="states">
+      <div class="ask">Which state do you live in?</div>
+      <input class="statefind" id="stateFind" type="search" placeholder="Type your state to find it" autocomplete="off" hidden>
+      <div class="chips" id="stateChips"></div>
+    </div>
+    <div id="stpanel" hidden>
+      <div class="ask" id="stTitle"></div>
+      <ol class="bigsteps" id="stSteps"></ol>
+      <a class="verify-btn bigbtn" id="stLink" href="#" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+        <span id="stBtn"></span>
+      </a>
+      <p class="sub" style="margin-top:12px">You're looking for <b class="hl">Active</b> status with a <b class="hl">Life</b> line of authority.</p>
+      <button class="linkbtn" id="stBack">&larr; Choose a different state</button>
+    </div>
+
+    <div class="vblock" data-f="nipr">
+      <a class="verify-btn alt" href="https://nipr.com/licensing-center/look-up-a-license" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg>
+        <span>Another way: National registry (NIPR)<em>National Insurance Producer Registry</em></span>
+      </a>
+      <ol class="steps">
+        <li>Tap the button above, then <b>Look up a National Producer Number</b>.</li>
+        <li>Enter my NPN <b class="v-npn"></b> and search.</li>
+        <li>The result should show my name, <b class="v-name"></b>.</li>
+      </ol>
+    </div>
+
+    <div class="vblock" data-f="lastResort">
+      <div class="lr-title">Still not sure? Last resort options</div>
+      <ol class="steps">
+        <li>Call your state's <b>Department of Insurance</b> consumer line yourself and ask them to confirm my license by name and number.</li>
+        <li>Or we get on a <b>three-way call with the state</b> together, so you hear it straight from them.</li>
+        <li>Or hop on a <b>video call</b> and I'll show you my license and photo ID live.</li>
+      </ol>
+      <p class="sub warn">For your protection: real agents never ask you to pay a fee to verify them, and you should never need anyone's Social Security number to check a license.</p>
+    </div>
+  </section>
+
+  <section data-f="products">
+    <h2 class="gold-text">How I can help</h2>
+    <p class="sub">Tap any coverage below to ask me for a free quote.</p>
+    <div class="products" id="productList"></div>
+    <div class="book" data-f="contact">
+      <button class="verify-btn bigbtn" id="bookBtn" type="button" style="width:100%;justify-content:center;padding:15px;font-size:16px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <span>Book a time to talk</span>
+      </button>
+    </div>
+  </section>
+
+  <section data-f="promise">
+    <h2 class="gold-text">My promise to you</h2>
+    <p class="sub">Trust is earned. Here's what you can hold me to:</p>
+    <ul class="promise" id="promiseList"></ul>
+  </section>
+
+  <div class="share" data-f="contact">
+    <button id="copyContact">Copy my contact info</button>
+  </div>
+
+  <footer>
+    <span id="footName"></span><span data-f="npn"> · NPN <span class="v-npn"></span></span><br>
+    Coverage subject to underwriting and carrier approval.<br>For security, visits to this page are logged.
+  </footer>
+</main>
+
+<div class="setup-note" id="setupNote" hidden>
+  <div class="ll-mono" style="margin:0 auto 14px;width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#f1d78a,#8f7426);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:30px;color:#0b0b0c">✦</div>
+  <h2 class="gold-text" style="font-family:'Cormorant Garamond',serif;font-size:26px;margin-bottom:8px">Almost there</h2>
+  <p class="sub">This card hasn't been set up yet. If this is your card, open the <a href="/admin">admin dashboard</a> to add your details.</p>
+</div>
+
+<nav class="bar" aria-label="Contact" data-f="contact">
+  <a class="act" id="barCall" data-f="phone" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1 1 .4 1.9.7 2.8a2 2 0 01-.5 2.1L8 9.9a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.6 2.8.7a2 2 0 011.7 2z"/></svg>Call</a>
+  <a class="act" id="barText" data-f="phone" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Text</a>
+  <a class="act" id="barEmail" data-f="email" href="#"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>Email</a>
+</nav>
+
+<div id="quote" hidden>
+  <div class="q-box">
+    <div id="qForm">
+      <h3 id="qTitle">Request a quote</h3>
+      <p class="psub">Send <span id="qWho">me</span> a quick request — no obligation, and your info isn't shared with anyone else.</p>
+      <input id="qName" type="text" placeholder="Your name" maxlength="80" autocomplete="name">
+      <input id="qPhone" type="tel" placeholder="Phone number" maxlength="40" autocomplete="tel" inputmode="tel">
+      <input id="qEmail" type="email" placeholder="Email" maxlength="120" autocomplete="email" inputmode="email">
+      <div id="qQuoteFields">
+        <input id="qCoverage" type="text" placeholder="Coverage amount you want (e.g. $250,000)" maxlength="60">
+        <input id="qBudget" type="text" placeholder="Monthly budget (e.g. $50/mo)" maxlength="60">
+      </div>
+      <div id="qApptFields" hidden>
+        <label class="qlabel">Preferred day</label>
+        <input id="qDate" type="date">
+        <div class="q-two">
+          <select id="qSlot"><option value="">Any time</option><option>Morning</option><option>Afternoon</option><option>Evening</option></select>
+          <select id="qMethod"><option>Phone call</option><option>Video call</option><option>In person</option></select>
+        </div>
+      </div>
+      <textarea id="qNote" placeholder="Anything I should know? (optional)" maxlength="300"></textarea>
+      <button class="verify-btn q-send" id="qSend"><span>Send my request</span></button>
+      <div class="q-alt" id="qAlt"></div>
+      <button class="q-cancel" id="qCancel">Cancel</button>
+    </div>
+    <div id="qDone" class="q-done" hidden>
+      <div class="okk">✓ Request sent</div>
+      <p class="sub" id="qDoneMsg" style="margin-top:8px;margin-bottom:12px"></p>
+      <button class="verify-btn q-send" id="qBook" hidden style="margin-bottom:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Book a time to talk</span></button>
+      <button class="q-cancel" id="qClose">Close</button>
+    </div>
+  </div>
+</div>
+<div id="livelock" hidden>
+  <div class="ll-box">
+    <div class="ll-mono" id="llMono"></div>
+    <h2 id="llTitle">Access paused</h2>
+    <p id="llMsg">Access to this card has been paused. You can ask to turn it back on.</p>
+    <form id="llForm">
+      <input id="llName" class="qin" type="text" placeholder="Your name" maxlength="80" autocomplete="name">
+      <button class="verify-btn bigbtn" id="llSend" type="submit"><span>Request access</span></button>
+    </form>
+    <p id="llDone" class="ll-done" hidden>Request sent. You'll hear back soon.</p>
+  </div>
+</div>
+<div class="toast" id="toast">Copied</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  function getK(){ const m=location.pathname.match(/^\/c\/([A-Za-z0-9_-]{16,64})$/); return m ? m[1] : new URLSearchParams(location.search).get('k'); }
+  function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1600); }
+  function initials(name){ const p=(name||'').trim().split(/\s+/); return ((p[0]||'')[0]||'')+((p.length>1?p[p.length-1][0]:'')||''); }
+  async function copy(text, btn){
+    try{ await navigator.clipboard.writeText(text); toast('Copied'); if(btn){btn.textContent='Copied ✓';btn.classList.add('done');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('done')},1800);} }
+    catch(e){ toast('Press and hold to copy: ' + text); }
+  }
+  const pk=$('picker'), pn=$('stpanel');
+  function mySt(){ try{return localStorage.getItem('mc_state')||''}catch(e){return ''} }
+  function openState(code,name,url,steps,noScroll){
+    $('stTitle').textContent='Verify me in '+name;
+    $('stSteps').innerHTML=steps.map(x=>'<li>'+x+'</li>').join('');
+    $('stLink').href=url; $('stBtn').textContent='Check my '+name+' license';
+    pk.hidden=true; pn.hidden=false; if(!noScroll) $('verify').scrollIntoView({behavior:'smooth'});
+    try{localStorage.setItem('mc_state',code)}catch(e){}
+  }
+  function buildStates(states){
+    const chips=$('stateChips'); chips.innerHTML='';
+    const codes=Object.keys(states||{}).sort((a,b)=>states[a][0].localeCompare(states[b][0]));
+    $('badgeText').textContent = codes.length ? ('Licensed in '+codes.length+' state'+(codes.length>1?'s':'')+' · Verify below') : 'Verify below';
+    const mine=mySt();
+    for(const code of codes){
+      const [name,url,steps]=states[code];
+      const b=document.createElement('button'); b.className='chip'+(code===mine?' mine':''); b.type='button';
+      b.dataset.q=(code+' '+name).toLowerCase();
+      b.innerHTML='<b>'+code+'</b><span>'+name+'</span>';
+      b.addEventListener('click',()=>openState(code,name,url,steps));
+      chips.appendChild(b);
+    }
+    const none=document.createElement('div'); none.className='nostate'; none.hidden=true;
+    none.textContent="I'm not licensed in that state yet. Call or text me and I'll point you the right way.";
+    chips.appendChild(none);
+    const find=$('stateFind');
+    if(codes.length>9){
+      find.hidden=false;
+      find.value=''; find.oninput=()=>{
+        const q=find.value.trim().toLowerCase(); let n=0;
+        chips.querySelectorAll('.chip').forEach(c=>{const ok=!q||c.dataset.q.includes(q); c.hidden=!ok; if(ok)n++;});
+        none.hidden=n>0;
+      };
+    }
+    if(mine && states[mine]){ const c=chips.querySelector('.chip.mine'); if(c) chips.prepend(c); }
+    // One state only: skip the "which state?" picker and go straight to verifying it.
+    if(codes.length===1){
+      const code=codes[0]; const [name,url,steps]=states[code];
+      $('badgeText').textContent='Licensed in '+name+' · Verify below';
+      const back=$('stBack'); if(back) back.style.display='none';
+      openState(code,name,url,steps,true);
+    } else { const back=$('stBack'); if(back) back.style.display=''; }
+  }
+  function vcard(){
+    const parts=(D.name||'').trim().split(/\s+/); const last=parts.length>1?parts.pop():''; const first=parts.join(' ');
+    const L=['BEGIN:VCARD','VERSION:3.0','N:'+last+';'+first+';;;','FN:'+(D.name||'')];
+    if(D.brand) L.push('ORG:'+D.brand);
+    if(D.title) L.push('TITLE:'+D.title);
+    if(D.phoneTel) L.push('TEL;TYPE=CELL,VOICE:'+D.phoneTel);
+    if(D.email) L.push('EMAIL;TYPE=INTERNET,WORK:'+D.email);
+    if(D.npn) L.push('NOTE:Licensed insurance agent. NPN '+D.npn);
+    L.push('END:VCARD'); return L.join('\r\n');
+  }
+  $('saveContact').addEventListener('click',()=>{
+    const blob=new Blob([vcard()],{type:'text/vcard'}); const u=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=u; a.download=((D.name||'contact').replace(/[^\w]+/g,'-'))+'.vcf';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000);
+    toast('Contact saved. Open the file to add me');
+  });
+  $('shareCard').addEventListener('click',async()=>{
+    const url=location.origin+'/';
+    if(navigator.share){ try{ await navigator.share({title:(D.name||'')+' · '+(D.brand||''),text:'Licensed insurance agent you can verify.',url}); return; }catch(e){ if(e&&e.name==='AbortError') return; } }
+    copy(url);
+  });
+  $('stBack').addEventListener('click',()=>{pn.hidden=true;pk.hidden=false;});
+  document.querySelectorAll('.copy').forEach(b => b.addEventListener('click', () => copy($(b.dataset.copy).textContent.trim(), b)));
+  $('copyContact').addEventListener('click', () => copy(
+    (D.name||'') + (D.title?'\n'+D.title:'') + (D.brand?', '+D.brand:'') +
+    (D.phone?'\n'+D.phone:'') + (D.email?'\n'+D.email:'') + (D.npn?'\nNPN '+D.npn:'')
+  ));
+
+  let D={}, locked=false;
+  const PREVIEW=new URLSearchParams(location.search).get('preview')==='1';
+  document.querySelectorAll('[data-f]').forEach(e=>e.setAttribute('data-f0',e.getAttribute('data-f')));
+  function show(key){document.querySelectorAll('[data-f0="'+key+'"]').forEach(e=>e.removeAttribute('data-f'))}
+  function openLock(kind){
+    locked=true;
+    $('llMono').textContent=initials(D.name)||'✦';
+    const t=$('llTitle'), m=$('llMsg');
+    if(kind==='revoked'){ t.textContent='This link is no longer active'; m.textContent="This private link was turned off. You can ask for a new one."; }
+    else { t.textContent='Access paused'; m.textContent='Access to this card has been paused. You can ask to turn it back on.'; }
+    const main=document.querySelector('main'); if(main) main.remove();
+    const note=$('setupNote'); if(note) note.remove();
+    const bar=document.querySelector('.bar'); if(bar) bar.remove();
+    document.documentElement.style.overflow='hidden';
+    document.body.style.overflow='hidden';
+    document.body.style.paddingBottom='0';
+    $('livelock').hidden=false;
+  }
+  function render(res){
+    document.body.classList.remove('pending');
+    document.querySelectorAll('[data-f0]').forEach(e=>e.setAttribute('data-f',e.getAttribute('data-f0')));
+    pk.hidden=false; pn.hidden=true; document.body.style.paddingBottom='';
+    const l=$('loading'); if(l) l.remove();
+    D=res; const f=res.f||{};
+    $('brandText').textContent=res.brand||'';
+    $('nameText').textContent=res.name||'';
+    $('titleText').textContent=res.title||'';
+    $('mono').textContent=initials(res.name)||'✦';
+    document.title=(res.name||'Agent')+' · '+(res.title||'Licensed Insurance Agent');
+    document.querySelectorAll('.v-name').forEach(e=>e.textContent=res.name||'');
+    $('footName').textContent=(res.name||'')+(res.brand?' · '+res.brand:'');
+    if(!PREVIEW && res.revoked){ openLock('revoked'); return; }
+    if(!PREVIEW && res.limited){ openLock('limited'); return; }
+    for(const key of Object.keys(f)) if(f[key]) show(key);
+    if(res.phone){ $('phoneText').textContent=res.phone; $('barCall').href='tel:'+res.phoneTel; $('barText').href='sms:'+res.phoneTel; }
+    if(res.email){ $('emailText').textContent=res.email; $('barEmail').href='mailto:'+res.email; }
+    if(res.npn){ $('npn').textContent=res.npn; document.querySelectorAll('.v-npn').forEach(e=>e.textContent=res.npn); }
+    if(res.states) buildStates(res.states);
+    if(Array.isArray(res.products)){
+      const pl=$('productList'); pl.innerHTML='';
+      res.products.forEach(p=>{
+        const soon=/^coming soon/i.test(p.d||'');
+        const el=document.createElement(soon?'div':'button'); el.className='prod'+(soon?' isSoon':''); if(!soon) el.type='button';
+        const dot=document.createElement('i');
+        const mid=document.createElement('div'); mid.style.flex='1';
+        const t=document.createElement('b'); t.textContent=p.t;
+        if(soon){ const tag=document.createElement('em'); tag.className='soon'; tag.textContent='Soon'; t.appendChild(tag); }
+        const s=document.createElement('span'); s.textContent=p.d;
+        mid.appendChild(t); mid.appendChild(s);
+        if(!soon){ const q=document.createElement('span'); q.className='q'; q.textContent='Get a quote →'; mid.appendChild(q); el.addEventListener('click',()=>openQuote(p.t)); }
+        el.appendChild(dot); el.appendChild(mid);
+        pl.appendChild(el);
+      });
+    }
+    if(Array.isArray(res.promises)){ const ul=$('promiseList'); ul.innerHTML=''; res.promises.forEach(p=>{ const li=document.createElement('li'); const s=document.createElement('span'); const b=document.createElement('b'); b.textContent=p.t+' '; s.appendChild(b); s.appendChild(document.createTextNode(p.d)); li.appendChild(s); ul.appendChild(li); }); }
+    if(f.phone||f.email) show('contact');
+    if(f.states||f.npn||f.nipr||f.lastResort) show('any');
+    const bar=document.querySelector('.bar'); if(bar) bar.style.gridTemplateColumns='repeat('+Math.max(1,bar.querySelectorAll('.act:not([data-f])').length)+',1fr)';
+    if(!(f.phone||f.email)) document.body.style.paddingBottom='40px';
+  }
+  async function fetchCard(first){
+    const k=getK();
+    let res;
+    try{ const qs=[]; if(k) qs.push('k='+encodeURIComponent(k)); if(!first) qs.push('p=1'); res=await (await fetch(AB+'/api/card'+(qs.length?'?'+qs.join('&'):''),{cache:'no-store'})).json(); }
+    catch(e){ if(first){ $('loading').textContent='Could not load. Please refresh the page.'; } return; }
+    if(first){
+      if(res.notSetup){
+        document.body.classList.remove('pending');
+        document.querySelector('main').remove();
+        document.querySelector('.bar').remove();
+        $('setupNote').hidden=false;
+        document.body.style.paddingBottom='0';
+        return;
+      }
+      render(res);
+    } else {
+      if(!locked && (res.revoked || res.limited)){
+        openLock(res.revoked ? 'revoked' : 'limited');
+      } else if(locked && !res.revoked && !res.limited && !res.notSetup){
+        location.reload();
+      }
+    }
+  }
+  // quote (product tap) + appointment booking
+  let qProduct='', qKind='quote';
+  function firstName(){ return (D.name||'').trim().split(/\s+/)[0]||'me'; }
+  function qAltFill(){
+    const alt=$('qAlt'); alt.innerHTML='';
+    if(D.phoneTel){ alt.innerHTML='<a href="tel:'+D.phoneTel+'">Call now</a><a href="sms:'+D.phoneTel+'">Text now</a>'; }
+    else if(D.email){ alt.innerHTML='<a href="mailto:'+D.email+'">Email now</a>'; }
+  }
+  function openQuote(product){
+    qKind='quote'; qProduct=product;
+    $('qTitle').textContent='Free quote: '+product; $('qWho').textContent=firstName();
+    $('qQuoteFields').hidden=false; $('qApptFields').hidden=true;
+    $('qSend').querySelector('span').textContent='Send my request';
+    qAltFill(); $('qForm').hidden=false; $('qDone').hidden=true; $('quote').hidden=false;
+    setTimeout(()=>$('qName').focus(),50);
+  }
+  function openAppt(){
+    qKind='appointment'; qProduct='';
+    $('qTitle').textContent='Book a time with '+firstName(); $('qWho').textContent=firstName();
+    $('qQuoteFields').hidden=true; $('qApptFields').hidden=false;
+    $('qSend').querySelector('span').textContent='Request this time';
+    qAltFill(); $('qForm').hidden=false; $('qDone').hidden=true; $('quote').hidden=false;
+    setTimeout(()=>$('qName').focus(),50);
+  }
+  function closeQuote(){ $('quote').hidden=true; ['qName','qPhone','qEmail','qCoverage','qBudget','qDate','qNote'].forEach(i=>{if($(i))$(i).value='';}); }
+  (function(){ const bb=$('bookBtn'); if(bb) bb.addEventListener('click',openAppt); })();
+  $('qCancel').addEventListener('click',closeQuote);
+  $('qClose').addEventListener('click',closeQuote);
+  $('quote').addEventListener('click',e=>{ if(e.target===$('quote')) closeQuote(); });
+  $('qSend').addEventListener('click',async()=>{
+    const span=$('qSend').querySelector('span'); const label=span.textContent; span.textContent='Sending…';
+    const payload={kind:qKind,product:qProduct,name:$('qName').value.trim(),phone:$('qPhone').value.trim(),email:$('qEmail').value.trim(),note:$('qNote').value.trim(),k:getK()};
+    if(qKind==='quote'){ payload.coverage=$('qCoverage').value.trim(); payload.budget=$('qBudget').value.trim(); }
+    else { payload.when=$('qDate').value; payload.slot=$('qSlot').value; payload.method=$('qMethod').value; }
+    try{ await fetch(AB+'/api/quote',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}); }catch(_){}
+    span.textContent=label;
+    $('qDoneMsg').textContent = qKind==='appointment'
+      ? (firstName()+" will confirm your time and reach out.")
+      : (firstName()+" is already shopping the best carriers for you. Want to lock in a quick time to go over your options together?");
+    $('qBook').hidden = qKind!=='quote';
+    $('qForm').hidden=true; $('qDone').hidden=false;
+  });
+  $('qBook').addEventListener('click',()=>{ openAppt(); }); // keeps the name/phone/email they just entered
+
+  (function(){
+    const f=$('llForm'); if(!f) return;
+    f.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const k=getK();
+      try{ await fetch(AB+'/api/request-access',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:$('llName').value.trim(),k})}); }catch(_){}
+      f.hidden=true; $('llDone').hidden=false;
+    });
+  })();
+  if(PREVIEW){
+    document.documentElement.classList.add('pv');
+    window.addEventListener('message',e=>{
+      if(e.origin!==location.origin||e.source!==parent) return;
+      const m=e.data; if(m&&m.type==='preview'&&m.data) render(m.data);
+    });
+    try{ parent.postMessage({type:'ready'},location.origin); }catch(_){}
+  } else {
+    fetchCard(true);
+    setInterval(()=>{ if(!document.hidden) fetchCard(false); }, 30000);
+    document.addEventListener('visibilitychange',()=>{ if(!document.hidden) fetchCard(false); });
+    window.addEventListener('pageshow',()=>fetchCard(false));
+  }
+</script>
+</body>
+</html>

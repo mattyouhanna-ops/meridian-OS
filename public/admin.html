@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>window.AB="%%AB%%";</script>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Meridian">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Meridian Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/admin.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Meridian">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--black:#0b0b0c;--panel:#141416;--panel2:#1b1b1e;--line:#2a2a2e;--gold:#d4af37;--gold2:#f1d78a;--gold-dim:#8f7426;--text:#f3efe6;--muted:#a9a397;--ok:#7fc79a;--bad:#e2795f}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--black);color:var(--text);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  body{min-height:100vh;padding:24px 16px 60px;background:radial-gradient(ellipse at top,#1a1810 0%,var(--black) 55%)}
+  .wrap{max-width:640px;margin:0 auto}
+  h1{font-family:"Cormorant Garamond",serif;font-size:30px;font-weight:700}
+  h2{font-family:"Cormorant Garamond",serif;font-size:22px;font-weight:700;margin-bottom:4px}
+  .gold-text{background:linear-gradient(135deg,var(--gold2),var(--gold) 45%,var(--gold-dim));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .muted{color:var(--muted);font-size:13.5px;line-height:1.55}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:16px}
+  label{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+  label:first-child{margin-top:0}
+  input,select,textarea{width:100%;padding:12px 14px;border-radius:11px;border:1px solid var(--line);background:var(--black);color:var(--text);font:500 15px Inter,system-ui,sans-serif}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--gold-dim);border-color:var(--gold-dim)}
+  textarea{min-height:70px;resize:vertical;line-height:1.5}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--black);font:700 15px Inter,sans-serif;cursor:pointer;width:100%}
+  .btn.sm{width:auto;padding:9px 14px;font-size:13px}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+  .btn.ghost:hover{border-color:var(--gold-dim)}
+  .btn.danger{background:transparent;border:1px solid #543029;color:var(--bad)}
+  .btn.warn{background:transparent;border:1px solid var(--gold-dim);color:var(--gold)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .err{color:var(--bad);font-size:13px;margin-top:10px;min-height:16px}
+  .ok{color:var(--ok)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+  .stat b{display:block;font-size:22px;color:var(--gold2);font-variant-numeric:tabular-nums}
+  .stat span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .switch:last-child{border-bottom:0}
+  .switch small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+  .tog{flex:none;width:50px;height:28px;border-radius:999px;background:#333;border:none;position:relative;cursor:pointer;transition:.15s}
+  .tog.on{background:linear-gradient(135deg,var(--gold2),var(--gold-dim))}
+  .tog:after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.15s}
+  .tog.on:after{left:25px}
+  .chk{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+  .chk:last-child{border-bottom:0}
+  .chk input{width:auto}
+  .stgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:4px 14px;margin-top:8px}
+  .stgrid .chk{border:0;padding:5px 0}
+  .pill{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600}
+  .pill.on{background:#13201a;color:var(--ok);border:1px solid #2f4a38}
+  .pill.off{background:#1d1608;color:var(--gold);border:1px solid #3a2f12}
+  .link-item{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:10px}
+  .link-item h3{font-size:15px;font-weight:600;margin-bottom:2px}
+  .link-url{font-size:11.5px;color:var(--muted);word-break:break-all;margin:8px 0;font-family:ui-monospace,monospace}
+  .req-item{background:#1d1608;border:1px solid #3a2f12;border-radius:12px;padding:14px;margin-top:10px}
+  .log{font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);padding:9px 0;line-height:1.5}
+  .log:last-child{border-bottom:0}
+  .log b{color:var(--text);font-weight:600}
+  details.adv{margin-top:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);overflow:hidden}
+  details.adv>summary{list-style:none;cursor:pointer;padding:14px 16px;font-weight:600;font-size:14px;display:flex;justify-content:space-between;align-items:center}
+  details.adv>summary::-webkit-details-marker{display:none}
+  details.adv>summary:after{content:"▾";color:var(--muted)}
+  details.adv[open]>summary:after{content:"▴"}
+  details.adv .body{padding:0 16px 16px}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--gold);color:var(--black);font-weight:700;font-size:13px;padding:10px 16px;border-radius:10px;transition:.2s;z-index:99;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .code{font-family:ui-monospace,monospace;font-size:20px;letter-spacing:.08em;color:var(--gold2);background:var(--black);border:1px dashed var(--gold-dim);border-radius:12px;padding:16px;text-align:center;margin:12px 0;word-break:break-all}
+  [hidden]{display:none!important}
+  .center{text-align:center}
+  .mono{width:64px;height:64px;margin:0 auto 14px;border-radius:50%;background:linear-gradient(135deg,var(--gold2),var(--gold-dim));display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-weight:700;font-size:28px;color:var(--black)}
+  .steps-n{counter-reset:s;list-style:none;margin-top:8px}
+  .steps-n li{counter-increment:s;position:relative;padding:4px 0 4px 26px;font-size:13.5px;color:var(--muted)}
+  .steps-n li:before{content:counter(s);position:absolute;left:0;top:3px;width:18px;height:18px;border-radius:50%;background:var(--gold-dim);color:var(--black);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .editrow{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:12px;margin-top:8px}
+  .editrow input{margin-bottom:6px}
+  /* ===== dashboard v2 ===== */
+  .wrap{max-width:1180px}
+  #gate{max-width:560px;margin:0 auto}
+  .top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;margin:-24px -16px 18px;padding:12px 16px;background:rgba(11,11,12,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .brandrow{display:flex;align-items:center;gap:12px;min-width:0}
+  .mono.sm{width:40px;height:40px;margin:0;font-size:17px;flex:none}
+  .tt{font-family:"Cormorant Garamond",serif;font-weight:700;font-size:20px;line-height:1.1}
+  .tabs{display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+  .tab{position:relative;border:none;background:transparent;color:var(--muted);font:600 14px Inter,sans-serif;padding:10px 18px;border-radius:10px;cursor:pointer;transition:.15s}
+  .tab:hover{color:var(--text)}
+  .tab.on{background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--black)}
+  .nb{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;margin-left:6px;border-radius:999px;background:var(--bad);color:#fff;font-size:11px;font-weight:700}
+  .topr{display:flex;gap:8px}
+  body.hasdock #adminCol{margin-right:424px}
+  .subnav{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;align-items:center}
+  .sn{flex:none;border:1px solid var(--line);background:var(--panel);color:var(--muted);font:600 13px Inter,sans-serif;padding:9px 15px;border-radius:999px;cursor:pointer;transition:.15s}
+  .sn:hover{border-color:var(--gold-dim);color:var(--text)}
+  .sn.on{border-color:var(--gold);color:var(--gold2);background:#1a170c}
+  .sn.pvbtn{margin-left:auto;border-color:var(--gold-dim);color:var(--gold2)}
+  @media(min-width:1100px){.sn.pvbtn{display:none}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:14px}
+  .panel h2{margin-bottom:2px}
+  .grid2{display:grid;grid-template-columns:1fr;gap:0 14px}
+  @media(min-width:700px){.grid2{grid-template-columns:1fr 1fr}}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+  /* live preview */
+  .pv{display:none}
+  .pv.dock{display:block;position:fixed;top:84px;right:max(16px,calc((100vw - 1180px)/2));width:400px;z-index:30}
+  .pvhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+  .seg{display:flex;gap:3px;padding:3px;border-radius:11px;background:var(--panel);border:1px solid var(--line)}
+  .seg button{border:none;background:transparent;color:var(--muted);font:600 12px Inter,sans-serif;padding:7px 11px;border-radius:8px;cursor:pointer}
+  .seg button.on{background:#2a2410;color:var(--gold2)}
+  .live{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ok);font-weight:700}
+  .live:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(127,199,154,.6);animation:ping 2s infinite}
+  @keyframes ping{70%{box-shadow:0 0 0 8px rgba(127,199,154,0)}100%{box-shadow:0 0 0 0 rgba(127,199,154,0)}}
+  .phone{border:1px solid var(--gold-dim);border-radius:34px;padding:10px;background:#050505;box-shadow:0 24px 60px -24px rgba(212,175,55,.35)}
+  .phone iframe{display:block;width:100%;height:min(760px,calc(100vh - 210px));border:0;border-radius:24px;background:var(--black)}
+  .pvwho{font-size:12.5px;color:var(--gold2);font-weight:600}
+  .pvclose{display:none}
+  .pv.open{display:block;position:fixed;inset:0;z-index:80;background:rgba(5,5,5,.94);backdrop-filter:blur(6px);padding:14px 14px 18px;overflow:auto;width:auto}
+  .pv.open .pvclose{display:inline-flex}
+  .pv.open .phone{max-width:430px;margin:0 auto}
+  .pv.open .pvhead{max-width:430px;margin:0 auto 10px}
+  /* save bar */
+  .savebar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:10px;padding:10px 12px 10px 18px;border-radius:16px;background:#1a170c;border:1px solid var(--gold);box-shadow:0 14px 40px rgba(0,0,0,.6);max-width:calc(100% - 24px);width:max-content}
+  .savebar b{font-size:13.5px;color:var(--gold2);margin-right:4px}
+  .savebar .btn.sm{white-space:nowrap}
+  /* clients */
+  .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  @media(min-width:760px){.tiles{grid-template-columns:repeat(4,1fr)}}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;cursor:pointer;transition:.15s;text-align:left;color:var(--text);font-family:inherit}
+  .tile:hover{border-color:var(--gold-dim)}
+  .tile.on{border-color:var(--gold);background:#1a170c}
+  .tile b{display:block;font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--gold2);line-height:1.1}
+  .tile span{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+  .tile em{display:block;font-style:normal;font-size:12.5px;color:var(--ok);margin-top:6px;min-height:16px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+  .toolbar input[type=search]{flex:1;min-width:180px}
+  .cl{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin-top:10px;overflow:hidden;transition:border-color .15s}
+  .cl:hover{border-color:#3a3a40}
+  .cl.open{border-color:var(--gold-dim)}
+  .clh{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+  .av{flex:none;width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--gold2),var(--gold-dim));color:var(--black);font:700 16px "Cormorant Garamond",serif;display:flex;align-items:center;justify-content:center}
+  .clm{flex:1;min-width:0}
+  .clm h3{font-size:15.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .clm .meta{font-size:12.5px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sp{display:inline-block;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.03em;border:1px solid}
+  .st-new{color:#b9b4a6;border-color:#3a3a40;background:#1b1b1e}
+  .st-chat{color:#8fb8ff;border-color:#2a3f66;background:#10192b}
+  .st-quoted{color:var(--gold2);border-color:var(--gold-dim);background:#1d1808}
+  .st-sold{color:var(--ok);border-color:#2f4a38;background:#13201a}
+  .chev{color:var(--muted);transition:transform .15s}
+  .cl.open .chev{transform:rotate(180deg)}
+  .cld{display:none;padding:2px 16px 18px;border-top:1px solid var(--line)}
+  .cl.open .cld{display:block}
+  .dealchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .dealchips .sp{font-weight:600;font-size:11px}
+  .deal{display:flex;gap:12px;justify-content:space-between;align-items:flex-start;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:8px}
+  .deal b{font-size:14px}
+  .deal .dm{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:2px}
+  .dealform{background:#17150c;border:1px solid var(--gold-dim);border-radius:14px;padding:14px;margin-top:10px}
+  .dealform label{margin-top:10px}
+  .sec{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px;font-weight:600}
+  .acts{display:flex;gap:8px;flex-wrap:wrap}
+  .empty{text-align:center;color:var(--muted);padding:34px 10px;font-size:14px;line-height:1.6}
+  .visit{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .visit:last-child{border-bottom:0}
+  .visit .muted{font-size:12.5px}
+  .seglist{display:flex;gap:6px;flex-wrap:wrap}
+  .seglist button{border:1px solid var(--line);background:var(--panel2);color:var(--muted);font:600 13px Inter,sans-serif;padding:9px 14px;border-radius:10px;cursor:pointer}
+  .seglist button.on.st-chat{color:#8fb8ff;border-color:#2a3f66;background:#10192b}
+  .seglist button.on.st-quoted{color:var(--gold2);border-color:var(--gold-dim);background:#1d1808}
+  .seglist button.on.st-sold{color:var(--ok);border-color:#2f4a38;background:#13201a}
+  .seglist button.on.st-new{color:var(--text);border-color:#555;background:#24242a}
+  .req-item{margin-top:12px}
+  .quote-item{background:#1a1408;border:1px solid #4a3a12;border-radius:14px;padding:16px;margin-top:10px}
+  .quote-item .qp{color:var(--gold2);font-weight:700;font-size:15px}
+  .quote-item .acts a.btn,.quote-item .acts button{text-decoration:none}
+  #app .btn.sm{border-radius:10px}
+  /* follow-up nudges */
+  .fudot{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--bad);border:2px solid var(--panel);position:absolute;top:-2px;right:-2px}
+  .av{position:relative}
+  .follow-sp{color:var(--bad);border:1px solid #543029;background:#231210;font-size:10.5px;padding:2px 8px;vertical-align:middle}
+  .cl.fu{border-color:#5a2f27}
+  .tile.follow b{color:var(--bad)}
+  .tile.follow{border-color:#5a2f27}
+  .quote-item.aging{border-color:#6b3a1a}
+  /* mobile: bigger tap targets */
+  @media(max-width:640px){
+    .top{margin-top:-24px}.topr .btn{padding:10px 12px}.tab{padding:11px 15px;font-size:14.5px}.panel{padding:18px}
+    .sn{padding:11px 16px;font-size:14px}
+    .tile{padding:18px 14px}.tile b{font-size:30px}
+    .clh{padding:15px 14px;gap:14px}.av{width:46px;height:46px;font-size:17px}.clm h3{font-size:16px}
+    #app .btn.sm{padding:12px 16px;font-size:14px;min-height:44px}
+    .seglist button{padding:11px 15px}.seg button{padding:9px 12px}
+    .savebar{bottom:10px;gap:8px;padding-left:14px}.savebar b{display:none}.savebar .btn.sm{min-height:42px}
+    .cld{padding:2px 14px 18px}
+    input,select,textarea{font-size:16px}
+  }
+  .seg button,.pvclose{white-space:nowrap}
+  @media(max-width:640px){.pvhead .live{display:none}.pvhead{justify-content:space-between}}
+  .modal{position:fixed;inset:0;z-index:95;background:rgba(5,5,5,.88);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:16px}
+  .mbox{width:100%;max-width:520px;background:var(--panel);border:1px solid var(--gold-dim);border-radius:18px;padding:22px}
+  .pvbtn2{display:none}
+  @media(max-width:1099px){.pvbtn2{display:inline-flex}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= GATE: setup / login / forgot ================= -->
+  <div id="gate" hidden>
+    <div class="center"><div class="mono" id="gateMono">✦</div><h1 class="gold-text">Card Admin</h1></div>
+
+    <!-- WELCOME PASSWORD (first visit, if a team lead set one) -->
+    <div class="card" id="invite" hidden>
+      <h2 class="gold-text">Welcome</h2>
+      <p class="muted">Enter the one-time welcome password from your email to set up your card.</p>
+      <label>Welcome password</label>
+      <input id="iv_pass" type="text" placeholder="From your welcome email" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="err" id="iv_err"></div>
+      <button class="btn" id="iv_go" style="margin-top:14px">Continue</button>
+    </div>
+
+    <!-- SETUP WIZARD (first run) -->
+    <div class="card" id="setup" hidden>
+      <h2 class="gold-text">Set up your card</h2>
+      <p class="muted">Fill this in once. It's what your clients will see. You can change any of it later.</p>
+      <label>Your full name *</label><input id="s_name" placeholder="Jane Smith" autocomplete="name">
+      <label>Your title</label><input id="s_title" placeholder="Licensed Life Insurance Agent" value="Licensed Life Insurance Agent">
+      <label>Agency / brand name</label><input id="s_brand" placeholder="Meridian Life Group">
+      <label>Phone (call &amp; text) *</label><input id="s_phone" placeholder="(555) 123-4567" inputmode="tel" autocomplete="tel">
+      <label>Email *</label><input id="s_email" placeholder="you@email.com" inputmode="email" autocomplete="email">
+      <label>NPN (National Producer Number)</label><input id="s_npn" placeholder="e.g. 1234567" inputmode="numeric">
+      <label>States you're licensed in</label>
+      <p class="muted">Tap every state where you hold a license. Each one gets its own official lookup link on your card.</p>
+      <div class="stgrid" id="s_states"></div>
+      <label>Create your passcode *</label><input id="s_pass" type="text" placeholder="At least 6 characters. Pick something you'll remember" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <p class="muted" style="margin-top:6px;font-size:12.5px">Your passcode is visible while you type so you can see it. You'll sign in with your email and this passcode.</p>
+      <div class="err" id="s_err"></div>
+      <button class="btn" id="s_go" style="margin-top:14px">Create my card</button>
+    </div>
+
+    <!-- RECOVERY CODE (shown once) -->
+    <div class="card" id="recov" hidden>
+      <h2 class="gold-text">Save your recovery code</h2>
+      <p class="muted">This is the <b>only</b> way to get back in if you forget your passcode. Screenshot it or write it down now — you won't see it again.</p>
+      <div class="code" id="recovCode"></div>
+      <div class="row"><button class="btn sm ghost" id="recovCopy">Copy code</button></div>
+
+      <h2 class="gold-text" style="margin-top:22px">Your two links</h2>
+      <p class="muted">Bookmark both. Send the first to clients; keep the second for yourself.</p>
+      <label>Your card (send this to clients)</label>
+      <div class="link-url" id="linkCard"></div>
+      <button class="btn sm ghost" id="linkCardCopy">Copy card link</button>
+      <label style="margin-top:14px">Your admin dashboard (keep private)</label>
+      <div class="link-url" id="linkAdmin"></div>
+      <button class="btn sm ghost" id="linkAdminCopy">Copy dashboard link</button>
+
+      <button class="btn" id="recovGo" style="margin-top:18px">I saved it — open my dashboard</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="card" id="login" hidden>
+      <h2 class="gold-text">Sign in</h2>
+      <label>Email</label><input id="l_email" inputmode="email" autocomplete="email">
+      <label>Passcode</label><input id="l_pass" type="password" autocomplete="current-password">
+      <div class="err" id="l_err"></div>
+      <button class="btn" id="l_go" style="margin-top:14px">Sign in</button>
+      <div class="center" style="margin-top:14px"><a href="#" id="l_forgot" class="muted" style="color:var(--gold2)">Forgot passcode?</a></div>
+    </div>
+
+    <!-- FORGOT -->
+    <div class="card" id="forgot" hidden>
+      <h2 class="gold-text">Reset your passcode</h2>
+      <p class="muted">Enter your recovery code and a new passcode.</p>
+      <label>Recovery code</label><input id="f_code" placeholder="MERI-XXXX-XXXX-XXXX" autocomplete="off">
+      <label>New passcode</label><input id="f_pass" type="password" placeholder="At least 6 characters" autocomplete="new-password">
+      <div class="err" id="f_err"></div>
+      <button class="btn" id="f_go" style="margin-top:14px">Reset &amp; sign in</button>
+      <div class="center" style="margin-top:14px"><a href="#" id="f_back" class="muted" style="color:var(--gold2)">Back to sign in</a></div>
+    </div>
+  </div>
+
+  <!-- ================= DASHBOARD ================= -->
+  <div id="app" hidden>
+    <header class="top">
+      <div class="brandrow"><div class="mono sm" id="topMono">✦</div><div style="min-width:0"><div class="tt gold-text" id="topBrand">Admin</div><div class="muted" id="whoami" style="font-size:12px;overflow:hidden;text-overflow:ellipsis"></div></div></div>
+      <nav class="tabs" role="tablist" aria-label="Dashboard sections">
+        <button class="tab on" data-tab="admin" role="tab">My Admin</button>
+        <button class="tab" data-tab="clients" role="tab">Clients<span class="nb" id="reqBadge" hidden>0</span></button>
+      </nav>
+      <div class="topr"><a href="/" target="_blank" rel="noopener" class="btn sm ghost">View card ↗</a><button class="btn sm ghost" id="signout">Sign out</button></div>
+    </header>
+
+    <!-- ============ TAB 1: MY ADMIN ============ -->
+    <main id="tab-admin">
+      <div class="split">
+        <div id="adminCol" style="min-width:0">
+          <div class="subnav" id="adminNav">
+            <button class="sn on" data-sec="profile">Card details</button>
+            <button class="sn" data-sec="offer">Promises &amp; products</button>
+            <button class="sn" data-sec="vis">Sharing &amp; visibility</button>
+            <button class="sn" data-sec="sec">Security</button>
+            <button class="sn pvbtn" id="pvOpen">👁 Preview</button>
+          </div>
+
+          <section class="panel" data-sec="profile">
+            <h2 class="gold-text">Card details</h2>
+            <p class="muted">Your name, contact info and licenses. Changes show in the preview first and only go live when you press Save.</p>
+            <div class="grid2" style="margin-top:14px">
+              <div><label>Full name</label><input id="p_name"></div>
+              <div><label>Title</label><input id="p_title"></div>
+              <div><label>Agency / brand</label><input id="p_brand"></div>
+              <div><label>NPN</label><input id="p_npn" inputmode="numeric"></div>
+              <div><label>Phone (call &amp; text)</label><input id="p_phone" inputmode="tel"></div>
+              <div><label>Email</label><input id="p_email" inputmode="email"></div>
+            </div>
+            <label>States you're licensed in</label>
+            <div class="stgrid" id="p_states"></div>
+            <div class="err" id="p_err"></div>
+          </section>
+
+          <section class="panel" data-sec="offer" hidden>
+            <h2 class="gold-text">Promises &amp; products</h2>
+            <p class="muted">What clients read under "How I can help" and "My promise to you." Start a product's description with <b>Coming soon</b> to tag it.</p>
+            <label>How I can help (products)</label>
+            <div id="p_products"></div>
+            <button class="btn sm ghost" id="addProduct" style="margin-top:10px">+ Add a product</button>
+            <label style="margin-top:24px">My promise to you</label>
+            <div id="p_promises"></div>
+            <button class="btn sm ghost" id="addPromise" style="margin-top:10px">+ Add a promise</button>
+          </section>
+
+          <section class="panel" data-sec="vis" hidden>
+            <h2 class="gold-text">Sharing &amp; visibility</h2>
+            <div class="row" style="margin:14px 0 4px;justify-content:space-between;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel2)">
+              <div style="min-width:0"><b>Your card link</b><div class="link-url" id="mainUrl" style="margin:4px 0 0"></div></div>
+              <div class="row"><button class="btn sm" id="mainSend">📤 Send</button><button class="btn sm ghost" id="mainCopy">Copy</button></div>
+            </div>
+            <div class="switch" style="margin-top:10px">
+              <div><b>Main link is live</b><small>The plain link with no code. Turn off to lock everyone out of it. This takes effect immediately.</small></div>
+              <button class="tog" id="mainTog" aria-label="Main link on or off"></button>
+            </div>
+            <label style="margin-top:18px">Main link shows</label>
+            <select id="defAud"></select>
+            <div id="audiences" style="margin-top:8px"></div>
+            <div style="display:none">
+              <textarea id="sendMsg" rows="4" maxlength="600"></textarea>
+              <button class="btn sm ghost" id="sendMsgReset" type="button">Reset</button>
+              <p id="sendMsgPrev"></p>
+            </div>
+            <p class="hint" style="margin-top:22px">Send buttons send just your link — so the card preview pops up in their text and a tap opens the full card. Flip a switch above and watch the preview on the right; use the Prospect, Client and My view buttons to check each audience.</p>
+          </section>
+
+          <section class="panel" data-sec="sec" hidden>
+            <h2 class="gold-text">Security</h2>
+            <label>Current passcode</label><input id="pc_cur" type="password" autocomplete="current-password">
+            <label>New passcode (min 6)</label><input id="pc_new" type="password" autocomplete="new-password">
+            <div class="err" id="pc_err"></div>
+            <div class="row" style="margin-top:10px"><button class="btn sm" id="pc_go">Update passcode</button><button class="btn sm danger" id="signoutAll">Sign out all devices</button></div>
+            <div class="sec">Admin sign-ins &amp; security events</div>
+            <div id="secLog"></div>
+            <p class="hint" style="margin-top:14px">Tip: on iPhone tap Share → <b>Add to Home Screen</b> to keep this dashboard one tap away.</p>
+          </section>
+        </div>
+
+      </div>
+
+      <div class="savebar" id="saveBar" hidden>
+        <b>Unsaved changes</b>
+        <button class="btn sm ghost pvbtn2" id="pvOpen2">Preview</button>
+        <button class="btn sm ghost" id="discard">Discard</button>
+        <button class="btn sm" id="p_save">Save changes</button>
+      </div>
+    </main>
+
+    <aside class="pv" id="pv" aria-label="Live preview">
+          <div class="pvhead">
+            <span class="live">Live preview</span>
+            <div class="seg" id="pvSeg"><button data-m="prospect" class="on">Prospect</button><button data-m="client">Client</button><button data-m="me">My view</button></div>
+            <span class="pvwho" id="pvWho" hidden></span>
+            <button class="btn sm ghost pvclose" id="pvClose">Close ✕</button>
+          </div>
+          <div class="phone"><iframe id="pvFrame" src="%%AB%%/?preview=1" title="Card preview"></iframe></div>
+        </aside>
+
+    <!-- ============ TAB 2: CLIENTS ============ -->
+    <main id="tab-clients" hidden>
+      <div class="card" id="reqCard" hidden style="margin-top:0">
+        <h2 class="gold-text">Access requests</h2>
+        <p class="muted">Someone whose access is paused is asking to get back in.</p>
+        <div id="reqList"></div>
+      </div>
+
+      <div class="card" id="quoteCard" hidden style="margin-top:0">
+        <h2 class="gold-text">New requests</h2>
+        <p class="muted">Quote requests and appointment bookings people sent from your card.</p>
+        <div id="quoteList"></div>
+      </div>
+
+      <div class="tiles" id="tiles" style="margin-top:14px"></div>
+
+      <div class="row" style="justify-content:space-between;margin-top:18px">
+        <div class="seg" id="clSub"><button data-v="pipeline" class="on">Pipeline</button><button data-v="activity">Recent clicks</button></div>
+        <div class="row"><button class="btn sm" id="quickLink">⚡ Quick link</button><button class="btn sm ghost" id="newLinkToggle">+ New client</button></div>
+      </div>
+
+      <div id="newLinkForm" class="panel" hidden>
+        <h2 class="gold-text">New client link</h2>
+        <p class="muted">One private link per person, so you know exactly who opened it.</p>
+        <div class="grid2" style="margin-top:12px">
+          <div><label>Who is this for?</label><input id="nl_name" placeholder="e.g. John from Facebook"></div>
+          <div><label>Phone (optional)</label><input id="nl_phone" inputmode="tel" placeholder="(555) 123-4567"></div>
+          <div><label>They see</label><select id="nl_aud"></select></div>
+        </div>
+        <div class="row" style="margin-top:14px"><button class="btn sm" id="nl_create">Create &amp; copy link</button><button class="btn sm ghost" id="nl_cancel">Cancel</button></div>
+      </div>
+
+      <div id="viewPipeline">
+        <div class="toolbar">
+          <input type="search" id="clSearch" placeholder="Search people, products, carriers…">
+          <div class="seg" id="clFilter"></div>
+        </div>
+        <div id="clientList"></div>
+      </div>
+      <div id="viewActivity" hidden>
+        <div class="panel"><h2 class="gold-text">Recent clicks</h2><p class="muted">Every time your card was opened. Clicks on your plain main link can't be matched to a person, so tap <b>Track</b> to add one to your pipeline.</p>
+          <div id="visitLog" style="margin-top:8px"></div>
+          <button class="btn sm danger" id="clearVisits" style="margin-top:14px">Clear this log</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+<div class="modal" id="sendModal" hidden>
+  <div class="mbox">
+    <h2 class="gold-text">Send to <span id="sm_who"></span></h2>
+    <p class="muted">Edit the message however you like, then send it.</p>
+    <textarea id="sm_text" rows="6" style="margin-top:10px"></textarea>
+    <div class="row" style="margin-top:14px"><button class="btn sm" id="sm_send">📤 Send</button><button class="btn sm ghost" id="sm_copy">Copy</button><button class="btn sm ghost" id="sm_cancel">Cancel</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const AB=window.AB||'';
+const api=(u,o)=>fetch(u,Object.assign({headers:{'content-type':'application/json'},cache:'no-store'},o));
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1700);}
+function initials(n){const p=(n||'').trim().split(/\s+/);return (((p[0]||'')[0]||'')+((p.length>1?p[p.length-1][0]:'')||''))||'✦';}
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const STATES={AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",CO:"Colorado",CT:"Connecticut",DE:"Delaware",DC:"District of Columbia",FL:"Florida",GA:"Georgia",HI:"Hawaii",ID:"Idaho",IL:"Illinois",IN:"Indiana",IA:"Iowa",KS:"Kansas",KY:"Kentucky",LA:"Louisiana",ME:"Maine",MD:"Maryland",MA:"Massachusetts",MI:"Michigan",MN:"Minnesota",MS:"Mississippi",MO:"Missouri",MT:"Montana",NE:"Nebraska",NV:"Nevada",NH:"New Hampshire",NJ:"New Jersey",NM:"New Mexico",NY:"New York",NC:"North Carolina",ND:"North Dakota",OH:"Ohio",OK:"Oklahoma",OR:"Oregon",PA:"Pennsylvania",RI:"Rhode Island",SC:"South Carolina",SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VT:"Vermont",VA:"Virginia",WA:"Washington",WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming"};
+function stateGrid(el,selected){
+  el.innerHTML='';
+  for(const code of Object.keys(STATES)){
+    const id=el.id+'_'+code;
+    const w=document.createElement('label');w.className='chk';w.style.textTransform='none';w.style.letterSpacing='0';w.style.margin='0';w.style.color='var(--text)';w.style.fontSize='13px';
+    w.innerHTML='<input type="checkbox" value="'+code+'" '+(selected.includes(code)?'checked':'')+'> '+code+' · '+STATES[code];
+    el.appendChild(w);
+  }
+}
+function gridValue(el){return [...el.querySelectorAll('input:checked')].map(i=>i.value);}
+
+// ---------- editable promise/product rows ----------
+function addEditRow(container,t,d,phType,phDesc){
+  const row=document.createElement('div');row.className='editrow';
+  row.innerHTML='<input class="et" placeholder="'+phType+'" value="'+esc(t)+'"><textarea class="ed" placeholder="'+phDesc+'">'+esc(d)+'</textarea><button class="btn sm danger rm">Remove</button>';
+  row.querySelector('.rm').addEventListener('click',()=>row.remove());
+  container.appendChild(row);
+}
+function readRows(container){
+  return [...container.querySelectorAll('.editrow')].map(r=>({t:r.querySelector('.et').value.trim(),d:r.querySelector('.ed').value.trim()})).filter(x=>x.t||x.d);
+}
+
+// ================= boot: decide which screen =================
+let INVITE="";
+async function boot(){
+  const st=await (await api(AB+'/api/auth/status')).json();
+  if(!st.setup){ showGate(st.inviteRequired && !INVITE ? 'invite' : 'setup'); return; }
+  const me=await api(AB+'/api/auth/me');
+  if(me.ok) return loadDash();
+  showGate('login');
+}
+function showGate(which){
+  $('app').hidden=true; $('gate').hidden=false;
+  for(const s of ['invite','setup','recov','login','forgot']) $(s).hidden=(s!==which);
+  if(which==='setup'){ stateGrid($('s_states'),[]); }
+}
+$('iv_go').addEventListener('click',async()=>{
+  $('iv_err').textContent='';
+  const code=$('iv_pass').value;
+  try{
+    const r=await (await api(AB+'/api/auth/invite',{method:'POST',body:JSON.stringify({code})})).json();
+    if(r.ok){ INVITE=code; showGate('setup'); return; }
+    $('iv_err').textContent=r.error||'That welcome password is incorrect.';
+  }catch(e){ $('iv_err').textContent='Could not reach the server. Try again.'; }
+});
+$('iv_pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('iv_go').click();});
+
+// ================= SETUP =================
+$('s_go').addEventListener('click',async()=>{
+  const p={name:$('s_name').value,title:$('s_title').value,brand:$('s_brand').value,phone:$('s_phone').value,email:$('s_email').value.trim(),npn:$('s_npn').value,states:gridValue($('s_states'))};
+  const pass=$('s_pass').value;
+  const err=m=>{const e=$('s_err');e.textContent=m;e.style.cssText='display:block;margin-top:14px;padding:12px;border-radius:10px;background:#2a1010;border:1px solid #6b2222;color:#ffb4b4;font-size:14px';e.scrollIntoView({behavior:'smooth',block:'center'});};
+  $('s_err').textContent='';$('s_err').style.cssText='';
+  if(!p.name||!p.phone||!p.email){err('Please fill in your name, phone and email.');return;}
+  if(pass.length<6){err('Your passcode needs at least 6 characters. Right now it has '+pass.length+'.');return;}
+  $('s_go').textContent='Creating…';$('s_go').disabled=true;
+  try{
+    const res=await api(AB+'/api/auth/setup',{method:'POST',body:JSON.stringify({profile:p,passcode:pass,invite:INVITE})});
+    let r; try{ r=await res.json(); }catch(_){ r={error:'The server did not answer correctly (code '+res.status+'). In Netlify, open Logs > Functions to see why, or redeploy the site and try again.'}; }
+    if(r.error){err(r.error);return;}
+    $('recovCode').textContent=r.recovery; fillRecovLinks(); showGate('recov');
+  }catch(e){ err('Could not reach the server. Check your internet and try again.'); }
+  finally{ $('s_go').textContent='Create my card';$('s_go').disabled=false; }
+});
+function fillRecovLinks(){ $('linkCard').textContent=location.origin+AB+'/'; $('linkAdmin').textContent=location.origin+AB+'/admin'; }
+$('recovCopy').addEventListener('click',()=>{navigator.clipboard.writeText($('recovCode').textContent).then(()=>toast('Recovery code copied'));});
+$('linkCardCopy').addEventListener('click',()=>navigator.clipboard.writeText(location.origin+AB+'/').then(()=>toast('Card link copied')));
+$('linkAdminCopy').addEventListener('click',()=>navigator.clipboard.writeText(location.origin+AB+'/admin').then(()=>toast('Dashboard link copied')));
+$('recovGo').addEventListener('click',loadDash);
+
+// ================= LOGIN / FORGOT =================
+$('l_go').addEventListener('click',async()=>{
+  $('l_err').textContent='';
+  const r=await (await api(AB+'/api/auth/login',{method:'POST',body:JSON.stringify({email:$('l_email').value,passcode:$('l_pass').value})})).json();
+  if(r.ok) return loadDash();
+  $('l_err').textContent=r.error||'Could not sign in.';
+});
+$('l_pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('l_go').click();});
+$('l_forgot').addEventListener('click',e=>{e.preventDefault();showGate('forgot');});
+$('f_back').addEventListener('click',e=>{e.preventDefault();showGate('login');});
+$('f_go').addEventListener('click',async()=>{
+  $('f_err').textContent='';
+  const r=await (await api(AB+'/api/auth/forgot',{method:'POST',body:JSON.stringify({recovery:$('f_code').value,passcode:$('f_pass').value})})).json();
+  if(r.ok){ $('recovCode').textContent=r.recovery; fillRecovLinks(); showGate('recov'); return; }
+  $('f_err').textContent=r.error||'Could not reset.';
+});
+
+// ================= DASHBOARD =================
+let S={}, AUD={}, BASE='', curTab='admin', pvMode='prospect', pvCtx=null, pvOpen=false, pvData=null, pvTimer=null, pvSeq=0;
+const wide=()=>matchMedia('(min-width:1100px)').matches;
+const OPEN=new Set(), DEALFORM={}; let CL={filter:'all',q:'',view:'pipeline'}; let VISITS=[];
+
+async function loadDash(){
+  $('gate').hidden=true; $('app').hidden=false;
+  const r=await api(AB+'/api/admin/state');
+  if(r.status===401){ showGate('login'); return; }
+  S=await r.json();
+  AUD=JSON.parse(JSON.stringify(S.settings.audiences));
+  $('gateMono').textContent=initials(S.profile.name); $('topMono').textContent=initials(S.profile.name);
+  $('topBrand').textContent=S.profile.brand||'Admin';
+  $('whoami').textContent=S.email;
+  fillProfile(); fillVisibility(); baseline();
+  renderClients(); loadActivity(); pollRequests(); pollQuotes(); applyTab(); schedulePreview();
+}
+
+// ---------- tabs ----------
+function applyTab(){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===curTab));
+  $('tab-admin').hidden=curTab!=='admin'; $('tab-clients').hidden=curTab!=='clients';
+  if(curTab!=='admin' && !pvCtx) closePv();
+  if(curTab==='admin' && pvCtx){ closePv(); }
+  setPvUI(); updateSaveBar(); schedulePreview();
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{curTab=b.dataset.tab; if(curTab==='admin'){pvCtx=null; setPvUI();} applyTab(); window.scrollTo({top:0});});
+document.querySelectorAll('#adminNav .sn[data-sec]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#adminNav .sn[data-sec]').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('#tab-admin .panel[data-sec]').forEach(p=>p.hidden=p.dataset.sec!==b.dataset.sec);
+  if(b.dataset.sec==='sec') loadActivity();
+});
+
+// ---------- card details ----------
+function fillProfile(){
+  const p=S.profile;
+  $('p_name').value=p.name||''; $('p_title').value=p.title||''; $('p_brand').value=p.brand||'';
+  $('p_phone').value=p.phone||''; $('p_email').value=p.email||''; $('p_npn').value=p.npn||'';
+  stateGrid($('p_states'),p.states||[]);
+  $('p_promises').innerHTML=''; (p.promises||[]).forEach(x=>addEditRow($('p_promises'),x.t,x.d,'Promise title','What it means'));
+  $('p_products').innerHTML=''; (p.products||[]).forEach(x=>addEditRow($('p_products'),x.t,x.d,'Product name','Short description'));
+}
+$('addPromise').addEventListener('click',()=>addEditRow($('p_promises'),'','','Promise title','What it means'));
+$('addProduct').addEventListener('click',()=>addEditRow($('p_products'),'','','Product name','Short description'));
+function readProfile(){return {name:$('p_name').value,title:$('p_title').value,brand:$('p_brand').value,phone:$('p_phone').value,email:$('p_email').value,npn:$('p_npn').value,states:gridValue($('p_states')),promises:readRows($('p_promises')),products:readRows($('p_products'))};}
+function readDraft(){return {profile:readProfile(),audiences:AUD,defaultAudience:$('defAud').value,sendMessage:$('sendMsg').value};}
+function baseline(){BASE=JSON.stringify(readDraft()); updateSaveBar();}
+function isDirty(){return JSON.stringify(readDraft())!==BASE;}
+function updateSaveBar(){ $('saveBar').hidden=!(curTab==='admin' && isDirty()); }
+function onDraft(){ updateSaveBar(); schedulePreview(); }
+$('tab-admin').addEventListener('input',onDraft);
+$('tab-admin').addEventListener('change',onDraft);
+$('tab-admin').addEventListener('click',()=>setTimeout(onDraft,0));
+
+$('p_save').addEventListener('click',async()=>{
+  const d=readDraft(); $('p_err').textContent='';
+  $('p_save').disabled=true; $('p_save').textContent='Saving…';
+  try{
+    const r=await (await api(AB+'/api/admin/profile',{method:'POST',body:JSON.stringify({profile:d.profile})})).json();
+    if(r.error){ $('p_err').textContent=r.error; toast(r.error); document.querySelector('#adminNav .sn[data-sec="profile"]').click(); return; }
+    S.profile=r.profile;
+    const r2=await (await api(AB+'/api/admin/settings',{method:'POST',body:JSON.stringify({audiences:d.audiences,defaultAudience:d.defaultAudience,sendMessage:d.sendMessage})})).json();
+    if(r2.settings){ S.settings=r2.settings; AUD=JSON.parse(JSON.stringify(S.settings.audiences)); $('sendMsg').value=S.settings.sendMessage; }
+    $('topBrand').textContent=S.profile.brand||'Admin'; $('topMono').textContent=initials(S.profile.name);
+    baseline(); toast('Saved. Your card is updated');
+  }catch(e){ toast('Could not save. Check your connection'); }
+  finally{ $('p_save').disabled=false; $('p_save').textContent='Save changes'; }
+});
+$('discard').addEventListener('click',()=>{
+  AUD=JSON.parse(JSON.stringify(S.settings.audiences)); fillProfile(); fillVisibility(); baseline(); schedulePreview(); toast('Changes discarded');
+});
+
+// ---------- visibility ----------
+function fillVisibility(){
+  $('mainTog').classList.toggle('on',!S.settings.mainLimited);
+  $('mainTog').onclick=async()=>{
+    const nowLive=$('mainTog').classList.contains('on');
+    if(nowLive && !confirm('Pause your main link? Anyone using it will be locked out right away.')) return;
+    const r=await (await api(AB+'/api/admin/settings',{method:'POST',body:JSON.stringify({mainLimited:nowLive})})).json();
+    S.settings.mainLimited=r.settings.mainLimited; $('mainTog').classList.toggle('on',!S.settings.mainLimited);
+    toast(S.settings.mainLimited?'Main link paused':'Main link live');
+  };
+  $('mainUrl').textContent=location.origin+AB+'/';
+  $('mainCopy').onclick=()=>navigator.clipboard.writeText(location.origin+AB+'/').then(()=>toast('Link copied')).catch(()=>toast('Press and hold the link to copy'));
+  $('mainSend').onclick=()=>sendLink(location.origin+AB+'/','',''); 
+  $('sendMsg').value=S.settings.sendMessage||DEFAULT_MSG; showMsgPrev();
+  const box=$('audiences'); box.innerHTML='';
+  for(const a of Object.keys(AUD)){
+    const sec=document.createElement('div'); sec.style.marginTop='18px';
+    sec.innerHTML='<div class="sec" style="margin:0 0 4px">'+esc(AUD[a].label)+' see</div>';
+    for(const f of Object.keys(S.fields)){
+      const sw=document.createElement('div'); sw.className='switch';
+      sw.innerHTML='<div>'+esc(S.fields[f])+'</div>';
+      const b=document.createElement('button'); b.type='button'; b.className='tog'+(AUD[a].fields[f]?' on':''); b.setAttribute('aria-label',S.fields[f]);
+      b.onclick=()=>{AUD[a].fields[f]=!AUD[a].fields[f]; b.classList.toggle('on',AUD[a].fields[f]);};
+      sw.appendChild(b); sec.appendChild(sw);
+    }
+    box.appendChild(sec);
+  }
+  const sel=$('defAud'); sel.innerHTML='';
+  for(const a of Object.keys(AUD)){const o=document.createElement('option');o.value=a;o.textContent=AUD[a].label;if(S.settings.defaultAudience===a)o.selected=true;sel.appendChild(o);}
+  const nl=$('nl_aud'); nl.innerHTML='';
+  for(const a of Object.keys(S.settings.audiences)){const o=document.createElement('option');o.value=a;o.textContent=S.settings.audiences[a].label;nl.appendChild(o);}
+}
+
+// ---------- live preview ----------
+function pvActive(){ return pvOpen || $('pv').classList.contains('dock'); }
+function pvFields(){
+  if(pvCtx) return pvCtx.fields;
+  if(pvMode==='me'){ const f={}; for(const k of Object.keys(S.fields)) f[k]=true; return f; }
+  return AUD[pvMode].fields;
+}
+function schedulePreview(){ clearTimeout(pvTimer); pvTimer=setTimeout(sendPreview,180); }
+async function sendPreview(){
+  if(!pvActive()||!S.profile) return;
+  const seq=++pvSeq; const prof=pvCtx?S.profile:readProfile();
+  try{
+    const r=await (await api(AB+'/api/admin/preview',{method:'POST',body:JSON.stringify({profile:prof,fields:pvFields()})})).json();
+    if(seq!==pvSeq) return; pvData=r; postPv();
+  }catch(e){}
+}
+function postPv(){ const w=$('pvFrame').contentWindow; if(w&&pvData) w.postMessage({type:'preview',data:pvData},location.origin); }
+window.addEventListener('message',e=>{ if(e.origin===location.origin&&e.data&&e.data.type==='ready') postPv(); });
+$('pvFrame').addEventListener('load',postPv);
+function setPvUI(){
+  document.querySelectorAll('#pvSeg button').forEach(b=>b.classList.toggle('on',b.dataset.m===pvMode));
+  $('pvSeg').hidden=!!pvCtx; $('pvWho').hidden=!pvCtx; if(pvCtx) $('pvWho').textContent='Viewing as '+pvCtx.name;
+  const pv=$('pv'); const dock=!pvOpen && curTab==='admin' && wide();
+  pv.classList.toggle('open',pvOpen); pv.classList.toggle('dock',dock); document.body.classList.toggle('hasdock',dock);
+}
+function openPv(){ pvOpen=true; setPvUI(); schedulePreview(); }
+function closePv(){ pvOpen=false; pvCtx=null; setPvUI(); }
+document.querySelectorAll('#pvSeg button').forEach(b=>b.onclick=()=>{pvMode=b.dataset.m; setPvUI(); schedulePreview();});
+$('pvOpen').onclick=openPv; $('pvOpen2').onclick=openPv; $('pvClose').onclick=closePv;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&pvOpen) closePv(); });
+matchMedia('(min-width:1100px)').addEventListener('change',()=>{setPvUI();schedulePreview();});
+
+// ---------- clients ----------
+const ST={new:{l:'New',c:'st-new'},chat:{l:'Brief chat',c:'st-chat'},quoted:{l:'Quoted',c:'st-quoted'},sold:{l:'Sold',c:'st-sold'}};
+const money=n=>'$'+(Number(n)||0).toLocaleString(undefined,{maximumFractionDigits:0});
+const annual=d=>d.freq==='year'?(+d.premium||0):(+d.premium||0)*12;
+function ago(t){ if(!t) return 'never'; const s=(Date.now()-t)/1000; if(s<60) return 'just now'; if(s<3600) return Math.floor(s/60)+' min ago'; if(s<86400) return Math.floor(s/3600)+' hr ago'; if(s<86400*30) return Math.floor(s/86400)+' d ago'; return new Date(t).toLocaleDateString(); }
+const stOf=l=>ST[l.status]?l.status:'new';
+const people=()=>Object.entries(S.links||{}).map(([tok,l])=>({tok,...l,status:stOf(l),deals:l.deals||[]}));
+function dealLine(d){
+  const bits=[]; if(d.carrier) bits.push(esc(d.carrier)); if(d.face) bits.push(money(d.face)+' coverage');
+  if(d.premium) bits.push(money(d.premium)+(d.freq==='year'?'/yr':'/mo')+(d.freq==='month'?' ('+money(annual(d))+'/yr)':''));
+  bits.push(new Date(d.date).toLocaleDateString());
+  return bits.join(' · ');
+}
+const needsFollow=p=>((p.status==='new'||p.status==='chat') && (p.views||0)>=2 && !(p.deals&&p.deals.length));
+function renderClients(){
+  const all=people();
+  const cnt=k=>all.filter(p=>p.status===k).length;
+  const fu=all.filter(needsFollow).length;
+  const qAP=all.reduce((n,p)=>n+p.deals.filter(d=>d.type==='quoted').reduce((m,d)=>m+annual(d),0),0);
+  const sAP=all.reduce((n,p)=>n+p.deals.filter(d=>d.type==='sold').reduce((m,d)=>m+annual(d),0),0);
+  const tiles=[['all','People tracked',all.length,'opened '+all.reduce((n,p)=>n+(p.views||0),0)+' times'],['follow','Follow up',fu,fu?'opened 2+, no quote yet':'all caught up'],['quoted','Quoted',cnt('quoted'),qAP?money(qAP)+'/yr quoted':''],['sold','Sold',cnt('sold'),sAP?money(sAP)+'/yr annual premium':'']];
+  $('tiles').innerHTML=tiles.map(t=>'<button class="tile '+(CL.filter===t[0]?'on':'')+(t[0]==='follow'&&t[2]?' follow':'')+'" data-f="'+t[0]+'"><b>'+t[2]+'</b><span>'+t[1]+'</span><em>'+esc(t[3])+'</em></button>').join('');
+  $('tiles').querySelectorAll('.tile').forEach(b=>b.onclick=()=>{CL.filter=(CL.filter===b.dataset.f?'all':b.dataset.f); renderClients();});
+  $('clFilter').innerHTML=[['all','All'],['follow','Follow up'],['new','New'],['chat','Brief chat'],['quoted','Quoted'],['sold','Sold']].map(([k,l])=>'<button data-f="'+k+'" class="'+(CL.filter===k?'on':'')+'">'+l+(k==='all'?'':' '+(k==='follow'?fu:cnt(k)))+'</button>').join('');
+  $('clFilter').querySelectorAll('button').forEach(b=>b.onclick=()=>{CL.filter=b.dataset.f; renderClients();});
+  const q=CL.q.trim().toLowerCase();
+  let list=all.filter(p=>CL.filter==='all'?true:CL.filter==='follow'?needsFollow(p):p.status===CL.filter);
+  if(q) list=list.filter(p=>[p.name,p.phone,p.notes,...p.deals.map(d=>d.product+' '+d.carrier+' '+d.note)].join(' ').toLowerCase().includes(q));
+  const lastAct=p=>Math.max(p.lastViewed||0,p.statusAt||0,p.created||0);
+  list.sort((a,b)=>lastAct(b)-lastAct(a));
+  const box=$('clientList');
+  if(!list.length){ box.innerHTML='<div class="empty">'+(all.length?'No one matches this filter.':'No one yet.<br>Tap <b>⚡ Quick link</b> to make a private link, send it, and they\'ll show up here the moment they open it.')+'</div>'; return; }
+  box.innerHTML=list.map(clientHtml).join('');
+}
+function clientHtml(p){
+  const tok=p.tok, open=OPEN.has(tok), paused=p.paused||!p.active;
+  const chips=p.deals.slice(0,3).map(d=>'<span class="sp '+(d.type==='sold'?'st-sold':'st-quoted')+'">'+(d.type==='sold'?'Sold':'Quoted')+(d.product?' · '+esc(d.product):'')+(d.premium?' · '+money(annual(d))+'/yr':'')+'</span>').join('');
+  const meta=p.manual?('Tracked visitor'+(p.fromVisit&&p.fromVisit.place?' · '+esc(p.fromVisit.place):'')):((p.views||0)+' open'+(p.views===1?'':'s')+' · last '+ago(p.lastViewed)+(p.seen&&p.seen.length?'':''));
+  const fu=needsFollow(p);
+  let h='<div class="cl '+(open?'open':'')+(fu?' fu':'')+'" data-tok="'+tok+'"><div class="clh" data-act="toggle"><div class="av">'+esc(initials(p.name))+(fu?'<span class="fudot" title="Opened 2+ times, no quote yet"></span>':'')+'</div><div class="clm"><h3>'+esc(p.name)+(fu?' <span class="sp follow-sp">Follow up</span>':'')+(paused&&!p.manual?' <span class="sp st-new" style="font-size:10px;padding:2px 8px">Paused</span>':'')+'</h3><div class="meta">'+meta+(p.phone?' · '+esc(p.phone):'')+'</div>'+(chips?'<div class="dealchips">'+chips+'</div>':'')+'</div><span class="sp '+ST[p.status].c+'">'+ST[p.status].l+'</span><span class="chev">▾</span></div>';
+  if(open){
+    h+='<div class="cld">';
+    h+='<div class="sec">Status</div><div class="seglist">'+Object.keys(ST).map(k=>'<button class="'+(p.status===k?'on ':'')+ST[k].c+'" data-act="status" data-v="'+k+'">'+ST[k].l+'</button>').join('')+'</div>';
+    h+='<div class="sec">Quotes &amp; sales</div>';
+    h+=p.deals.length?p.deals.map(d=>'<div class="deal"><div><b>'+(d.type==='sold'?'<span style="color:var(--ok)">Sold</span>':'<span style="color:var(--gold2)">Quoted</span>')+' · '+esc(d.product||'Policy')+'</b><div class="dm">'+dealLine(d)+(d.note?'<br>'+esc(d.note):'')+'</div></div><div class="acts">'+(d.type==='quoted'?'<button class="btn sm" data-act="dealsold" data-id="'+d.id+'">Mark sold</button>':'')+'<button class="btn sm danger" data-act="dealdel" data-id="'+d.id+'">Remove</button></div></div>').join(''):'<p class="muted">Nothing logged yet.</p>';
+    const df=DEALFORM[tok];
+    if(df){
+      const prods=(S.profile.products||[]).map(x=>'<option value="'+esc(x.t)+'">').join('');
+      h+='<div class="dealform"><div class="seglist" style="margin-bottom:4px"><button class="'+(df==='quoted'?'on st-quoted':'')+'" data-act="dftype" data-v="quoted">I quoted</button><button class="'+(df==='sold'?'on st-sold':'')+'" data-act="dftype" data-v="sold">I sold</button></div>'+
+      '<div class="grid2"><div><label>Product</label><input id="df_product" list="df_prods" placeholder="e.g. Final Expense"><datalist id="df_prods">'+prods+'</datalist></div><div><label>Carrier</label><input id="df_carrier" placeholder="e.g. Mutual of Omaha"></div>'+
+      '<div><label>Coverage amount ($)</label><input id="df_face" inputmode="decimal" placeholder="e.g. 15000"></div><div><label>Premium ($)</label><div class="row" style="flex-wrap:nowrap"><input id="df_prem" inputmode="decimal" placeholder="e.g. 89.50"><select id="df_freq" style="width:auto"><option value="month">per month</option><option value="year">per year</option></select></div></div>'+
+      '<div><label>Date</label><input id="df_date" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div><label>Note</label><input id="df_note" placeholder="Optional"></div></div>'+
+      '<div class="row" style="margin-top:14px"><button class="btn sm" data-act="dealsave">Save '+(df==='sold'?'sale':'quote')+'</button><button class="btn sm ghost" data-act="dealcancel">Cancel</button></div></div>';
+    } else h+='<div class="acts" style="margin-top:10px"><button class="btn sm" data-act="dealadd" data-v="quoted">+ Log a quote</button><button class="btn sm ghost" data-act="dealadd" data-v="sold">+ Log a sale</button></div>';
+    h+='<div class="sec">Details</div><div class="grid2"><div><label>Name</label><input data-fld="name" value="'+esc(p.name)+'"></div><div><label>Phone</label><input data-fld="phone" inputmode="tel" value="'+esc(p.phone||'')+'"></div></div><label>Notes</label><textarea data-fld="notes" placeholder="What did you talk about?">'+esc(p.notes||'')+'</textarea>';
+    h+='<div class="sec">Link</div>';
+    if(p.manual) h+='<p class="muted">Added from your click log. No private link for this person.</p><div class="acts" style="margin-top:8px"><button class="btn sm danger" data-act="del">Delete</button></div>';
+    else h+='<div class="link-url">'+esc(location.origin+AB+'/?k='+tok)+'</div><p class="muted" style="margin-bottom:8px">'+(p.places||0)+' device/place'+((p.places||0)===1?'':'s')+' · created '+new Date(p.created).toLocaleDateString()+'</p><div class="acts"><button class="btn sm" data-act="send">📤 Send</button><button class="btn sm ghost" data-act="copy">Copy link</button><button class="btn sm ghost" data-act="pv">👁 See what they see</button><button class="btn sm '+(paused?'':'warn')+'" data-act="pause">'+(paused?'Give access':'Pause')+'</button><button class="btn sm danger" data-act="del">Delete</button></div>';
+    h+='</div>';
+  }
+  return h+'</div>';
+}
+async function patchLink(tok,body){
+  const r=await (await api(AB+'/api/admin/links/'+tok,{method:'PATCH',body:JSON.stringify(body)})).json();
+  if(r.links){ S.links=r.links; return true; } toast(r.error||'Could not save'); return false;
+}
+$('clientList').addEventListener('click',async e=>{
+  const el=e.target.closest('[data-act]'); if(!el) return;
+  const card=el.closest('.cl'); const tok=card.dataset.tok; const p=S.links[tok]; const act=el.dataset.act;
+  if(act==='toggle'){ OPEN.has(tok)?OPEN.delete(tok):OPEN.add(tok); renderClients(); return; }
+  if(act==='status'){ if(await patchLink(tok,{status:el.dataset.v})) renderClients(); return; }
+  if(act==='dealadd'){ DEALFORM[tok]=el.dataset.v; renderClients(); return; }
+  if(act==='dftype'){ const keep=['df_product','df_carrier','df_face','df_prem','df_freq','df_date','df_note'].map(i=>[i,$(i).value]); DEALFORM[tok]=el.dataset.v; renderClients(); keep.forEach(([i,v])=>$(i).value=v); return; }
+  if(act==='dealcancel'){ delete DEALFORM[tok]; renderClients(); return; }
+  if(act==='dealsave'){
+    const type=DEALFORM[tok];
+    const d={id:Math.random().toString(16).slice(2,14),type,product:$('df_product').value,carrier:$('df_carrier').value,face:$('df_face').value.replace(/[^\d.]/g,''),premium:$('df_prem').value.replace(/[^\d.]/g,''),freq:$('df_freq').value,note:$('df_note').value,date:new Date($('df_date').value+'T12:00:00').getTime()||Date.now()};
+    if(!d.product.trim()&&!d.premium&&!d.face) return toast('Add at least a product or an amount');
+    const st=stOf(p); const status=type==='sold'?'sold':(st==='new'||st==='chat'?'quoted':st);
+    if(await patchLink(tok,{deals:[...(p.deals||[]),d],status})){ delete DEALFORM[tok]; renderClients(); toast(type==='sold'?'Sale logged':'Quote logged'); }
+    return;
+  }
+  if(act==='dealsold'){ const deals=(p.deals||[]).map(d=>d.id===el.dataset.id?{...d,type:'sold',date:Date.now()}:d); if(await patchLink(tok,{deals,status:'sold'})){ renderClients(); toast('Marked as sold'); } return; }
+  if(act==='dealdel'){ if(!confirm('Remove this entry?')) return; if(await patchLink(tok,{deals:(p.deals||[]).filter(d=>d.id!==el.dataset.id)})) renderClients(); return; }
+  if(act==='send'){ sendLink(location.origin+AB+'/?k='+tok,p.name,p.phone); return; }
+  if(act==='copy'){ navigator.clipboard.writeText(location.origin+AB+'/?k='+tok).then(()=>toast('Link copied')).catch(()=>toast('Press and hold the link to copy')); return; }
+  if(act==='pause'){ const paused=p.paused||!p.active; if(await patchLink(tok,{paused:!paused,active:true})){ renderClients(); toast(paused?'Access given back':'Paused'); } return; }
+  if(act==='del'){ if(!confirm('Delete '+p.name+'? This removes their link and everything logged for them.')) return; const r=await (await api(AB+'/api/admin/links/'+tok,{method:'DELETE'})).json(); if(r.links){ S.links=r.links; OPEN.delete(tok); renderClients(); loadActivity(); toast('Deleted'); } return; }
+  if(act==='pv'){
+    const fields=p.audience==='custom'?(p.fields||{}):(S.settings.audiences[p.audience]||S.settings.audiences.prospect).fields;
+    pvCtx={name:p.name,fields}; openPv(); return;
+  }
+});
+$('clientList').addEventListener('focusout',async e=>{
+  const f=e.target.dataset&&e.target.dataset.fld; if(!f) return;
+  const tok=e.target.closest('.cl').dataset.tok; const v=e.target.value;
+  if((S.links[tok][f]||'')===v) return;
+  if(f==='name'&&!v.trim()){ e.target.value=S.links[tok].name; return; }
+  if(await patchLink(tok,{[f]:v})){ if(f==='name') e.target.closest('.cl').querySelector('h3').firstChild.textContent=v; toast('Saved'); }
+});
+$('clSearch').addEventListener('input',e=>{CL.q=e.target.value; renderClients();});
+$('clSub').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  CL.view=b.dataset.v; $('clSub').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  $('viewPipeline').hidden=CL.view!=='pipeline'; $('viewActivity').hidden=CL.view!=='activity'; if(CL.view==='activity') loadActivity();
+});
+
+// ---------- the message sent with links ----------
+const DEFAULT_MSG="Hi {first}, it's {me}. Here's my digital card. You can verify my license and reach me anytime: {link}";
+function buildMsg(tpl,url,name){
+  tpl=(tpl||DEFAULT_MSG);
+  const generic=/^(new contact|visitor|quick)/i.test(name||'');
+  const full=generic?'':(name||'').trim(); const first=full.split(/\s+/)[0]||'';
+  const me=((S.profile&&S.profile.name)||'').trim().split(/\s+/)[0]||'';
+  let m=tpl.replace(/[ \t]*\{first\}/g,first?' '+first:'').replace(/\{name\}/g,full).replace(/\{me\}/g,me).replace(/\{link\}/g,url);
+  if(!tpl.includes('{link}')) m+='\n'+url;
+  return m.trim();
+}
+function showMsgPrev(){ $('sendMsgPrev').textContent='Example: '+buildMsg($('sendMsg').value,location.origin+AB+'/?k=abc123','Mathew Smith'); }
+$('sendMsg').addEventListener('input',showMsgPrev);
+$('sendMsgReset').addEventListener('click',()=>{ $('sendMsg').value=DEFAULT_MSG; showMsgPrev(); onDraft(); });
+let SM={phone:''};
+function sendLink(url,name,phone){
+  // Send the bare link only — no message text — so the card preview unfurls and the tap opens the full card.
+  if(navigator.share){ navigator.share({url}).catch(()=>{}); return; }
+  const digits=(phone||'').replace(/[^\d+]/g,'');
+  if(digits && /Android|iPhone|iPad/i.test(navigator.userAgent)){ location.href='sms:'+digits+'?&body='+encodeURIComponent(url); return; }
+  navigator.clipboard.writeText(url).then(()=>toast('Link copied — paste it to send')).catch(()=>toast('Press and hold the link to copy'));
+}
+const closeSm=()=>$('sendModal').hidden=true;
+$('sm_cancel').onclick=closeSm; $('sendModal').addEventListener('click',e=>{ if(e.target.id==='sendModal') closeSm(); });
+$('sm_copy').onclick=()=>navigator.clipboard.writeText($('sm_text').value).then(()=>{toast('Message copied'); closeSm();}).catch(()=>toast('Press and hold the text to copy'));
+$('sm_send').onclick=()=>{
+  const msg=$('sm_text').value.trim(); if(!msg) return toast('Type a message first');
+  if(navigator.share){ navigator.share({text:msg}).then(closeSm).catch(()=>{}); return; }
+  const digits=SM.phone.replace(/[^\d+]/g,'');
+  if(digits && /Android|iPhone|iPad/i.test(navigator.userAgent)){ location.href='sms:'+digits+'?&body='+encodeURIComponent(msg); closeSm(); return; }
+  navigator.clipboard.writeText(msg).then(()=>{toast('Message copied. Paste it to send'); closeSm();}).catch(()=>toast('Could not copy'));
+};
+// create people / links
+$('newLinkToggle').addEventListener('click',()=>{$('newLinkForm').hidden=!$('newLinkForm').hidden; if(!$('newLinkForm').hidden) $('nl_name').focus();});
+$('nl_cancel').addEventListener('click',()=>$('newLinkForm').hidden=true);
+async function makeLink(body){
+  const r=await (await api(AB+'/api/admin/links',{method:'POST',body:JSON.stringify(body)})).json();
+  if(r.error){ toast(r.error); return null; }
+  S.links=r.links; return r.token;
+}
+$('quickLink').addEventListener('click',async()=>{
+  const name='New contact · '+new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+new Date().toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+  const tok=await makeLink({name,audience:S.settings.defaultAudience}); if(!tok) return;
+  OPEN.add(tok); CL.filter='all'; renderClients();
+  navigator.clipboard.writeText(location.origin+AB+'/?k='+tok).then(()=>toast('Link copied. Paste it to send, rename them later')).catch(()=>toast('Link created'));
+});
+$('nl_create').addEventListener('click',async()=>{
+  const name=$('nl_name').value.trim(); if(!name) return toast("Enter who it's for");
+  const tok=await makeLink({name,phone:$('nl_phone').value,audience:$('nl_aud').value}); if(!tok) return;
+  $('nl_name').value=''; $('nl_phone').value=''; $('newLinkForm').hidden=true; CL.filter='all'; renderClients();
+  navigator.clipboard.writeText(location.origin+AB+'/?k='+tok).then(()=>toast('Link copied. Paste it to send')).catch(()=>toast('Link created'));
+});
+
+// ---------- inbound quote + appointment requests ----------
+let _reqN=0,_qN=0;
+function renderBadge(){ const n=_reqN+_qN; $('reqBadge').hidden=!n; $('reqBadge').textContent=n; }
+async function pollQuotes(){
+  try{
+    if(!document.hidden){
+      const r=await (await api(AB+'/api/admin/quotes')).json();
+      const pend=(r.quotes||[]).filter(x=>x.status!=='done');
+      _qN=pend.length; renderBadge();
+      $('quoteCard').hidden=!pend.length;
+      const box=$('quoteList'); box.innerHTML='';
+      for(const q of pend){
+        const appt=q.kind==='appointment';
+        const digits=(q.phone||'').replace(/[^\d+]/g,''); const hasPhone=digits.length>=7;
+        const rows=[];
+        if(appt){ const when=[q.when,q.slot].filter(Boolean).join(' · '); if(when) rows.push(['When',when]); if(q.method) rows.push(['How',q.method]); }
+        else { if(q.coverage) rows.push(['Coverage',q.coverage]); if(q.budget) rows.push(['Budget',q.budget]); }
+        if(q.phone) rows.push(['Phone',q.phone]); if(q.email) rows.push(['Email',q.email]);
+        const aging=(Date.now()-q.t)>864e5;
+        const d=document.createElement('div');d.className='quote-item'+(aging?' aging':'');
+        d.innerHTML='<div class="row" style="justify-content:space-between"><div class="qp">'+(appt?'📅 Appointment':('Quote · '+esc(q.product||'General')))+(aging?' <span class="sp follow-sp">⏰ waiting 1d+</span>':'')+'</div>'+
+          '<span class="sp '+(appt?'st-chat':'st-quoted')+'">'+(appt?'Booking':'Quote')+'</span></div>'+
+          '<b>'+esc(q.name||'Someone')+'</b><br>'+
+          '<span class="muted" style="font-size:12.5px">'+esc(q.linkName||'Main link')+' · '+esc(q.place||'')+' · '+new Date(q.t).toLocaleString()+'</span>'+
+          rows.map(r=>'<div style="font-size:13.5px;margin-top:4px"><span class="muted">'+r[0]+':</span> <b>'+esc(r[1])+'</b></div>').join('')+
+          (q.note?'<div class="muted" style="margin-top:6px">“'+esc(q.note)+'”</div>':'')+
+          '<div class="acts" style="margin-top:12px">'+
+            (hasPhone?'<a class="btn sm" href="sms:'+esc(digits)+'">Text</a><a class="btn sm ghost" href="tel:'+esc(digits)+'">Call</a>':'')+
+            (q.email?'<a class="btn sm ghost" href="mailto:'+esc(q.email)+'">Email</a>':'')+
+            '<button class="btn sm ghost" data-qadd="'+q.id+'">+ Add to clients</button>'+
+            '<button class="btn sm ghost" data-qdone="'+q.id+'">Mark done</button>'+
+          '</div>';
+        box.appendChild(d);
+      }
+      box.querySelectorAll('[data-qdone]').forEach(b=>b.onclick=async()=>{ await api(AB+'/api/admin/quotes/resolve',{method:'POST',body:JSON.stringify({id:b.dataset.qdone})}); toast('Marked done'); pollQuotes(); });
+      box.querySelectorAll('[data-qadd]').forEach(b=>b.onclick=()=>addQuoteToClients(r.quotes.find(x=>x.id===b.dataset.qadd)));
+    }
+  }catch(e){}
+  clearTimeout(pollQuotes._t); pollQuotes._t=setTimeout(pollQuotes,6000);
+}
+async function addQuoteToClients(q){
+  if(!q) return;
+  const nm=(q.name||'').trim()||'New request';
+  const tok=await makeLink({name:nm,phone:q.phone||'',audience:S.settings.defaultAudience,manual:true});
+  if(!tok) return;
+  if(q.kind!=='appointment' && (q.coverage||q.budget||q.product)){
+    const face=String(q.coverage||'').replace(/[^\d.]/g,''); const prem=String(q.budget||'').replace(/[^\d.]/g,'');
+    const deal={id:Math.random().toString(16).slice(2,14),type:'quoted',product:q.product||'',carrier:'',face,premium:prem,freq:'month',note:(q.note||'')+(q.email?(q.note?' · ':'')+q.email:''),date:Date.now()};
+    await patchLink(tok,{deals:[deal],status:'quoted'});
+  } else {
+    const note=[q.when&&('Wants '+q.when+(q.slot?' '+q.slot:'')),q.method,q.email,q.note].filter(Boolean).join(' · ');
+    await patchLink(tok,{status:'chat',notes:note});
+  }
+  await api(AB+'/api/admin/quotes/resolve',{method:'POST',body:JSON.stringify({id:q.id})});
+  OPEN.add(tok); curTab='clients'; applyTab(); renderClients(); pollQuotes();
+  toast('Added to your clients');
+}
+
+// ---------- requests ----------
+async function pollRequests(){
+  try{
+    if(!document.hidden){
+      const r=await (await api(AB+'/api/admin/requests')).json();
+      const pend=(r.requests||[]).filter(x=>x.status==='pending');
+      _reqN=pend.length; renderBadge();
+      $('reqCard').hidden=!pend.length;
+      const box=$('reqList'); box.innerHTML='';
+      for(const q of pend){
+        const d=document.createElement('div');d.className='req-item card';
+        d.innerHTML='<b>'+esc(q.name||'Someone')+'</b> wants back in<br><span class="muted">'+esc(q.linkName||'Main link')+' · '+esc(q.place||'')+' · '+esc(q.device||'')+' · '+new Date(q.t).toLocaleString()+'</span><div class="row" style="margin-top:10px"><button class="btn sm" data-ap="'+q.id+'">Approve</button><button class="btn sm danger" data-dn="'+q.id+'">Deny</button></div>';
+        box.appendChild(d);
+      }
+      box.querySelectorAll('[data-ap]').forEach(b=>b.onclick=()=>resolveReq(b.dataset.ap,'approve'));
+      box.querySelectorAll('[data-dn]').forEach(b=>b.onclick=()=>resolveReq(b.dataset.dn,'deny'));
+    }
+  }catch(e){}
+  clearTimeout(pollRequests._t); pollRequests._t=setTimeout(pollRequests,6000);
+}
+async function resolveReq(id,action){
+  const r=await (await api(AB+'/api/admin/requests/resolve',{method:'POST',body:JSON.stringify({id,action})})).json();
+  if(r.links){S.links=r.links;renderClients();}
+  toast(action==='approve'?"Approved. They're back in":'Denied'); pollRequests();
+}
+
+// ---------- activity ----------
+async function loadActivity(){
+  const r=await (await api(AB+'/api/admin/activity')).json();
+  VISITS=r.visits||[];
+  const tracked=new Set(Object.values(S.links||{}).filter(l=>l.fromVisit).map(l=>l.fromVisit.sig));
+  $('visitLog').innerHTML=VISITS.slice(0,80).map((v,i)=>{
+    const sig=(v.ip||'')+'|'+(v.device||'');
+    const btn=(!v.link&&v.view!=='blocked')?(tracked.has(sig)?'<span class="sp st-sold" style="font-size:10.5px">Tracked</span>':'<button class="btn sm ghost" data-track="'+i+'">Track</button>'):'';
+    return '<div class="visit"><div><b>'+esc(v.linkName||'Main link')+'</b> · '+esc(v.place||'')+' · '+esc(v.device||'')+'<div class="muted">'+new Date(v.t).toLocaleString()+(v.flag?' · <span style="color:var(--gold2)">'+esc(v.flag)+'</span>':'')+'</div></div>'+btn+'</div>';
+  }).join('')||'<p class="muted">No clicks yet.</p>';
+  $('visitLog').querySelectorAll('[data-track]').forEach(b=>b.onclick=async()=>{
+    const v=VISITS[+b.dataset.track];
+    const def='Visitor · '+(v.place&&v.place!=='Unknown location'?v.place+' · ':'')+new Date(v.t).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    const name=prompt('Who is this? (you can rename later)',def); if(name===null) return;
+    const tok=await makeLink({name:name.trim()||def,manual:true,audience:S.settings.defaultAudience,fromVisit:{sig:(v.ip||'')+'|'+(v.device||''),place:v.place,device:v.device,t:v.t}});
+    if(tok){ OPEN.add(tok); renderClients(); loadActivity(); toast('Added to your pipeline'); }
+  });
+  $('secLog').innerHTML=(r.security||[]).slice(0,60).map(s=>'<div class="log"><b>'+esc(s.event||'')+'</b><br>'+esc(s.place||'')+' · '+esc(s.ip||'')+' · '+new Date(s.t).toLocaleString()+'</div>').join('')||'<p class="muted">Nothing yet.</p>';
+}
+$('clearVisits').addEventListener('click',async()=>{if(!confirm('Clear the click log?'))return;await api(AB+'/api/admin/activity/clear',{method:'POST'});loadActivity();toast('Cleared');});
+
+// ---------- account ----------
+$('pc_go').addEventListener('click',async()=>{
+  $('pc_err').textContent='';
+  const r=await (await api(AB+'/api/admin/passcode',{method:'POST',body:JSON.stringify({current:$('pc_cur').value,next:$('pc_new').value})})).json();
+  if(r.error){$('pc_err').textContent=r.error;return;}
+  $('pc_cur').value='';$('pc_new').value='';toast('Passcode updated');
+});
+$('signout').addEventListener('click',async()=>{await api(AB+'/api/auth/logout',{method:'POST'});showGate('login');});
+$('signoutAll').addEventListener('click',async()=>{if(!confirm('Sign out everywhere?'))return;await api(AB+'/api/admin/signout-all',{method:'POST'});await api(AB+'/api/auth/logout',{method:'POST'});showGate('login');});
+window.addEventListener('beforeunload',e=>{ if(!$('app').hidden && isDirty()){ e.preventDefault(); e.returnValue=''; } });
+
+boot();
+</script>
+</body>
+</html>
