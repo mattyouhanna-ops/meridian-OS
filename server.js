@@ -18,7 +18,7 @@ import {
   listAgents, getAgent, getAgentBySlug, createAgent, updateAgent, deleteAgent, agentSummary, agencyOf,
 } from "./lib/model.js";
 import { cardPNG } from "./lib/og.js";
-import { alertNewLead, sendEmail } from "./lib/notify.js";
+import { alertNewLead, sendEmail, welcomeEmailHTML } from "./lib/notify.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUB = path.join(HERE, "public");
@@ -56,12 +56,14 @@ async function emailAgentWelcome(agent, tempPass, req) {
   const text = `Hey ${firstName(agent.profile.name)} — your digital business card is ready.\n\n` +
     `1) Open ${card}/admin\n2) Sign in with: ${agent.profile.email} / ${tempPass}\n3) Set your own password, confirm your info, and you're live.\n\n` +
     `Your card to text out: ${card}\nTip: open it on your phone, Share → Add to Home Screen for the icon.\n\nPowered by ${platformBrand()}`;
-  return await sendEmail(agent.profile.email, subject, text);
+  const html = welcomeEmailHTML({ name: agent.profile.name, signinUrl: `${card}/admin`, loginEmail: agent.profile.email, password: tempPass, cardUrl: card, origin: originOf(req) });
+  return await sendEmail(agent.profile.email, subject, text, html);
 }
 async function emailOwnerWelcome(agency, email, pass, req) {
   const subject = `You're set up on ${platformBrand()} — ${agency.name}`;
   const text = `Your agency dashboard is ready.\n\n1) Open ${originOf(req)}/owner\n2) Sign in with: ${email} / ${pass}\n3) Change your password and add your agents.\n\nPowered by ${platformBrand()}`;
-  return await sendEmail(email, subject, text);
+  const html = welcomeEmailHTML({ name: agency.name, signinUrl: `${originOf(req)}/owner`, loginEmail: email, password: pass, cardUrl: null, origin: originOf(req) });
+  return await sendEmail(email, subject, text, html);
 }
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json", ".json": "application/json" };
 function serveStatic(res, file, cache = "public, max-age=3600") {
