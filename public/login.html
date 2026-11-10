@@ -63,16 +63,21 @@ input:focus{border-color:#d4af37}
 const $=id=>document.getElementById(id);
 async function route(url){ location.replace(url); }
 
+function showForm(){ $('load').hidden=true; $('card').hidden=false; try{$('email').focus();}catch(e){} }
 // On open: if already signed in, go straight to the right dashboard.
+// Hard 2.5s cap so a cold server can never leave the page stuck on the spinner.
 (async()=>{
+  const ctrl=new AbortController();
+  const to=setTimeout(()=>ctrl.abort(),2500);
   try{
-    const r=await fetch('/api/whoami',{credentials:'same-origin'});
-    const j=await r.json();
+    const r=await fetch('/api/whoami',{credentials:'same-origin',signal:ctrl.signal});
+    const j=await r.json(); clearTimeout(to);
     if(j && j.role && j.url){ return route(j.url); }
-  }catch(e){}
-  $('load').hidden=true; $('card').hidden=false;
-  $('email').focus();
+  }catch(e){ clearTimeout(to); }
+  showForm();
 })();
+// Absolute fallback: whatever happens, show the form within 3s.
+setTimeout(showForm,3000);
 
 $('card').addEventListener('submit',async(e)=>{
   e.preventDefault();

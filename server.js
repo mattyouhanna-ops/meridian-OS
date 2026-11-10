@@ -343,7 +343,7 @@ async function handleAdmin(agent, sub, method, body, req) {
     if (!checkPass(String(body.current || ""), agent.passHash)) return { status: 401, data: { error: "Current passcode is incorrect." } };
     const next = String(body.next || "");
     if (next.length < 6) return { status: 400, data: { error: "New passcode must be at least 6 characters." } };
-    agent.passHash = hashPass(next); agent.mustChange = false; agent.sessionsValidAfter = Date.now();
+    agent.passHash = hashPass(next); agent.mustChange = false; agent.sessionsValidAfter = Date.now(); agent.issuedPass = null;
     appendLog(agent.security, { t: Date.now(), ...w, event: "Passcode changed" }, 300); save();
     return { status: 200, data: { ok: true } };
   }
@@ -352,7 +352,7 @@ async function handleAdmin(agent, sub, method, body, req) {
     if (!agent.mustChange) return { status: 409, data: { error: "Password already set." } };
     const next = String(body.next || "");
     if (next.length < 6) return { status: 400, data: { error: "Password must be at least 6 characters." } };
-    agent.passHash = hashPass(next); agent.mustChange = false;
+    agent.passHash = hashPass(next); agent.mustChange = false; agent.issuedPass = null;
     appendLog(agent.security, { t: Date.now(), ...w, event: "Set password (onboarding)" }, 300); save();
     return { status: 200, data: { ok: true } };
   }
