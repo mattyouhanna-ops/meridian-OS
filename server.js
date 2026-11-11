@@ -25,7 +25,7 @@ import {
   listAccountRequests, addAccountRequest, setAccountRequestStatus,
 } from "./lib/model.js";
 import { cardPNG } from "./lib/og.js";
-import { alertNewLead, sendEmail, welcomeEmailHTML } from "./lib/notify.js";
+import { alertNewLead, sendEmail, welcomeEmailHTML, emailStatus, sendTestEmail } from "./lib/notify.js";
 import { vapidPublicKey, addSubscription, pushToAgent } from "./lib/push.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -523,6 +523,14 @@ async function handleDev(sub, method, body, req) {
   if (sub === "alerts" && method === "POST") { const d = setDevAlerts(body.alertEmails, body.alertSms); return { status: 200, data: { ok: true, alertEmails: d.alertEmails, alertSms: d.alertSms } }; }
   if (sub === "freeze" && method === "POST") { const on = setPlatformFrozen(!!body.on); return { status: 200, data: { ok: true, frozen: on } }; }
   if (sub === "compliance" && method === "POST") { const c = setDevCompliance(body.text); return { status: 200, data: { ok: true, compliance: c } }; }
+  if (sub === "test-alert" && method === "POST") {
+    const st = emailStatus();
+    const to = String(body.to || "").trim() || dev.email || process.env.OWNER_ALERT_EMAIL || null;
+    const emailed = to ? await sendTestEmail(to) : false;
+    const smsTo = process.env.OWNER_ALERT_SMS || null;
+    const smsSent = (smsTo && smsTo.includes("@")) ? await sendEmail(smsTo, "Meridian: test", "Test alert — your text alerts are working.") : false;
+    return { status: 200, data: { ok: true, status: st, to, emailed, smsTo, smsSent } };
+  }
   // Per-agency + per-agent analytics for the Metrics tab
   if (sub === "metrics" && method === "GET") {
     const agencies = listAgencies().map((ag) => {

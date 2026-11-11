@@ -198,6 +198,13 @@ textarea{min-height:120px;resize:vertical}
         <p class="muted" style="font-size:12px;margin-top:8px">Per-agency wording: expand an agency and use its <b>📋 Compliance</b> button.</p>
       </div>
       <div class="card">
+        <h2>📬 Alert health — test it</h2>
+        <p class="muted">Not getting emails/texts? Send yourself a test and see exactly what's working.</p>
+        <label>Send the test to (defaults to your developer email)</label><input id="ta_to" type="email" placeholder="you@email.com">
+        <button class="btn gold" id="ta_go" style="margin-top:10px">Send me a test alert</button>
+        <div id="ta_out" class="hide" style="margin-top:12px"></div>
+      </div>
+      <div class="card">
         <h2>Copy me on every lead</h2>
         <p class="muted">Get CC'd on every quote &amp; appointment across all agencies — on top of the agent who owns the card.</p>
         <label>Your emails (one per line)</label><textarea id="cc_emails" rows="3" placeholder="mattyouhanna@gmail.com"></textarea>
@@ -653,6 +660,20 @@ $('cc_go').onclick=async()=>{ $('cc_err').textContent='';
   const sms=$('cc_sms').value.split('\n').map(s=>s.trim()).filter(Boolean);
   const r=await(await api('/api/dev/alerts',{method:'POST',body:JSON.stringify({alertEmails:emails,alertSms:sms})})).json();
   if(r.ok){ $('cc_emails').value=(r.alertEmails||[]).join('\n'); $('cc_sms').value=(r.alertSms||[]).join('\n'); toast('Saved'); } else $('cc_err').textContent=r.error||'Could not save.';
+};
+$('ta_go').onclick=async()=>{
+  $('ta_go').disabled=true; $('ta_go').textContent='Sending…';
+  const r=await(await api('/api/dev/test-alert',{method:'POST',body:JSON.stringify({to:$('ta_to').value.trim()||undefined})})).json();
+  $('ta_go').disabled=false; $('ta_go').textContent='Send me a test alert';
+  const s=r.status||{}; const out=$('ta_out'); out.classList.remove('hide');
+  const channel = s.smtp?('Gmail SMTP ('+(s.gmailUser||'?')+')'):(s.brevo?'Brevo':(s.resend?'Resend':'NONE — no email provider configured'));
+  let h='<div class="banner" style="'+(r.emailed?'':'border-color:#7a2d2d')+'">'+(r.emailed?'✅ Test email sent to <b>'+esc(r.to||'')+'</b> — check your inbox (and spam).':'❌ Email did NOT send.')+'</div>';
+  h+='<div class="credline">Email channel: <b>'+esc(channel)+'</b></div>';
+  h+='<div class="credline">Copy-me email (OWNER_ALERT_EMAIL): <b>'+(s.ownerEmail?esc(s.ownerEmail):'not set')+'</b></div>';
+  h+='<div class="credline">Copy-me text (OWNER_ALERT_SMS): <b>'+(s.ownerSms?esc(s.ownerSms)+(r.smsSent?' · ✅ sent':' · attempted'):'not set')+'</b></div>';
+  if(!s.smtp && !s.brevo && !s.resend) h+='<div class="banner" style="border-color:#7a2d2d;margin-top:8px">No email provider is configured on Railway. Set <b>GMAIL_USER</b> and <b>GMAIL_APP_PASSWORD</b> (a Google App Password) and redeploy.</div>';
+  else if(!r.emailed) h+='<div class="banner" style="border-color:#7a2d2d;margin-top:8px">Provider is set but sending failed — the Gmail App Password may be wrong/revoked. Generate a new one and update GMAIL_APP_PASSWORD on Railway.</div>';
+  out.innerHTML=h;
 };
 $('comp_go').onclick=async()=>{ $('comp_err').textContent='';
   const r=await(await api('/api/dev/compliance',{method:'POST',body:JSON.stringify({text:$('dev_compliance').value})})).json();
