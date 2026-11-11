@@ -159,6 +159,7 @@ async function handleCard(agent, url, req) {
   if (fields.states) out.states = statesFor(P.states, P.npn, P.name);
   if (fields.promise) out.promises = P.promises;
   if (fields.products) out.products = P.products;
+  if (P.socials && P.socials.length) out.socials = P.socials;
   return out;
 }
 
@@ -767,6 +768,12 @@ const server = http.createServer(async (req, res) => {
       if (rest === "/api/card") return sendJSON(res, 200, await handleCard(agent, url, req));
       if (rest === "/api/quote" && method === "POST") { if (!sameOrigin(req)) return sendJSON(res, 403, { error: "Not allowed" }); return sendJSON(res, 200, await handleQuote(agent, await readBody(req), req)); }
       if (rest === "/api/request-access" && method === "POST") { if (!sameOrigin(req)) return sendJSON(res, 403, { error: "Not allowed" }); return sendJSON(res, 200, await handleRequestAccess(agent, await readBody(req), req)); }
+      if (rest === "/api/click" && method === "POST") {
+        if (!sameOrigin(req)) return sendJSON(res, 403, { error: "Not allowed" });
+        const b = await readBody(req); const t = String(b.type || "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 24);
+        if (t) { agent.clicks = agent.clicks || {}; agent.clicks[t] = (agent.clicks[t] || 0) + 1; agent.clickTotal = (agent.clickTotal || 0) + 1; save(); }
+        return sendJSON(res, 200, { ok: true });
+      }
       if (rest === "/api/request-reinstate" && method === "POST") {
         if (!sameOrigin(req)) return sendJSON(res, 403, { error: "Not allowed" });
         if (!agent.denied) return sendJSON(res, 200, { ok: true }); // nothing to do

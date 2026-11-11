@@ -140,6 +140,10 @@
   .qrbox.empty{display:none}
   .qrcap{font-size:12px;color:var(--muted);letter-spacing:.3px}
   .hero-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:16px}
+  .socials{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+  .socials .soc{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;border:1px solid var(--gold-dim);background:#151206;color:var(--gold2);text-decoration:none;font-size:13px;font-weight:600;transition:border-color .15s,transform .1s}
+  .socials .soc:hover{border-color:var(--gold)}
+  .socials .soc:active{transform:scale(.97)}
   .hbtn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 10px;border-radius:12px;font:700 14px Inter,sans-serif;cursor:pointer;border:1px solid var(--gold-dim);background:transparent;color:var(--gold2);transition:transform .12s,border-color .15s}
   .hbtn.pri{background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--black);border:none}
   .hbtn svg{width:17px;height:17px}
@@ -250,6 +254,7 @@
       <button class="hbtn" id="shareCard" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v14"/></svg>Share</button>
       <button class="hbtn pri" id="saveContact" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Save contact</button>
     </div>
+    <div class="socials" id="socials" data-f="contact" hidden></div>
     <div class="loading" id="loading">Loading…</div>
     <div id="skelHero">
       <div class="sk" style="width:104px;height:104px;border-radius:50%;margin:0 auto 16px"></div>
@@ -414,6 +419,13 @@
   function getK(){ const m=location.pathname.match(/^\/c\/([A-Za-z0-9_-]{16,64})$/); return m ? m[1] : new URLSearchParams(location.search).get('k'); }
   function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),1600); }
   function initials(name){ const p=(name||'').trim().split(/\s+/); return ((p[0]||'')[0]||'')+((p.length>1?p[p.length-1][0]:'')||''); }
+  const SOCIAL_LABEL={facebook:'Facebook',instagram:'Instagram',linkedin:'LinkedIn',youtube:'YouTube',tiktok:'TikTok',x:'X',twitter:'X',google:'Google Reviews',reviews:'Reviews',yelp:'Yelp',website:'Website',web:'Website',booking:'Book a call',calendly:'Book a call',whatsapp:'WhatsApp'};
+  function renderSocials(list){ const sc=$('socials'); if(!sc) return; sc.innerHTML='';
+    if(!list||!list.length){ sc.hidden=true; return; }
+    list.forEach(s=>{ const a=document.createElement('a'); a.className='soc'; a.href=s.url; a.target='_blank'; a.rel='noopener noreferrer'; a.dataset.soc=s.type; a.textContent=SOCIAL_LABEL[s.type]||s.type; sc.appendChild(a); });
+    sc.hidden=false;
+  }
+  (function(){ const sc=document.getElementById('socials'); if(sc) sc.addEventListener('click',e=>{ const a=e.target.closest('.soc'); if(!a) return; try{ fetch((window.AB||'')+'/api/click',{method:'POST',keepalive:true,headers:{'content-type':'application/json'},body:JSON.stringify({type:a.dataset.soc})}); }catch(_){} }); })();
   async function copy(text, btn){
     try{ await navigator.clipboard.writeText(text); toast('Copied'); if(btn){btn.textContent='Copied ✓';btn.classList.add('done');setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('done')},1800);} }
     catch(e){ toast('Press and hold to copy: ' + text); }
@@ -531,6 +543,7 @@
     $('titleText').textContent=res.title||'';
     if(res.photo){ $('mono').innerHTML='<img src="'+res.photo+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'; }
     else { $('mono').textContent=initials(res.name)||'✦'; }
+    renderSocials(res.socials);
     document.title=(res.name||'Agent')+' · '+(res.title||'Licensed Insurance Agent');
     document.querySelectorAll('.v-name').forEach(e=>e.textContent=res.name||'');
     $('footName').textContent=(res.name||'')+(res.brand?' · '+res.brand:'');
