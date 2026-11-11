@@ -662,7 +662,8 @@ function renderCardPage(agent, req) {
   const base = `${proto}://${host}/a/${agent.slug}`;
   const title = `${P.name || P.brand} · ${P.title}`;
   const desc = `${P.name}${P.brand ? ", " + P.brand : ""}. Tap to verify my license, then call, text, or email.`;
-  const img = `${base}/card.png?v=${agent.cardVer || 1}`;
+  const linkK = (() => { try { return new URL(req.url, "http://h").searchParams.get("k"); } catch { return null; } })();
+  const img = `${base}/card.png?v=${agent.cardVer || 1}${linkK && /^[A-Za-z0-9_-]{16,64}$/.test(linkK) ? "&k=" + encodeURIComponent(linkK) : ""}`;
   const tags = {
     "%%AB%%": `/a/${agent.slug}`,
     "%%TITLE%%": esc(title),
@@ -683,17 +684,28 @@ function renderAdminPage(agent) {
   return html.replaceAll("%%AB%%", `/a/${agent.slug}`).replaceAll("%%AGENTNAME%%", esc(agent.profile.name || "Agent"));
 }
 
+// Which fields the preview image should show, based on the link (?k=) it belongs to.
+// Main/new link -> default audience (new prospects, NPN hidden); a client link -> client audience (NPN shown).
+function previewFields(agent, k) {
+  const settings = normalizeSettings(agent.settings);
+  if (k && /^[A-Za-z0-9_-]{16,64}$/.test(k) && agent.links && agent.links[k] && agent.links[k].active) {
+    const link = agent.links[k];
+    if (link.paused || link.audience === "limited") return settings.audiences.prospect?.fields || {};
+    return (link.audience === "custom" ? link.fields : settings.audiences[link.audience]?.fields) || {};
+  }
+  return settings.audiences[settings.defaultAudience]?.fields || settings.audiences.prospect?.fields || {};
+}
+
 // per-agent preview image cache (busts when agent.cardVer changes)
 const ogCache = new Map();
-async function serveCardImage(agent, res) {
-  const settings = normalizeSettings(agent.settings);
-  // The preview image gets forwarded unpredictably, so it always uses the new-prospect view (never leaks NPN etc.).
-  const fields = settings.audiences.prospect?.fields || settings.audiences[settings.defaultAudience]?.fields || {};
+async function serveCardImage(agent, res, req) {
+  const k = (() => { try { return new URL(req.url, "http://h").searchParams.get("k"); } catch { return null; } })();
+  const fields = previewFields(agent, k);
   const key = agent.id + ":" + agent.cardVer + ":" + (fields.npn ? 1 : 0) + (fields.phone ? 1 : 0) + (fields.email ? 1 : 0);
   let buf = ogCache.get(key);
   if (!buf) {
     const prof = normalizeProfile(agent.profile);
-    // Only show what the prospect audience allows.
+    // Only show what this link's audience allows.
     if (!fields.npn) prof.npn = "";
     if (!fields.phone) prof.phone = "";
     if (!fields.email) prof.email = "";
@@ -818,7 +830,7 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (rest === "" || rest === "/") return res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" }).end(renderCardPage(agent, req));
-      if (rest === "/card.png") return serveCardImage(agent, res);
+      if (rest === "/card.png") return serveCardImage(agent, res, req);
       if (rest === "/photo.jpg") {
         if (!agent.photoVer) { res.writeHead(404).end(); return; }
         try { const buf = fs.readFileSync(path.join(PHOTOS, agent.id + ".jpg")); return res.writeHead(200, { "content-type": "image/jpeg", "cache-control": "public, max-age=31536000" }).end(buf); }
