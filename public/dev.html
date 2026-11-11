@@ -101,6 +101,7 @@ textarea{min-height:120px;resize:vertical}
     <div id="pwBanner" class="banner hide">⚠️ You're on a default password. <a href="#" id="pwLink">Change it now</a>.</div>
     <div class="tabrow">
       <div class="tab active" data-tab="agencies">Agencies</div>
+      <div class="tab" data-tab="metrics">Metrics</div>
       <div class="tab" data-tab="onboarding">Onboarding <span id="reqCount" class="chip gold hide" style="margin-left:4px"></span></div>
       <div class="tab" data-tab="inbox">Platform inbox</div>
       <div class="tab" data-tab="settings">Settings</div>
@@ -125,6 +126,14 @@ textarea{min-height:120px;resize:vertical}
         </div>
         <div id="agencies"></div>
       </div>
+    </section>
+
+    <section id="tab-metrics" class="hide">
+      <div class="card">
+        <div class="flexb"><h2>Platform metrics</h2><button class="btn sm" id="refreshMetrics">↻ Refresh</button></div>
+        <div class="tiles" id="mPlatform"></div>
+      </div>
+      <div id="mAgencies"></div>
     </section>
 
     <section id="tab-onboarding" class="hide">
@@ -450,9 +459,33 @@ async function loadLeads(){ const r=await(await api('/api/dev/leads')).json(); c
 }
 
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
-  const n=t.dataset.tab; ['agencies','onboarding','inbox','settings'].forEach(s=>$('tab-'+s).classList.toggle('hide',s!==n)); if(n==='inbox')loadLeads(); if(n==='onboarding')loadRequests(); });
+  const n=t.dataset.tab; ['agencies','metrics','onboarding','inbox','settings'].forEach(s=>$('tab-'+s).classList.toggle('hide',s!==n)); if(n==='inbox')loadLeads(); if(n==='onboarding')loadRequests(); if(n==='metrics')loadMetrics(); });
 $('refreshLeads').onclick=loadLeads;
 $('refreshReqs').onclick=loadRequests;
+$('refreshMetrics').onclick=loadMetrics;
+
+function health(a){ if(a.sold>0) return ['Producing','on']; if(a.views>0) return ['Engaged','gold']; if(!a.mustChange) return ['Set up, no views','']; return ['Not started','off']; }
+async function loadMetrics(){
+  const r=await(await api('/api/dev/metrics')).json(); const P=r.platform||{}, ags=r.agencies||[];
+  $('mPlatform').innerHTML=[
+    ['Agencies',P.agencies||0],['Agents',P.agents||0],['Producing',(P.producing||0)+'/'+(P.agents||0)],['Card views',P.views||0],['Policies sold',P.sold||0]
+  ].map(([l,v])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join('');
+  const box=$('mAgencies');
+  if(!ags.length){ box.innerHTML='<div class="card"><p class="muted">No agencies yet.</p></div>'; return; }
+  box.innerHTML=ags.map(a=>{
+    const t=a.totals, conv=t.views?Math.round((t.newQuotes/t.views)*100):0;
+    const headline = t.agents===0 ? 'No agents yet' : `${t.producing}/${t.agents} producing · ${t.sold} sold · ${conv}% of views become quotes`;
+    const rows = a.agents.length ? a.agents.map(x=>{ const [lbl,cls]=health(x);
+      return `<div class="agent"><div class="r1"><b>${esc(x.name)}</b><span class="chip ${cls}">${lbl}</span><span class="sp"></span><span class="muted" style="font-size:12px">${x.views} views · ${x.newQuotes} quotes · ${x.sold} sold · ${x.clients} clients</span></div></div>`;
+    }).join('') : '<p class="muted">No agents.</p>';
+    return `<div class="card">
+      <div class="flexb"><h2 style="font-size:17px">${esc(a.name)} ${a.active?'':'<span class=\"chip off\">Suspended</span>'} ${a.licensed?'':'<span class=\"chip off\">License lapsed</span>'}</h2></div>
+      <p class="muted" style="margin:2px 0 12px">${headline}</p>
+      <div class="tiles">${[['Agents',t.agents],['Views',t.views],['New quotes',t.newQuotes],['Sold',t.sold],['Clients',t.clients]].map(([l,v])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join('')}</div>
+      <div style="margin-top:12px">${rows}</div>
+    </div>`;
+  }).join('');
+}
 
 async function loadRequests(){
   const r=await(await api('/api/dev/requests')).json(); const reqs=(r.requests||[]);

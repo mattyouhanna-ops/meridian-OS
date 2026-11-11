@@ -487,6 +487,16 @@ async function handleDev(sub, method, body, req) {
     return { status: 200, data: { dev: { email: dev.email, name: dev.name, brand: dev.platformBrand, mustChange: !!dev.mustChange, alertEmails: dev.alertEmails || [], alertSms: dev.alertSms || [] }, agencies, totals, stateNames: STATE_NAMES } };
   }
   if (sub === "alerts" && method === "POST") { const d = setDevAlerts(body.alertEmails, body.alertSms); return { status: 200, data: { ok: true, alertEmails: d.alertEmails, alertSms: d.alertSms } }; }
+  // Per-agency + per-agent analytics for the Metrics tab
+  if (sub === "metrics" && method === "GET") {
+    const agencies = listAgencies().map((ag) => {
+      const agents = listAgents(ag.id).map(agentSummary);
+      const t = agents.reduce((s, a) => ({ agents: s.agents + 1, views: s.views + a.views, newQuotes: s.newQuotes + a.newQuotes, sold: s.sold + a.sold, clients: s.clients + a.clients, producing: s.producing + (a.sold > 0 ? 1 : 0), engaged: s.engaged + (a.views > 0 ? 1 : 0), onboarded: s.onboarded + (a.mustChange ? 0 : 1) }), { agents: 0, views: 0, newQuotes: 0, sold: 0, clients: 0, producing: 0, engaged: 0, onboarded: 0 });
+      return { id: ag.id, name: ag.name, active: ag.active, licensed: agencyLicensed(ag), totals: t, agents };
+    });
+    const platform = agencies.reduce((s, a) => ({ agencies: s.agencies + 1, agents: s.agents + a.totals.agents, views: s.views + a.totals.views, newQuotes: s.newQuotes + a.totals.newQuotes, sold: s.sold + a.totals.sold, producing: s.producing + a.totals.producing }), { agencies: 0, agents: 0, views: 0, newQuotes: 0, sold: 0, producing: 0 });
+    return { status: 200, data: { platform, agencies } };
+  }
   if (sub === "agencies" && method === "POST") {
     try { const { agency, ownerPassword } = createAgency(body); let emailed = false; if (ownerPassword && agency.ownerEmail) emailed = await emailOwnerWelcome(agency, agency.ownerEmail, ownerPassword, req); return { status: 200, data: { ok: true, agency: agencySummary(agency), ownerPassword, emailed } }; }
     catch (e) { return { status: 400, data: { error: e.message } }; }
