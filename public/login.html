@@ -160,9 +160,22 @@ $('vLogin').addEventListener('submit',async e=>{
     const j=await r.json();
     if(j.ok&&j.url){ return route(j.url); }
     $('loginErr').textContent=j.error||'Could not sign in.';
+    if(j.denied&&j.slug) showReinstate(j.slug);
   }catch(e){ $('loginErr').textContent='Network error — try again.'; }
   $('go').disabled=false; $('go').textContent='Sign in';
 });
+
+function showReinstate(slug){
+  var old=document.getElementById('reinstateBtn'); if(old) old.remove();
+  var b=document.createElement('button'); b.id='reinstateBtn'; b.type='button'; b.className='btn ghost'; b.textContent='Request access back';
+  b.onclick=async function(){
+    b.disabled=true; b.textContent='Sending…';
+    try{ await fetch('/a/'+slug+'/api/request-reinstate',{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:'{}'});
+      $('loginErr').textContent='Request sent. You’ll hear back once it’s reviewed.'; b.remove();
+    }catch(e){ b.disabled=false; b.textContent='Request access back'; }
+  };
+  $('loginErr').insertAdjacentElement('afterend',b);
+}
 
 // Request an account
 $('vRequest').addEventListener('submit',async e=>{

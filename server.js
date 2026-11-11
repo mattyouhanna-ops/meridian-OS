@@ -17,6 +17,7 @@ import {
   listAgencies, getAgency, getAgencyBySlug, getAgencyByOwnerEmail, createAgency, updateAgency, deleteAgency, setOwnerPass, agencySummary,
   agencyLicensed, licenseDaysLeft, setAgencyLicense,
   agentLocked, agentLoginFail, agentLoginOk, ownerLocked, ownerLoginFail, ownerLoginOk,
+  agentDenied, denyAgent, reinstateAgent, requestReinstate,
   listAgents, getAgent, getAgentBySlug, getAgentByEmail, createAgent, updateAgent, deleteAgent, agentSummary, agencyOf,
   listAccountRequests, addAccountRequest, setAccountRequestStatus,
 } from "./lib/model.js";
@@ -216,6 +217,7 @@ async function handleAgentAuth(agent, action, method, body, req) {
 
   if (action === "login") {
     const w = who(req);
+    if (agentDenied(agent)) return { status: 403, data: { error: "Your access has been revoked. You can request to have it restored.", denied: true, slug: agent.slug } };
     const until0 = agentLocked(agent);
     if (until0) return { status: 423, data: lockedBody(until0, "agent") };
     const email = String(body.email || "").trim().toLowerCase();
@@ -508,6 +510,13 @@ async function handleDev(sub, method, body, req) {
     if (method === "PATCH") { try { const u = updateAgent(am2[1], agentPatch(body)); return { status: 200, data: { ok: true, agent: agentSummary(u) } }; } catch (e) { return { status: 400, data: { error: e.message } }; } }
     if (method === "DELETE") { deleteAgent(am2[1]); return { status: 200, data: { ok: true } }; }
   }
+  // developer-only: deny (revoke) an agent for fraud, or reinstate them
+  const dnm = sub.match(/^agents\/([a-z0-9]+)\/(deny|reinstate)$/i);
+  if (dnm && method === "POST") {
+    if (!getAgent(dnm[1])) return { status: 404, data: { error: "Agent not found." } };
+    const a = dnm[2] === "deny" ? denyAgent(dnm[1], body.reason) : reinstateAgent(dnm[1]);
+    return { status: 200, data: { ok: true, agent: agentSummary(a) } };
+  }
   // developer renews / extends / clears an agency's license lease
   const lm = sub.match(/^agencies\/([a-z0-9]+)\/license$/i);
   if (lm && method === "POST") {
@@ -632,6 +641,7 @@ const server = http.createServer(async (req, res) => {
       // 3) agent
       const agent = getAgentByEmail(email);
       if (agent && agent.passHash) {
+        if (agentDenied(agent)) return sendJSON(res, 403, { error: "Your access has been revoked. You can request to have it restored.", denied: true, slug: agent.slug });
         const until = agentLocked(agent);
         if (until) return sendJSON(res, 423, lockedBody(until, "agent"));
         if (checkPass(pass, agent.passHash)) { agentLoginOk(agent.id); return sendJSON(res, 200, { ok: true, role: "agent", url: "/a/" + agent.slug + "/admin", mustChange: !!agent.mustChange }, { "set-cookie": makeSessionCookie("agent", agent.id) }); }
@@ -688,8 +698,8 @@ const server = http.createServer(async (req, res) => {
       // Agent off-boarded, or their whole agency suspended: never leak the card or its leads.
       // Redirect to the central corporate landing page if configured, else show a neutral notice.
       const ag = agencyOf(agent);
-      const live = agent.active && (!ag || ag.active);
-      if (!live && !rest.startsWith("/api/auth") && !rest.startsWith("/admin")) {
+      const live = agent.active && !agent.denied && (!ag || ag.active);
+      if (!live && !rest.startsWith("/api/auth") && !rest.startsWith("/admin") && rest !== "/api/request-reinstate") {
         const corp = (ag && ag.corpLanding) || process.env.CORP_LANDING_URL;
         if (corp && (rest === "" || rest === "/" || rest === "/card.png")) {
           res.writeHead(302, { location: corp, "cache-control": "no-store" }).end(); return;
@@ -705,6 +715,13 @@ const server = http.createServer(async (req, res) => {
       if (rest === "/api/card") return sendJSON(res, 200, await handleCard(agent, url, req));
       if (rest === "/api/quote" && method === "POST") { if (!sameOrigin(req)) return sendJSON(res, 403, { error: "Not allowed" }); return sendJSON(res, 200, await handleQuote(agent, await readBody(req), req)); }
       if (rest === "/api/request-access" && method === "POST") { if (!sameOrigin(req)) return sendJSON(res, 403, { error: "Not allowed" }); return sendJSON(res, 200, await handleRequestAccess(agent, await readBody(req), req)); }
+      if (rest === "/api/request-reinstate" && method === "POST") {
+        if (!sameOrigin(req)) return sendJSON(res, 403, { error: "Not allowed" });
+        if (!agent.denied) return sendJSON(res, 200, { ok: true }); // nothing to do
+        requestReinstate(agent.id);
+        try { const dev = getDeveloper(); if (dev && dev.email) sendEmail(dev.email, `Reinstatement request — ${agent.profile.name}`, `${agent.profile.name} (${agent.profile.email}) is asking to have their revoked ${platformBrand()} access restored. Review it in your developer console.`).catch(() => {}); } catch {}
+        return sendJSON(res, 200, { ok: true });
+      }
 
       if (rest.startsWith("/api/auth/")) {
         const action = rest.split("/").pop();

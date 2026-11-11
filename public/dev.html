@@ -331,6 +331,8 @@ function agentRow(x,a){
   return `<div class="agent" data-id="${x.id}">
     <div class="r1"><b>${esc(x.name)}</b><span class="chip ${x.active?'on':'off'}">${x.active?'On':'Off'}</span>
     ${x.locked?'<span class="chip off">🔒 Locked</span>':''}
+    ${x.denied?'<span class="chip off">🚫 Denied</span>':''}
+    ${x.reinstateRequested?'<span class="chip gold">Wants back in</span>':''}
     ${x.newQuotes?`<span class="chip gold">${x.newQuotes} new</span>`:''}<span class="sp"></span>
     <span class="muted" style="font-size:12px">${x.views} views · ${(x.states||[]).join(', ')||'—'}</span></div>
     <div class="link-url">${esc(card)}</div>
@@ -342,6 +344,7 @@ function agentRow(x,a){
       <button class="btn sm" data-act="dash">Dashboard</button>
       <button class="btn sm ghost" data-act="welcome">Welcome msg</button>
       <button class="btn sm ghost" data-act="reset">Reset pw</button>
+      ${x.denied?'<button class="btn sm gold" data-act="reinstate">Reinstate access</button>':'<button class="btn sm danger" data-act="deny">🚫 Deny (fraud)</button>'}
       <button class="btn sm ${x.active?'warn':''}" data-act="toggle">${x.active?'Deactivate':'Activate'}</button>
       <button class="btn sm danger" data-act="del">Delete</button>
     </div><div class="msgbox hide" style="margin-top:7px"></div></div>`;
@@ -412,6 +415,8 @@ async function agentAction(act,x,a,row){
     const r=await(await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({password:pass})})).json();
     if(r.ok){ box.classList.remove('hide'); const txt=welcomeText(x,pass); box.innerHTML=`<div class="banner">New password set.</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`; box.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); toast('Password reset'); } }
   else if(act==='unlock'){ await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({unlock:true})}); const el=row.closest('.agency'); loadAgents(a,el); toast(x.name+' unlocked'); }
+  else if(act==='deny'){ if(!confirm('Deny access for '+x.name+'?\n\nTheir login is blocked immediately and their card goes dark. They can request reinstatement, which only you approve.'))return; await api('/api/dev/agents/'+x.id+'/deny',{method:'POST',body:JSON.stringify({reason:''})}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); toast(x.name+' denied — access revoked'); }
+  else if(act==='reinstate'){ await api('/api/dev/agents/'+x.id+'/reinstate',{method:'POST'}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); toast(x.name+' reinstated'); }
   else if(act==='toggle'){ await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({active:!x.active})}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); }
   else if(act==='del'){ if(confirm('Delete '+x.name+'?')){ await api('/api/dev/agents/'+x.id,{method:'DELETE'}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); toast('Agent deleted'); } }
 }
