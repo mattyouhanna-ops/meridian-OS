@@ -163,6 +163,12 @@ textarea{min-height:120px;resize:vertical}
     </section>
 
     <section id="tab-settings" class="hide">
+      <div class="card" style="border-color:#7a2d2d">
+        <h2>🚨 Platform control</h2>
+        <p class="muted">The master switch. Freezing shuts down <b>every</b> card and blocks all owner &amp; agent logins across the whole platform. Only you can sign in to lift it.</p>
+        <div id="freezeState" class="banner hide" style="border-color:#7a2d2d;background:linear-gradient(180deg,#2a1414,#1a0c0c)"></div>
+        <button class="btn danger" id="freezeBtn" style="margin-top:6px">Freeze everything</button>
+      </div>
       <div class="card">
         <h2>Copy me on every lead</h2>
         <p class="muted">Get CC'd on every quote &amp; appointment across all agencies — on top of the agent who owns the card.</p>
@@ -224,8 +230,20 @@ async function loadDash(){
   $('who').textContent=r.dev.email; $('pbrand').textContent=r.dev.brand;
   $('pwBanner').classList.toggle('hide',!r.dev.mustChange);
   $('cc_emails').value=(r.dev.alertEmails||[]).join('\n'); $('cc_sms').value=(r.dev.alertSms||[]).join('\n');
-  renderTiles(); renderAgencies(); loadRequests();
+  renderTiles(); renderAgencies(); loadRequests(); applyFreezeUI(!!r.frozen);
 }
+function applyFreezeUI(frozen){
+  const b=$('freezeBtn'), s=$('freezeState');
+  if(frozen){ b.textContent='Unfreeze — bring everything back online'; b.classList.remove('danger'); b.classList.add('gold'); s.classList.remove('hide'); s.innerHTML='🚨 <b>Platform is FROZEN.</b> Every card is dark and all owner/agent logins are blocked right now.'; }
+  else { b.textContent='Freeze everything'; b.classList.add('danger'); b.classList.remove('gold'); s.classList.add('hide'); s.innerHTML=''; }
+  b.dataset.frozen=frozen?'1':'';
+}
+document.addEventListener('click',async e=>{ if(e.target&&e.target.id==='freezeBtn'){
+  const on=e.target.dataset.frozen!=='1';
+  if(on && !confirm('Freeze the ENTIRE platform?\n\nEvery card goes dark and every owner & agent is locked out until you unfreeze. Only you can sign in.'))return;
+  await api('/api/dev/freeze',{method:'POST',body:JSON.stringify({on})});
+  toast(on?'Platform frozen':'Platform back online'); loadDash();
+}});
 function renderTiles(){ const t=DATA.totals;
   $('tiles').innerHTML=[['Agencies',t.agencies],['Agents',t.agents],['New quotes',t.newQuotes],['Views',t.views],['Policies sold',t.sold]]
     .map(([l,v])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join(''); }

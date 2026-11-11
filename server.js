@@ -19,6 +19,7 @@ import {
   agencyLicensed, licenseDaysLeft, setAgencyLicense,
   agentLocked, agentLoginFail, agentLoginOk, ownerLocked, ownerLoginFail, ownerLoginOk,
   agentDenied, denyAgent, reinstateAgent, requestReinstate,
+  isPlatformFrozen, setPlatformFrozen,
   listAgents, getAgent, getAgentBySlug, getAgentByEmail, createAgent, updateAgent, deleteAgent, agentSummary, agencyOf,
   listAccountRequests, addAccountRequest, setAccountRequestStatus,
 } from "./lib/model.js";
@@ -96,8 +97,9 @@ function appendLog(list, entry, max) { list.unshift(entry); if (list.length > ma
 function session(req) { return readSession(req.headers.cookie); }
 function devSession(req) { const s = session(req); return s && s.r === "dev" ? s : null; }
 // Owner session carries the agency id. Returns the agency, or null.
-function ownerSession(req) { const s = session(req); if (!s || s.r !== "owner") return null; const ag = getAgency(s.id); return ag || null; }
+function ownerSession(req) { if (isPlatformFrozen()) return null; const s = session(req); if (!s || s.r !== "owner") return null; const ag = getAgency(s.id); return ag || null; }
 function agentSession(req) {
+  if (isPlatformFrozen()) return null;
   const s = session(req); if (!s || s.r !== "agent") return null;
   const a = getAgent(s.id); if (!a) return null;
   if (a.sessionsValidAfter && s.x - 12 * 3600e3 < a.sessionsValidAfter) return null;
@@ -485,9 +487,10 @@ async function handleDev(sub, method, body, req) {
   if (sub === "data" && method === "GET") {
     const agencies = listAgencies().map(agencySummary);
     const totals = agencies.reduce((t, a) => ({ agencies: t.agencies + 1, agents: t.agents + a.totals.agents, newQuotes: t.newQuotes + a.totals.newQuotes, views: t.views + a.totals.views, sold: t.sold + a.totals.sold }), { agencies: 0, agents: 0, newQuotes: 0, views: 0, sold: 0 });
-    return { status: 200, data: { dev: { email: dev.email, name: dev.name, brand: dev.platformBrand, mustChange: !!dev.mustChange, alertEmails: dev.alertEmails || [], alertSms: dev.alertSms || [] }, agencies, totals, stateNames: STATE_NAMES } };
+    return { status: 200, data: { dev: { email: dev.email, name: dev.name, brand: dev.platformBrand, mustChange: !!dev.mustChange, alertEmails: dev.alertEmails || [], alertSms: dev.alertSms || [] }, agencies, totals, stateNames: STATE_NAMES, frozen: isPlatformFrozen() } };
   }
   if (sub === "alerts" && method === "POST") { const d = setDevAlerts(body.alertEmails, body.alertSms); return { status: 200, data: { ok: true, alertEmails: d.alertEmails, alertSms: d.alertSms } }; }
+  if (sub === "freeze" && method === "POST") { const on = setPlatformFrozen(!!body.on); return { status: 200, data: { ok: true, frozen: on } }; }
   // Per-agency + per-agent analytics for the Metrics tab
   if (sub === "metrics" && method === "GET") {
     const agencies = listAgencies().map((ag) => {
@@ -640,6 +643,8 @@ const server = http.createServer(async (req, res) => {
       const dev = getDeveloper();
       if (dev && email === dev.email && checkPass(pass, dev.passHash))
         return sendJSON(res, 200, { ok: true, role: "dev", url: "/dev", mustChange: !!dev.mustChange }, { "set-cookie": makeSessionCookie("dev", "dev") });
+      // Platform frozen: only the developer (handled above) can get in.
+      if (isPlatformFrozen()) return sendJSON(res, 503, { error: "Meridian OS is temporarily unavailable. Please check back shortly." });
       // 2) agency owner
       const ag = getAgencyByOwnerEmail(email);
       if (ag && ag.ownerPassHash) {
@@ -709,7 +714,7 @@ const server = http.createServer(async (req, res) => {
       // Agent off-boarded, or their whole agency suspended: never leak the card or its leads.
       // Redirect to the central corporate landing page if configured, else show a neutral notice.
       const ag = agencyOf(agent);
-      const live = agent.active && !agent.denied && (!ag || ag.active);
+      const live = agent.active && !agent.denied && !isPlatformFrozen() && (!ag || ag.active);
       if (!live && !rest.startsWith("/api/auth") && !rest.startsWith("/admin") && rest !== "/api/request-reinstate") {
         const corp = (ag && ag.corpLanding) || process.env.CORP_LANDING_URL;
         if (corp && (rest === "" || rest === "/" || rest === "/card.png")) {
