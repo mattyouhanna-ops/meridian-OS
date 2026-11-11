@@ -116,6 +116,7 @@ textarea{min-height:120px;resize:vertical}
 
   <div id="app" class="hide">
     <div id="pwBanner" class="banner hide">⚠️ You're on a default password. <a href="#" id="pwLink">Change it now</a>.</div>
+    <div id="emailBanner" class="banner hide" style="border-color:#7a2d2d;background:linear-gradient(180deg,#2a1414,#1a0c0c)"></div>
     <div class="tabrow">
       <div class="tab active" data-tab="agencies">Agencies</div>
       <div class="tab" data-tab="metrics">Metrics</div>
@@ -176,7 +177,7 @@ textarea{min-height:120px;resize:vertical}
 
     <section id="tab-inbox" class="hide">
       <div class="card">
-        <div class="flexb"><h2>Platform inbox</h2><div class="row"><button class="btn sm gold" id="dlLeads">⬇ Download CSV</button><button class="btn sm" id="refreshLeads">↻ Refresh</button></div></div>
+        <div class="flexb"><h2>Platform inbox</h2><div class="row"><button class="btn sm gold" id="dlLeads">⬇ Download CSV</button><button class="btn sm danger" id="clrLeads">🗑 Clear all</button><button class="btn sm" id="refreshLeads">↻ Refresh</button></div></div>
         <p class="muted">Every quote and appointment across every agency.</p>
         <div id="leads"></div>
       </div>
@@ -269,6 +270,14 @@ async function loadDash(){
   $('cc_emails').value=(r.dev.alertEmails||[]).join('\n'); $('cc_sms').value=(r.dev.alertSms||[]).join('\n');
   $('dev_compliance').value=r.dev.compliance||'';
   renderTiles(); renderAgencies(); loadRequests(); applyFreezeUI(!!r.frozen);
+  const eh=r.emailHealth||{}; const eb=$('emailBanner');
+  if(eh.failing || (eh.configured===false)){
+    eb.classList.remove('hide');
+    eb.innerHTML = (eh.configured===false)
+      ? '🔴 <b>No email provider is set up</b> — leads can\'t be emailed or texted. Set GMAIL_USER + GMAIL_APP_PASSWORD on Railway. <a href="#" id="ebTest" style="color:#f1d78a">Run a test</a>'
+      : '🔴 <b>Alerts are failing to send right now.</b> Last error: '+esc(eh.lastError||'unknown')+'. Your Gmail App Password was likely revoked — generate a new one and update GMAIL_APP_PASSWORD on Railway. <a href="#" id="ebTest" style="color:#f1d78a">Run a test</a>';
+    const t=$('ebTest'); if(t) t.onclick=(e)=>{e.preventDefault();document.querySelector('[data-tab=settings]').click();setTimeout(()=>$('ta_go')&&$('ta_go').scrollIntoView({behavior:'smooth'}),50);};
+  } else eb.classList.add('hide');
 }
 function applyFreezeUI(frozen){
   const b=$('freezeBtn'), s=$('freezeState');
@@ -553,16 +562,18 @@ function downloadLeads(){
 async function loadLeads(){ const r=await(await api('/api/dev/leads')).json(); const box=$('leads'); LEADS=r.leads||[];
   if(!r.leads||!r.leads.length){box.innerHTML='<p class="muted">No leads yet.</p>';return;}
   box.innerHTML=r.leads.map(q=>{ const kind=q.kind==='appointment'?'📅 Appointment':'💬 Quote'; const bits=[q.product,q.coverage,q.budget,q.when].filter(Boolean).join(' · ');
-    return `<div class="lead"><div class="flexb"><b>${kind}${q.name?' — '+esc(q.name):''}</b><span class="chip ${q.status==='new'?'gold':''}">${esc(q.status)}</span></div>
+    return `<div class="lead" data-slug="${esc(q.agentSlug||'')}" data-id="${esc(q.id||'')}"><div class="flexb"><b>${kind}${q.name?' — '+esc(q.name):''}</b><div class="row"><span class="chip ${q.status==='new'?'gold':''}">${esc(q.status)}</span><button class="btn sm danger" data-del>🗑</button></div></div>
       <div class="t">${esc(q.agency)} › ${esc(q.agent)} · ${new Date(q.t).toLocaleString()}</div>
       ${bits?`<div style="margin-top:4px">${esc(bits)}</div>`:''}
       ${q.phone||q.email?`<div class="muted" style="margin-top:4px">${esc([q.phone,q.email].filter(Boolean).join(' · '))}</div>`:''}</div>`;}).join('');
+  box.querySelectorAll('.lead [data-del]').forEach(b=>b.onclick=async()=>{ const el=b.closest('.lead'); await api('/api/dev/leads/delete',{method:'POST',body:JSON.stringify({slug:el.dataset.slug,id:el.dataset.id})}); el.remove(); toast('Lead deleted'); });
 }
 
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
   const n=t.dataset.tab; ['agencies','metrics','onboarding','inbox','settings'].forEach(s=>$('tab-'+s).classList.toggle('hide',s!==n)); if(n==='inbox')loadLeads(); if(n==='onboarding')loadRequests(); if(n==='metrics')loadMetrics(); });
 $('refreshLeads').onclick=loadLeads;
 $('dlLeads').onclick=downloadLeads;
+$('clrLeads').onclick=async()=>{ if(!confirm('Delete ALL leads across every agency? This clears your test quotes and cannot be undone.'))return; const r=await(await api('/api/dev/leads/clear',{method:'POST'})).json(); toast('Cleared '+(r.cleared||0)+' leads'); loadLeads(); loadDash(); };
 $('refreshReqs').onclick=loadRequests;
 $('refreshMetrics').onclick=loadMetrics;
 

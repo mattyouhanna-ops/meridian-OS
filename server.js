@@ -25,7 +25,7 @@ import {
   listAccountRequests, addAccountRequest, setAccountRequestStatus,
 } from "./lib/model.js";
 import { cardPNG } from "./lib/og.js";
-import { alertNewLead, sendEmail, welcomeEmailHTML, emailStatus, sendTestEmail } from "./lib/notify.js";
+import { alertNewLead, sendEmail, welcomeEmailHTML, emailStatus, sendTestEmail, emailHealth } from "./lib/notify.js";
 import { vapidPublicKey, addSubscription, pushToAgent } from "./lib/push.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -518,7 +518,7 @@ async function handleDev(sub, method, body, req) {
   if (sub === "data" && method === "GET") {
     const agencies = listAgencies().map(agencySummary);
     const totals = agencies.reduce((t, a) => ({ agencies: t.agencies + 1, agents: t.agents + a.totals.agents, newQuotes: t.newQuotes + a.totals.newQuotes, views: t.views + a.totals.views, sold: t.sold + a.totals.sold }), { agencies: 0, agents: 0, newQuotes: 0, views: 0, sold: 0 });
-    return { status: 200, data: { dev: { email: dev.email, name: dev.name, brand: dev.platformBrand, mustChange: !!dev.mustChange, alertEmails: dev.alertEmails || [], alertSms: dev.alertSms || [], compliance: dev.compliance || "" }, agencies, totals, stateNames: STATE_NAMES, frozen: isPlatformFrozen() } };
+    return { status: 200, data: { dev: { email: dev.email, name: dev.name, brand: dev.platformBrand, mustChange: !!dev.mustChange, alertEmails: dev.alertEmails || [], alertSms: dev.alertSms || [], compliance: dev.compliance || "" }, agencies, totals, stateNames: STATE_NAMES, frozen: isPlatformFrozen(), emailHealth: emailHealth() } };
   }
   if (sub === "alerts" && method === "POST") { const d = setDevAlerts(body.alertEmails, body.alertSms); return { status: 200, data: { ok: true, alertEmails: d.alertEmails, alertSms: d.alertSms } }; }
   if (sub === "freeze" && method === "POST") { const on = setPlatformFrozen(!!body.on); return { status: 200, data: { ok: true, frozen: on } }; }
@@ -601,6 +601,16 @@ async function handleDev(sub, method, body, req) {
     const r = setAccountRequestStatus(rm[1], action);
     if (!r) return { status: 404, data: { error: "Request not found." } };
     return { status: 200, data: { ok: true, request: r } };
+  }
+  // delete one test lead, or clear them all (cleanup after testing)
+  if (sub === "leads/delete" && method === "POST") {
+    const a = getAgentBySlug(body.slug); if (!a) return { status: 404, data: { error: "Agent not found." } };
+    a.quotes = (a.quotes || []).filter((q) => q.id !== body.id); save();
+    return { status: 200, data: { ok: true } };
+  }
+  if (sub === "leads/clear" && method === "POST") {
+    let n = 0; for (const a of listAgents()) { n += (a.quotes || []).length; a.quotes = []; } save();
+    return { status: 200, data: { ok: true, cleared: n } };
   }
   // platform-wide leads across every agency
   if (sub === "leads" && method === "GET") {
