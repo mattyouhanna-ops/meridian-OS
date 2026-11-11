@@ -336,6 +336,7 @@
   </div>
 
   <footer>
+    <div id="complianceBox" style="white-space:pre-line;margin-bottom:10px" hidden></div>
     <span id="footName"></span><span data-f="npn"> · NPN <span class="v-npn"></span></span><br>
     Coverage subject to underwriting and carrier approval.<br>For security, visits to this page are logged.
   </footer>
@@ -533,6 +534,7 @@
     document.title=(res.name||'Agent')+' · '+(res.title||'Licensed Insurance Agent');
     document.querySelectorAll('.v-name').forEach(e=>e.textContent=res.name||'');
     $('footName').textContent=(res.name||'')+(res.brand?' · '+res.brand:'');
+    if(res.compliance){ $('complianceBox').textContent=res.compliance; $('complianceBox').hidden=false; } else { $('complianceBox').hidden=true; }
     if(!PREVIEW && res.revoked){ openLock('revoked'); return; }
     if(!PREVIEW && res.limited){ openLock('limited'); return; }
     for(const key of Object.keys(f)) if(f[key]) show(key);

@@ -14,7 +14,7 @@ import {
 } from "./lib/core.js";
 import { STATE_NAMES, statesFor } from "./lib/states.js";
 import {
-  ensureDeveloper, getDeveloper, setDeveloperPass, setDevAlerts, platformBrand,
+  ensureDeveloper, getDeveloper, setDeveloperPass, setDevAlerts, setDevCompliance, platformBrand,
   listAgencies, getAgency, getAgencyBySlug, getAgencyByOwnerEmail, createAgency, updateAgency, deleteAgency, setOwnerPass, agencySummary,
   agencyLicensed, licenseDaysLeft, setAgencyLicense,
   agentLocked, agentLoginFail, agentLoginOk, ownerLocked, ownerLoginFail, ownerLoginOk,
@@ -145,7 +145,9 @@ async function handleCard(agent, url, req) {
   }
   if (!poll) { appendLog(agent.visits, visit, 1000); save(); }
 
-  const base = { name: P.name, title: P.title, brand: P.brand, photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null };
+  const agc = agencyOf(agent);
+  const compliance = [getDeveloper().compliance, agc && agc.compliance].filter(Boolean).join("\n\n");
+  const base = { name: P.name, title: P.title, brand: P.brand, photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null, compliance };
   if (revoked) return { ...base, revoked: true, f: {} };
   if (limited) return { ...base, limited: true, f: {} };
   if (!fields) fields = settings.audiences[settings.defaultAudience]?.fields || {};
@@ -515,10 +517,11 @@ async function handleDev(sub, method, body, req) {
   if (sub === "data" && method === "GET") {
     const agencies = listAgencies().map(agencySummary);
     const totals = agencies.reduce((t, a) => ({ agencies: t.agencies + 1, agents: t.agents + a.totals.agents, newQuotes: t.newQuotes + a.totals.newQuotes, views: t.views + a.totals.views, sold: t.sold + a.totals.sold }), { agencies: 0, agents: 0, newQuotes: 0, views: 0, sold: 0 });
-    return { status: 200, data: { dev: { email: dev.email, name: dev.name, brand: dev.platformBrand, mustChange: !!dev.mustChange, alertEmails: dev.alertEmails || [], alertSms: dev.alertSms || [] }, agencies, totals, stateNames: STATE_NAMES, frozen: isPlatformFrozen() } };
+    return { status: 200, data: { dev: { email: dev.email, name: dev.name, brand: dev.platformBrand, mustChange: !!dev.mustChange, alertEmails: dev.alertEmails || [], alertSms: dev.alertSms || [], compliance: dev.compliance || "" }, agencies, totals, stateNames: STATE_NAMES, frozen: isPlatformFrozen() } };
   }
   if (sub === "alerts" && method === "POST") { const d = setDevAlerts(body.alertEmails, body.alertSms); return { status: 200, data: { ok: true, alertEmails: d.alertEmails, alertSms: d.alertSms } }; }
   if (sub === "freeze" && method === "POST") { const on = setPlatformFrozen(!!body.on); return { status: 200, data: { ok: true, frozen: on } }; }
+  if (sub === "compliance" && method === "POST") { const c = setDevCompliance(body.text); return { status: 200, data: { ok: true, compliance: c } }; }
   // Per-agency + per-agent analytics for the Metrics tab
   if (sub === "metrics" && method === "GET") {
     const agencies = listAgencies().map((ag) => {
@@ -744,14 +747,10 @@ const server = http.createServer(async (req, res) => {
       const agent = getAgentBySlug(slug);
       if (!agent) { res.writeHead(404, { "content-type": "text/html" }).end("<h1>Card not found</h1>"); return; }
       // Agent off-boarded, or their whole agency suspended: never leak the card or its leads.
-      // Redirect to the central corporate landing page if configured, else show a neutral notice.
+      // Show a neutral "no longer active" notice (no redirect to any corporate page).
       const ag = agencyOf(agent);
       const live = agent.active && !agent.denied && !isPlatformFrozen() && (!ag || ag.active);
       if (!live && !rest.startsWith("/api/auth") && !rest.startsWith("/admin") && rest !== "/api/request-reinstate") {
-        const corp = (ag && ag.corpLanding) || process.env.CORP_LANDING_URL;
-        if (corp && (rest === "" || rest === "/" || rest === "/card.png")) {
-          res.writeHead(302, { location: corp, "cache-control": "no-store" }).end(); return;
-        }
         res.writeHead(404, { "content-type": "text/html" }).end("<h1 style='font-family:sans-serif;text-align:center;margin-top:3rem'>This card is no longer active.</h1>"); return;
       }
 

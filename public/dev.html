@@ -175,6 +175,14 @@ textarea{min-height:120px;resize:vertical}
         <button class="btn danger" id="freezeBtn" style="margin-top:6px">Freeze everything</button>
       </div>
       <div class="card">
+        <h2>🔒 Locked compliance disclaimer</h2>
+        <p class="muted">Locked from the top. This text shows on the footer of <b>every</b> card platform-wide and agents can't edit it. Update it once here to push new licensing/compliance wording to all 1,000+ cards instantly.</p>
+        <label>Global disclaimer (shown on every card)</label><textarea id="dev_compliance" rows="4" placeholder="e.g. Meridian Life Group agents are licensed insurance producers. Verify any license at the state Department of Insurance. Coverage subject to carrier underwriting."></textarea>
+        <div class="err" id="comp_err"></div>
+        <button class="btn gold" id="comp_go" style="margin-top:10px">Push to all cards</button>
+        <p class="muted" style="font-size:12px;margin-top:8px">Per-agency wording: expand an agency and use its <b>📋 Compliance</b> button.</p>
+      </div>
+      <div class="card">
         <h2>Copy me on every lead</h2>
         <p class="muted">Get CC'd on every quote &amp; appointment across all agencies — on top of the agent who owns the card.</p>
         <label>Your emails (one per line)</label><textarea id="cc_emails" rows="3" placeholder="mattyouhanna@gmail.com"></textarea>
@@ -235,6 +243,7 @@ async function loadDash(){
   $('who').textContent=r.dev.email; $('pbrand').textContent=r.dev.brand;
   $('pwBanner').classList.toggle('hide',!r.dev.mustChange);
   $('cc_emails').value=(r.dev.alertEmails||[]).join('\n'); $('cc_sms').value=(r.dev.alertSms||[]).join('\n');
+  $('dev_compliance').value=r.dev.compliance||'';
   renderTiles(); renderAgencies(); loadRequests(); applyFreezeUI(!!r.frozen);
 }
 function applyFreezeUI(frozen){
@@ -288,9 +297,11 @@ function renderAgencies(){
         <button class="btn sm ghost" data-act="owner">${a.hasOwner?'Reset owner login':'Add owner login'}</button>
         ${a.ownerLocked?'<button class="btn sm gold" data-act="unlockOwner">🔓 Unlock owner</button>':''}
         <button class="btn sm ghost" data-act="license">🔑 License</button>
+        <button class="btn sm ghost" data-act="compliance">📋 Compliance</button>
         <button class="btn sm ${a.active?'warn':''}" data-act="suspend">${a.active?'Suspend':'Activate'}</button>
         <button class="btn sm danger" data-act="del">Delete</button>
       </div>
+      <div class="compbox hide" style="margin-top:8px"></div>
       <div class="licensebox hide" style="margin-top:8px"></div>
       <div class="ownerbox hide" style="margin-top:8px"></div>
       <div class="notifybox hide" style="margin-top:8px"></div>
@@ -314,6 +325,15 @@ async function agencyAction(act,a,el){
   if(act==='manage'){ if(openAgencies.has(a.id)){openAgencies.delete(a.id);} else {openAgencies.add(a.id);} renderAgencies(); return; }
   if(act==='suspend'){ await api('/api/dev/agencies/'+a.id,{method:'PATCH',body:JSON.stringify({active:!a.active})}); toast(a.active?'Suspended — all its cards now redirect':'Activated'); loadDash(); return; }
   if(act==='unlockOwner'){ await api('/api/dev/agencies/'+a.id,{method:'PATCH',body:JSON.stringify({unlockOwner:true})}); toast('Owner login unlocked'); loadDash(); return; }
+  if(act==='compliance'){
+    const box=el.querySelector('.compbox'); box.classList.remove('hide');
+    box.innerHTML=`<div class="banner">Locked wording for <b>${esc(a.name)}</b> only — shows on its cards under the global disclaimer. Agents can't edit it.</div>
+      <textarea class="cx_txt" rows="3" placeholder="Agency-specific compliance / licensing wording">${esc(a.compliance||'')}</textarea>
+      <div class="acts"><button class="btn gold sm cx_save">Save</button><button class="btn sm ghost cx_cancel">Cancel</button></div>`;
+    box.querySelector('.cx_cancel').onclick=()=>{box.classList.add('hide');box.innerHTML='';};
+    box.querySelector('.cx_save').onclick=async()=>{ await api('/api/dev/agencies/'+a.id,{method:'PATCH',body:JSON.stringify({compliance:box.querySelector('.cx_txt').value})}); toast('Saved'); box.classList.add('hide'); loadDash(); };
+    return;
+  }
   if(act==='del'){ if(confirm('Delete '+a.name+' and ALL its agents? This cannot be undone.')){ await api('/api/dev/agencies/'+a.id,{method:'DELETE'}); openAgencies.delete(a.id); toast('Agency deleted'); loadDash(); } return; }
   if(act==='notify'){
     const box=el.querySelector('.notifybox'); box.classList.remove('hide');
@@ -582,6 +602,10 @@ $('cc_go').onclick=async()=>{ $('cc_err').textContent='';
   const sms=$('cc_sms').value.split('\n').map(s=>s.trim()).filter(Boolean);
   const r=await(await api('/api/dev/alerts',{method:'POST',body:JSON.stringify({alertEmails:emails,alertSms:sms})})).json();
   if(r.ok){ $('cc_emails').value=(r.alertEmails||[]).join('\n'); $('cc_sms').value=(r.alertSms||[]).join('\n'); toast('Saved'); } else $('cc_err').textContent=r.error||'Could not save.';
+};
+$('comp_go').onclick=async()=>{ $('comp_err').textContent='';
+  const r=await(await api('/api/dev/compliance',{method:'POST',body:JSON.stringify({text:$('dev_compliance').value})})).json();
+  if(r.ok){ $('dev_compliance').value=r.compliance||''; toast('Pushed to all cards'); } else $('comp_err').textContent=r.error||'Could not save.';
 };
 async function signOut(){await api('/api/dev/logout',{method:'POST'});showLogin();}
 $('signout').onclick=signOut;$('signout2').onclick=signOut;
