@@ -147,7 +147,7 @@ async function handleCard(agent, url, req) {
 
   const agc = agencyOf(agent);
   const compliance = [getDeveloper().compliance, agc && agc.compliance].filter(Boolean).join("\n\n");
-  const base = { name: P.name, title: P.title, brand: P.brand, photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null, compliance };
+  const base = { name: P.name, title: P.title, brand: P.brand, photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null, compliance, ver: agent.cardVer || 0 };
   if (revoked) return { ...base, revoked: true, f: {} };
   if (limited) return { ...base, limited: true, f: {} };
   if (!fields) fields = settings.audiences[settings.defaultAudience]?.fields || {};
@@ -535,7 +535,9 @@ async function handleDev(sub, method, body, req) {
     const platform = agencies.reduce((s, a) => ({ agencies: s.agencies + 1, agents: s.agents + a.totals.agents, views: s.views + a.totals.views, clicks: s.clicks + a.totals.clicks, unique: s.unique + a.totals.unique, newQuotes: s.newQuotes + a.totals.newQuotes, quotes: s.quotes + a.totals.quotes, sold: s.sold + a.totals.sold, producing: s.producing + a.totals.producing, engaged: s.engaged + a.totals.engaged }), { agencies: 0, agents: 0, views: 0, clicks: 0, unique: 0, newQuotes: 0, quotes: 0, sold: 0, producing: 0, engaged: 0 });
     platform.activeRatio = platform.agents ? Math.round((platform.engaged / platform.agents) * 100) : 0;
     platform.conversion = platform.clicks ? Math.round((platform.quotes / platform.clicks) * 100) : 0;
-    return { status: 200, data: { platform, agencies } };
+    const linkClicks = {};
+    for (const ag of agencies) for (const a of ag.agents) for (const [k, v] of Object.entries(a.clicks || {})) linkClicks[k] = (linkClicks[k] || 0) + v;
+    return { status: 200, data: { platform, agencies, linkClicks } };
   }
   if (sub === "agencies" && method === "POST") {
     try { const { agency, ownerPassword } = createAgency(body); let emailed = false; if (ownerPassword && agency.ownerEmail) emailed = await emailOwnerWelcome(agency, agency.ownerEmail, ownerPassword, req); return { status: 200, data: { ok: true, agency: agencySummary(agency), ownerPassword, emailed } }; }

@@ -93,11 +93,13 @@
   .catrow{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin-top:8px}
   .catrow .catname{flex:1;font-size:14px}
   .catrow .catsel{flex:none;background:var(--black);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:8px 10px;font:600 13px Inter,sans-serif}
-  .catchk{display:flex;align-items:flex-start;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin-top:8px;cursor:pointer}
-  .catchk input{margin-top:3px;accent-color:var(--gold);flex:none}
-  .catchk span{display:block}
-  .catchk b{display:block;font-size:14px}
-  .catchk em{font-style:normal;font-size:12.5px;color:var(--muted);line-height:1.4}
+  .promrow{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px}
+  .promhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+  .promtog{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--gold2);cursor:pointer}
+  .promtog input{accent-color:var(--gold);width:18px;height:18px}
+  .promrow .prom_t{width:100%;font-weight:600}
+  .promrow .prom_d{width:100%;margin-top:8px;resize:vertical}
+  .socrow .s_type{background:var(--black);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px}
   .sharecard{display:flex;gap:14px;align-items:center;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel2)}
   .sharecard .qrbox{flex:none;background:#fff;border-radius:12px;padding:8px;width:116px;height:116px;display:flex;align-items:center;justify-content:center}
   .sharecard .qrbox svg{width:100%;height:100%;display:block}
@@ -595,26 +597,29 @@ function renderProducts(p){
   });
   (p.products||[]).forEach(x=>{ if(chosen[x.t.toLowerCase()]) addEditRow(box,x.t,x.d,'Product name','Short description'); });
 }
+function promRow(t,d,on){
+  const row=document.createElement('div'); row.className='promrow';
+  row.innerHTML='<div class="promhead"><label class="promtog"><input type="checkbox" class="prom_on"'+(on?' checked':'')+'> <span>Show on card</span></label><button type="button" class="btn sm danger prom_rm">Remove</button></div>'
+    +'<input class="prom_t" placeholder="Promise title">'
+    +'<textarea class="prom_d" rows="2" placeholder="What it means in plain words"></textarea>';
+  row.querySelector('.prom_t').value=t||''; row.querySelector('.prom_d').value=d||'';
+  row.querySelector('.prom_rm').addEventListener('click',()=>{row.remove();onDraft&&onDraft();});
+  return row;
+}
 function renderPromises(p){
   const box=$('p_promises'); box.innerHTML='';
-  const chosen={}; (p.promises||[]).forEach(x=>chosen[x.t.toLowerCase()]=true);
-  (CATALOG.promises||[]).forEach(c=>{
-    const on=chosen[c.t.toLowerCase()]===true;
-    const l=document.createElement('label'); l.className='catchk'; l.dataset.t=c.t; l.dataset.d=c.d;
-    l.innerHTML='<input type="checkbox"'+(on?' checked':'')+'><span><b>'+esc(c.t)+'</b><em>'+esc(c.d)+'</em></span>';
-    box.appendChild(l); delete chosen[c.t.toLowerCase()];
-  });
-  (p.promises||[]).forEach(x=>{ if(chosen[x.t.toLowerCase()]) addEditRow(box,x.t,x.d,'Promise title','What it means'); });
+  const chosen={}; (p.promises||[]).forEach(x=>chosen[(x.t||'').toLowerCase()]={t:x.t,d:x.d});
+  (CATALOG.promises||[]).forEach(c=>{ const ex=chosen[(c.t||'').toLowerCase()]; box.appendChild(promRow(ex?ex.t:c.t, ex?ex.d:c.d, !!ex)); delete chosen[(c.t||'').toLowerCase()]; });
+  Object.values(chosen).forEach(x=>box.appendChild(promRow(x.t,x.d,true)));
+}
+function readPromises(){
+  return [...document.querySelectorAll('#p_promises .promrow')].filter(r=>r.querySelector('.prom_on').checked)
+    .map(r=>({t:r.querySelector('.prom_t').value.trim(),d:r.querySelector('.prom_d').value.trim()})).filter(x=>x.t||x.d);
 }
 function readProducts(){
   const out=[];
   document.querySelectorAll('#p_products .catrow').forEach(r=>{ const v=r.querySelector('.catsel').value; if(v==='hide')return; const base=r.dataset.base; out.push({t:r.dataset.t,d:v==='soon'?('Coming soon. '+base):base}); });
   return out.concat(readRows($('p_products')));
-}
-function readPromises(){
-  const out=[];
-  document.querySelectorAll('#p_promises .catchk').forEach(l=>{ if(l.querySelector('input').checked) out.push({t:l.dataset.t,d:l.dataset.d}); });
-  return out.concat(readRows($('p_promises')));
 }
 
 // ================= boot: decide which screen =================
@@ -843,7 +848,7 @@ function renderPhoto(){ const av=$('peAv'); if(!av) return; if(S.photo){ av.inne
   });
   if(rm) rm.addEventListener('click',async function(){ if(!S.photo) return; await api(AB+'/api/admin/photo/remove',{method:'POST'}); S.photo=null; renderPhoto(); toast('Photo removed'); });
 })();
-$('addPromise').addEventListener('click',()=>addEditRow($('p_promises'),'','','Promise title','What it means'));
+$('addPromise').addEventListener('click',()=>{ $('p_promises').appendChild(promRow('','',true)); });
 $('addProduct').addEventListener('click',()=>addEditRow($('p_products'),'','','Product name','Short description'));
 function readProfile(){return {name:$('p_name').value,title:$('p_title').value,brand:$('p_brand').value,phone:$('p_phone').value,email:$('p_email').value,npn:$('p_npn').value,states:gridValue($('p_states')),promises:readPromises(),products:readProducts(),socials:readSocials()};}
 $('addSocial').addEventListener('click',()=>{ $('p_socials').appendChild(socialRow('instagram','')); });

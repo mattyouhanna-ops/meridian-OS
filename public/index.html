@@ -533,6 +533,7 @@
     $('livelock').hidden=false;
   }
   function render(res){
+    CARDVER=res.ver||CARDVER;
     document.body.classList.remove('pending');
     document.querySelectorAll('[data-f0]').forEach(e=>e.setAttribute('data-f',e.getAttribute('data-f0')));
     pk.hidden=false; pn.hidden=true; document.body.style.paddingBottom='';
@@ -597,9 +598,13 @@
         openLock(res.revoked ? 'revoked' : 'limited');
       } else if(locked && !res.revoked && !res.limited && !res.notSetup){
         location.reload();
+      } else if(!locked && !res.revoked && !res.limited && !res.notSetup && res.ver && CARDVER && res.ver!==CARDVER){
+        // The agent edited their card — refresh the content live, unless the client is mid-form.
+        if($('quote').hidden){ render(res); }
       }
     }
   }
+  let CARDVER=null;
   // quote (product tap) + appointment booking
   let qProduct='', qKind='quote';
   function firstName(){ return (D.name||'').trim().split(/\s+/)[0]||'me'; }
