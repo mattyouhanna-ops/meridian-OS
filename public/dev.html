@@ -156,7 +156,7 @@ textarea{min-height:120px;resize:vertical}
 
     <section id="tab-inbox" class="hide">
       <div class="card">
-        <div class="flexb"><h2>Platform inbox</h2><button class="btn sm" id="refreshLeads">↻ Refresh</button></div>
+        <div class="flexb"><h2>Platform inbox</h2><div class="row"><button class="btn sm gold" id="dlLeads">⬇ Download CSV</button><button class="btn sm" id="refreshLeads">↻ Refresh</button></div></div>
         <p class="muted">Every quote and appointment across every agency.</p>
         <div id="leads"></div>
       </div>
@@ -467,7 +467,19 @@ $('ag_go').onclick=async()=>{ $('ag_err').textContent='';
 };
 
 // ----- leads -----
-async function loadLeads(){ const r=await(await api('/api/dev/leads')).json(); const box=$('leads');
+let LEADS=[];
+function csvCell(v){ v=(v==null?'':String(v)); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+function downloadLeads(){
+  if(!LEADS.length){ toast('No leads to download'); return; }
+  const cols=['Date','Type','Agency','Agent','Name','Phone','Email','Product','Coverage','Budget','When','Note','Status'];
+  const rows=LEADS.map(q=>[new Date(q.t).toLocaleString(),q.kind==='appointment'?'Appointment':'Quote',q.agency,q.agent,q.name,q.phone,q.email,q.product,q.coverage,q.budget,q.when,q.note,q.status]);
+  const csv=[cols,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}); const u=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=u; a.download='meridian-leads-'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000);
+  toast('Downloaded '+LEADS.length+' leads');
+}
+async function loadLeads(){ const r=await(await api('/api/dev/leads')).json(); const box=$('leads'); LEADS=r.leads||[];
   if(!r.leads||!r.leads.length){box.innerHTML='<p class="muted">No leads yet.</p>';return;}
   box.innerHTML=r.leads.map(q=>{ const kind=q.kind==='appointment'?'📅 Appointment':'💬 Quote'; const bits=[q.product,q.coverage,q.budget,q.when].filter(Boolean).join(' · ');
     return `<div class="lead"><div class="flexb"><b>${kind}${q.name?' — '+esc(q.name):''}</b><span class="chip ${q.status==='new'?'gold':''}">${esc(q.status)}</span></div>
@@ -479,6 +491,7 @@ async function loadLeads(){ const r=await(await api('/api/dev/leads')).json(); c
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
   const n=t.dataset.tab; ['agencies','metrics','onboarding','inbox','settings'].forEach(s=>$('tab-'+s).classList.toggle('hide',s!==n)); if(n==='inbox')loadLeads(); if(n==='onboarding')loadRequests(); if(n==='metrics')loadMetrics(); });
 $('refreshLeads').onclick=loadLeads;
+$('dlLeads').onclick=downloadLeads;
 $('refreshReqs').onclick=loadRequests;
 $('refreshMetrics').onclick=loadMetrics;
 
