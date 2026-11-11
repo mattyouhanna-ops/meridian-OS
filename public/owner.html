@@ -193,6 +193,7 @@ function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');cle
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 const first=n=>String(n||'').trim().split(/\s+/)[0]||'there';
 
+(function(){ var V=null; function chk(){ fetch('/api/version',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ if(V&&j.v&&j.v!==V){ location.reload(); } V=j.v; }).catch(function(){}); } chk(); document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') chk(); }); })();
 async function boot(){
   const me=await api('/api/owner/me');
   if(me.ok){ const d=await me.json(); if(d.ok){ return loadDash(); } }

@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { db, save } from "./lib/store.js";
 import {
   normalizeProfile, normalizeSettings, FIELDS, DEFAULT_MESSAGE, cleanFields,
-  hashPass, checkPass, makeSessionCookie, clearCookie, readSession, describeDevice, encField,
+  hashPass, checkPass, makeSessionCookie, clearCookie, readSession, describeDevice, encField, decField,
   DEFAULT_PRODUCTS, DEFAULT_PROMISES,
 } from "./lib/core.js";
 import { STATE_NAMES, statesFor } from "./lib/states.js";
@@ -561,6 +561,15 @@ async function handleDev(sub, method, body, req) {
     if (!getAgent(am2[1])) return { status: 404, data: { error: "Agent not found." } };
     if (method === "PATCH") { try { const u = updateAgent(am2[1], agentPatch(body)); return { status: 200, data: { ok: true, agent: agentSummary(u) } }; } catch (e) { return { status: 400, data: { error: e.message } }; } }
     if (method === "DELETE") { deleteAgent(am2[1]); return { status: 200, data: { ok: true } }; }
+  }
+  // developer-only: resend the welcome email with the agent's current login
+  const rw = sub.match(/^agents\/([a-z0-9]+)\/resend-welcome$/i);
+  if (rw && method === "POST") {
+    const a = getAgent(rw[1]); if (!a) return { status: 404, data: { error: "Agent not found." } };
+    let pass = decField(a.curPass) || a.issuedPass;
+    if (!pass) { pass = "Meridian-" + ["Oak", "Gold", "Ridge", "Vale", "Stone", "North"][crypto.randomInt(0, 6)] + "-" + crypto.randomInt(1000, 9999); a.passHash = hashPass(pass); a.mustChange = true; a.issuedPass = pass; a.curPass = encField(pass); save(); }
+    const emailed = await emailAgentWelcome(a, pass, req);
+    return { status: 200, data: { ok: true, emailed, email: a.profile.email } };
   }
   // developer-only: deny (revoke) an agent for fraud, or reinstate them
   const dnm = sub.match(/^agents\/([a-z0-9]+)\/(deny|reinstate)$/i);

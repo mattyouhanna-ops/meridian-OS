@@ -243,6 +243,8 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','
 const first=n=>String(n||'').trim().split(/\s+/)[0]||'there';
 
 async function boot(){ const me=await api('/api/dev/me'); if(me.ok){const d=await me.json(); if(d.ok) return loadDash();} showLogin(); }
+// Auto-update: reload when a newer version is deployed so the console never goes stale.
+(function(){ var V=null; function chk(){ fetch('/api/version',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ if(V&&j.v&&j.v!==V){ location.reload(); } V=j.v; }).catch(function(){}); } chk(); document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') chk(); }); })();
 function showLogin(){$('gate').classList.remove('hide');$('app').classList.add('hide');$('signout').classList.add('hide');}
 function showApp(){$('gate').classList.add('hide');$('app').classList.remove('hide');$('signout').classList.remove('hide');}
 
@@ -426,7 +428,7 @@ function agentRow(x,a){
       ${x.locked?'<button class="btn sm gold" data-act="unlock">🔓 Unlock</button>':''}
       <button class="btn sm" data-act="edit">✏️ Edit info</button>
       <button class="btn sm" data-act="dash">Open dashboard</button>
-      <button class="btn sm ghost" data-act="welcome">Welcome msg</button>
+      <button class="btn sm ghost" data-act="welcome">📧 Resend welcome</button>
       <button class="btn sm ghost" data-act="reset">Reset pw</button>
       ${x.denied?'<button class="btn sm gold" data-act="reinstate">Reinstate access</button>':'<button class="btn sm danger" data-act="deny">🚫 Deny (fraud)</button>'}
       <button class="btn sm ${x.active?'warn':''}" data-act="toggle">${x.active?'Deactivate':'Activate'}</button>
@@ -494,7 +496,11 @@ async function agentAction(act,x,a,row){
   if(act==='edit'){ showEditAgent(x,a,row); return; }
   if(act==='open') window.open(card,'_blank');
   else if(act==='dash') window.open(card+'/admin','_blank');
-  else if(act==='welcome'){ box.classList.remove('hide'); const txt=welcomeText(x,'(their current password)'); box.innerHTML=`<textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`; box.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); }
+  else if(act==='welcome'){
+    const r=await(await api('/api/dev/agents/'+x.id+'/resend-welcome',{method:'POST'})).json();
+    if(r.emailed){ toast('📧 Welcome email resent to '+x.email); }
+    else { box.classList.remove('hide'); const txt=welcomeText(x,'(their current password)'); box.innerHTML=`<div class="banner">Couldn't send the email — copy & send this instead:</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`; box.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); }
+  }
   else if(act==='reset'){ if(!confirm('Reset '+x.name+"'s password?"))return; const pass='Meridian-'+['Oak','Gold','Ridge','Vale','Stone','North'][Math.floor(Math.random()*6)]+'-'+Math.floor(1000+Math.random()*9000);
     const r=await(await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({password:pass})})).json();
     if(r.ok){ box.classList.remove('hide'); const txt=welcomeText(x,pass); box.innerHTML=`<div class="banner">New password set.</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`; box.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); toast('Password reset'); } }
