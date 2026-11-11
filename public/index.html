@@ -528,7 +528,8 @@
     $('brandText').textContent=res.brand||'';
     $('nameText').textContent=res.name||'';
     $('titleText').textContent=res.title||'';
-    $('mono').textContent=initials(res.name)||'✦';
+    if(res.photo){ $('mono').innerHTML='<img src="'+res.photo+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'; }
+    else { $('mono').textContent=initials(res.name)||'✦'; }
     document.title=(res.name||'Agent')+' · '+(res.title||'Licensed Insurance Agent');
     document.querySelectorAll('.v-name').forEach(e=>e.textContent=res.name||'');
     $('footName').textContent=(res.name||'')+(res.brand?' · '+res.brand:'');

@@ -104,6 +104,9 @@
   .sharecard .qrbox.empty{display:none}
   .sharemeta{flex:1;min-width:0}
   .sharerow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .photoedit{display:flex;gap:14px;align-items:center;margin-top:14px}
+  .pe-av{flex:none;width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--gold2),var(--gold-dim));display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-size:26px;font-weight:700;color:var(--black);overflow:hidden}
+  .pe-av img{width:100%;height:100%;object-fit:cover}
   @media(max-width:560px){.sharecard{flex-direction:column;align-items:stretch}.sharecard .qrbox{align-self:center}}
   .editrow input{margin-bottom:6px}
   /* ===== dashboard v2 ===== */
@@ -392,6 +395,17 @@
                   <button type="button" class="btn sm ghost" id="dashCopy">Copy link</button>
                   <a class="btn sm ghost" id="dashOpen" href="#" target="_blank" rel="noopener">Open ↗</a>
                 </div>
+              </div>
+            </div>
+            <div class="photoedit">
+              <div class="pe-av" id="peAv"></div>
+              <div style="flex:1;min-width:0">
+                <label style="margin-top:0">Profile photo (headshot)</label>
+                <div class="row" style="gap:8px">
+                  <label class="btn sm" style="cursor:pointer;margin:0">Upload photo<input id="peFile" type="file" accept="image/*" hidden></label>
+                  <button type="button" class="btn sm ghost" id="peRemove">Remove</button>
+                </div>
+                <p class="muted" style="font-size:11.5px;margin:6px 0 0">A clear headshot of you builds trust. JPG or PNG.</p>
               </div>
             </div>
             <div class="grid2" style="margin-top:14px">
@@ -798,7 +812,22 @@ function fillProfile(){
   stateGrid($('p_states'),p.states||[]);
   renderPromises(p);
   renderProducts(p);
+  renderPhoto();
 }
+function renderPhoto(){ const av=$('peAv'); if(!av) return; if(S.photo){ av.innerHTML='<img src="'+S.photo+'" alt="">'; } else { av.textContent=initials(S.profile&&S.profile.name)||'✦'; } }
+(function(){
+  var f=document.getElementById('peFile'), rm=document.getElementById('peRemove');
+  if(f) f.addEventListener('change',function(){ var file=f.files&&f.files[0]; if(!file) return;
+    if(file.size>12*1024*1024){ toast('Image too large (max 12MB)'); f.value=''; return; }
+    var rd=new FileReader(); rd.onload=async function(){
+      toast('Uploading photo…');
+      try{ var r=await (await api(AB+'/api/admin/photo',{method:'POST',body:JSON.stringify({image:rd.result})})).json();
+        if(r.ok){ S.photo=r.photo; renderPhoto(); toast('Photo updated'); } else toast(r.error||'Upload failed');
+      }catch(e){ toast('Upload failed'); } f.value='';
+    }; rd.readAsDataURL(file);
+  });
+  if(rm) rm.addEventListener('click',async function(){ if(!S.photo) return; await api(AB+'/api/admin/photo/remove',{method:'POST'}); S.photo=null; renderPhoto(); toast('Photo removed'); });
+})();
 $('addPromise').addEventListener('click',()=>addEditRow($('p_promises'),'','','Promise title','What it means'));
 $('addProduct').addEventListener('click',()=>addEditRow($('p_products'),'','','Product name','Short description'));
 function readProfile(){return {name:$('p_name').value,title:$('p_title').value,brand:$('p_brand').value,phone:$('p_phone').value,email:$('p_email').value,npn:$('p_npn').value,states:gridValue($('p_states')),promises:readPromises(),products:readProducts()};}

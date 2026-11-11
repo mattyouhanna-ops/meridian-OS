@@ -30,6 +30,8 @@ import { vapidPublicKey, addSubscription, pushToAgent } from "./lib/push.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUB = path.join(HERE, "public");
+const PHOTOS = path.join(process.env.DATA_DIR || path.join(process.cwd(), "data"), "photos");
+try { fs.mkdirSync(PHOTOS, { recursive: true }); } catch {}
 const PORT = process.env.PORT || 3000;
 // Build id so installed (home-screen) apps can detect a new deploy and refresh.
 const BUILD = process.env.RAILWAY_GIT_COMMIT_SHA || process.env.BUILD_ID || String(Date.now());
@@ -143,7 +145,7 @@ async function handleCard(agent, url, req) {
   }
   if (!poll) { appendLog(agent.visits, visit, 1000); save(); }
 
-  const base = { name: P.name, title: P.title, brand: P.brand };
+  const base = { name: P.name, title: P.title, brand: P.brand, photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null };
   if (revoked) return { ...base, revoked: true, f: {} };
   if (limited) return { ...base, limited: true, f: {} };
   if (!fields) fields = settings.audiences[settings.defaultAudience]?.fields || {};
@@ -257,7 +259,7 @@ async function handleAdmin(agent, sub, method, body, req) {
   const S = () => normalizeSettings(agent.settings);
 
   if (sub === "state" && method === "GET")
-    return { status: 200, data: { email: agent.profile.email, fields: FIELDS, stateNames: STATE_NAMES, profile: normalizeProfile(agent.profile), settings: S(), links: agent.links, mustChange: !!agent.mustChange, catalog: { products: DEFAULT_PRODUCTS, promises: DEFAULT_PROMISES } } };
+    return { status: 200, data: { email: agent.profile.email, fields: FIELDS, stateNames: STATE_NAMES, profile: normalizeProfile(agent.profile), settings: S(), links: agent.links, mustChange: !!agent.mustChange, photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null, catalog: { products: DEFAULT_PRODUCTS, promises: DEFAULT_PROMISES } } };
 
   if (sub === "profile" && method === "POST") {
     const next = normalizeProfile({ ...agent.profile, ...(body.profile || {}) });
@@ -375,6 +377,25 @@ async function handleAdmin(agent, sub, method, body, req) {
   }
   if (sub === "onboarded" && method === "POST") { agent.mustChange = false; save(); return { status: 200, data: { ok: true } }; }
   if (sub === "push-subscribe" && method === "POST") { addSubscription(agent, body.subscription); return { status: 200, data: { ok: true } }; }
+  if (sub === "photo" && method === "POST") {
+    try {
+      const m = String(body.image || "").match(/^data:image\/[a-z+]+;base64,([A-Za-z0-9+/=]+)$/);
+      if (!m) return { status: 400, data: { error: "Please choose a JPG or PNG image." } };
+      const raw = Buffer.from(m[1], "base64");
+      if (raw.length > 12 * 1024 * 1024) return { status: 400, data: { error: "That image is too large (max ~12MB)." } };
+      const sharp = (await import("sharp")).default;
+      const out = await sharp(raw).rotate().resize(480, 480, { fit: "cover" }).jpeg({ quality: 82 }).toBuffer();
+      fs.writeFileSync(path.join(PHOTOS, agent.id + ".jpg"), out);
+      agent.photoVer = Date.now(); agent.cardVer = Date.now();
+      appendLog(agent.security, { t: Date.now(), ...w, event: "Updated profile photo" }, 300); save();
+      return { status: 200, data: { ok: true, photo: `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` } };
+    } catch (e) { return { status: 400, data: { error: "Couldn't process that image. Try another." } }; }
+  }
+  if (sub === "photo/remove" && method === "POST") {
+    try { fs.unlinkSync(path.join(PHOTOS, agent.id + ".jpg")); } catch {}
+    agent.photoVer = 0; agent.cardVer = Date.now(); save();
+    return { status: 200, data: { ok: true } };
+  }
   if (sub === "signout-all" && method === "POST") { agent.sessionsValidAfter = Date.now(); save(); return { status: 200, data: { ok: true } }; }
 
   return { status: 404, data: { error: "Not found" } };
@@ -732,6 +753,11 @@ const server = http.createServer(async (req, res) => {
 
       if (rest === "" || rest === "/") return res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" }).end(renderCardPage(agent, req));
       if (rest === "/card.png") return serveCardImage(agent, res);
+      if (rest === "/photo.jpg") {
+        if (!agent.photoVer) { res.writeHead(404).end(); return; }
+        try { const buf = fs.readFileSync(path.join(PHOTOS, agent.id + ".jpg")); return res.writeHead(200, { "content-type": "image/jpeg", "cache-control": "public, max-age=31536000" }).end(buf); }
+        catch { res.writeHead(404).end(); return; }
+      }
       if (rest === "/admin" || rest === "/admin/") return res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" }).end(renderAdminPage(agent));
 
       // agent APIs
