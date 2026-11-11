@@ -239,7 +239,7 @@
     <div class="title" id="titleText"></div>
     <div class="trust">
       <span class="t" data-f="states"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span id="badgeText">Verify below</span></span>
-      <span class="t g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>State-regulated agent</span>
+      <span class="t g" id="regBadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>State-regulated agent</span>
     </div>
 
     <div class="contact-lines">
@@ -320,7 +320,7 @@
   </section>
 
   <section class="acc open" id="accProducts" data-f="products">
-    <button type="button" class="acc-head" data-acc><div><h2 class="gold-text">How I can help</h2><div class="peek">Tap a coverage for a free, no-obligation quote</div></div><span class="chev"></span></button>
+    <button type="button" class="acc-head" data-acc><div><h2 class="gold-text">How I can help</h2><div class="peek" id="helpPeek">Tap a coverage for a free, no-obligation quote</div></div><span class="chev"></span></button>
     <div class="acc-body">
       <div class="products" id="productList"></div>
       <div class="book" data-f="contact">
@@ -371,7 +371,7 @@
         <div class="q-kicker">Meridian</div>
       </div>
       <h3 id="qTitle" class="q-center">Request a quote</h3>
-      <p class="psub q-center">Send <span id="qWho">me</span> a quick request. No obligation. Your information stays between us.</p>
+      <p class="psub q-center" id="qSub">Send <span id="qWho">me</span> a quick request. No obligation. Your information stays between us.</p>
       <input id="qName" type="text" placeholder="Your name" maxlength="80" autocomplete="name">
       <input id="qPhone" type="tel" placeholder="Phone number" maxlength="40" autocomplete="tel" inputmode="tel">
       <input id="qEmail" type="email" placeholder="Email" maxlength="120" autocomplete="email" inputmode="email">
@@ -544,7 +544,10 @@
     const l=$('loading'); if(l) l.remove();
     D=res; const f=res.f||{};
     const LICENSED=res.licensed!==false;
+    REFER=!LICENSED;
     if(!LICENSED){ f.npn=false; f.states=false; f.nipr=false; f.lastResort=false; }
+    { const hp=$('helpPeek'); if(hp) hp.textContent=LICENSED?'Tap a coverage for a free, no-obligation quote':"Tap a coverage and I'll connect you with a trusted licensed agent"; }
+    { const rb=$('regBadge'); if(rb) rb.style.display=LICENSED?'':'none'; }
     const shownTitle=res.title||'';
     $('brandText').textContent=res.brand||'';
     $('nameText').textContent=res.name||'';
@@ -614,8 +617,12 @@
   }
   let CARDVER=null;
   // quote (product tap) + appointment booking
-  let qProduct='', qKind='quote';
+  let qProduct='', qKind='quote', REFER=false;
   function firstName(){ return (D.name||'').trim().split(/\s+/)[0]||'me'; }
+  function setQSub(){ const el=$('qSub'); if(!el) return;
+    if(REFER){ el.textContent="Send a quick request and I'll connect you with the most trusted licensed agent on our team."; }
+    else { el.innerHTML='Send <span id="qWho"></span> a quick request. No obligation. Your information stays between us.'; const w=$('qWho'); if(w) w.textContent=firstName(); }
+  }
   function qAltFill(){
     const alt=$('qAlt'); alt.innerHTML='';
     if(D.phoneTel){ alt.innerHTML='<a href="tel:'+D.phoneTel+'">Call now</a><a href="sms:'+D.phoneTel+'">Text now</a>'; }
@@ -623,7 +630,7 @@
   }
   function openQuote(product){
     qKind='quote'; qProduct=product;
-    $('qTitle').textContent='Free quote: '+product; $('qWho').textContent=firstName();
+    $('qTitle').textContent=(REFER?'Request a quote: ':'Free quote: ')+product; setQSub();
     $('qQuoteFields').hidden=false; $('qApptFields').hidden=true;
     $('qSend').querySelector('span').textContent='Send my request';
     qAltFill(); $('qForm').hidden=false; $('qDone').hidden=true; $('quote').hidden=false;
@@ -631,7 +638,7 @@
   }
   function openAppt(){
     qKind='appointment'; qProduct='';
-    $('qTitle').textContent='Book a time with '+firstName(); $('qWho').textContent=firstName();
+    $('qTitle').textContent='Book a time with '+firstName(); setQSub();
     $('qQuoteFields').hidden=true; $('qApptFields').hidden=false;
     $('qSend').querySelector('span').textContent='Request this time';
     qAltFill(); $('qForm').hidden=false; $('qDone').hidden=true; $('quote').hidden=false;
@@ -649,9 +656,11 @@
     else { payload.when=$('qDate').value; payload.slot=$('qSlot').value; payload.method=$('qMethod').value; }
     try{ await fetch(AB+'/api/quote',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}); }catch(_){}
     span.textContent=label;
-    $('qDoneMsg').textContent = qKind==='appointment'
-      ? (firstName()+" will confirm your time and reach out.")
-      : (firstName()+" is already shopping the best carriers for you. Want to lock in a quick time to go over your options together?");
+    $('qDoneMsg').textContent = REFER
+      ? (firstName()+" will connect you with the most trusted licensed agent on the team to take care of you.")
+      : (qKind==='appointment'
+        ? (firstName()+" will confirm your time and reach out.")
+        : (firstName()+" is already shopping the best carriers for you. Want to lock in a quick time to go over your options together?"));
     $('qBook').hidden = qKind!=='quote';
     $('qForm').hidden=true; $('qDone').hidden=false;
   });
