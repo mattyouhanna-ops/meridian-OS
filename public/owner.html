@@ -54,6 +54,13 @@
   .stategrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:190px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:10px;background:#0e0e10}
   .stategrid label{display:flex;align-items:center;gap:5px;margin:0;font-size:13px;color:var(--text);cursor:pointer}
   .stategrid input{width:auto}
+  .stsearch{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0e0e10;color:var(--text);font:500 14px Inter,sans-serif;margin-bottom:8px}
+  #a_states.stgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;max-height:210px;overflow:auto}
+  #a_states.stgrid label{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#141416;font-size:13px;margin:0}
+  #a_states.stgrid label:has(input:checked){border-color:var(--gold);background:#1a1708}
+  #a_states.stgrid label b{flex:none;color:var(--gold2);width:24px}
+  #a_states.stgrid label span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .stcount{font-size:12px;color:var(--gold2);margin-top:6px;min-height:14px}
   .gate{max-width:420px;margin:8vh auto}
   .err{color:#ffb4b4;font-size:14px;margin-top:10px;min-height:1em}
   .ok{color:var(--ok)}
@@ -128,8 +135,10 @@
         </div>
         <label>Mobile carrier (for free text alerts)</label>
         <select id="a_carrier"><option value="">— carrier —</option><option value="verizon">Verizon</option><option value="att">AT&T</option><option value="tmobile">T-Mobile</option><option value="metro">Metro by T-Mobile</option><option value="cricket">Cricket</option><option value="boost">Boost Mobile</option><option value="uscellular">US Cellular</option><option value="googlefi">Google Fi</option><option value="xfinity">Xfinity Mobile</option><option value="visible">Visible</option><option value="mint">Mint Mobile</option><option value="straighttalk">Straight Talk</option></select>
-        <label>Licensed states (tap to toggle)</label>
-        <div class="stategrid" id="a_states"></div>
+        <label>Licensed states</label>
+        <input class="stsearch" id="a_stsearch" type="search" placeholder="Search states — type a name or code (e.g. Michigan or MI)">
+        <div class="stgrid" id="a_states"></div>
+        <div class="stcount" id="a_stcount"></div>
         <div class="err" id="a_err"></div>
         <button class="btn gold" id="a_go" style="margin-top:12px">Create agent</button>
         <div id="a_result" class="hide" style="margin-top:14px"></div>
@@ -307,7 +316,11 @@ function showWelcome(box2,a,pass){
 // ----- Add agent -----
 function buildStateGrid(){
   const g=$('a_states'); if(g.dataset.built) return;
-  g.innerHTML=Object.keys(STATE_NAMES).sort().map(c=>`<label><input type="checkbox" value="${c}">${c}</label>`).join('');
+  g.classList.add('stgrid');
+  g.innerHTML=Object.keys(STATE_NAMES).sort().map(c=>`<label data-s="${c.toLowerCase()} ${(STATE_NAMES[c]||'').toLowerCase()}"><input type="checkbox" value="${c}"><b>${c}</b><span>${STATE_NAMES[c]||''}</span></label>`).join('');
+  const cnt=$('a_stcount'); const upd=()=>{ const n=g.querySelectorAll('input:checked').length; cnt.textContent=n?(n+' state'+(n>1?'s':'')+' selected'):''; };
+  g.addEventListener('change',upd);
+  const s=$('a_stsearch'); if(s) s.addEventListener('input',()=>{ const q=s.value.trim().toLowerCase(); g.querySelectorAll('label').forEach(l=>{ l.style.display=(!q||l.dataset.s.indexOf(q)>=0)?'':'none'; }); });
   g.dataset.built='1';
 }
 $('a_go').onclick=async()=>{
