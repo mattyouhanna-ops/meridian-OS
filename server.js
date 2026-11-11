@@ -20,6 +20,7 @@ import {
   agentLocked, agentLoginFail, agentLoginOk, ownerLocked, ownerLoginFail, ownerLoginOk,
   agentDenied, denyAgent, reinstateAgent, requestReinstate,
   isPlatformFrozen, setPlatformFrozen,
+  childAgencies, agencyScopeIds,
   listAgents, getAgent, getAgentBySlug, getAgentByEmail, createAgent, updateAgent, deleteAgent, agentSummary, agencyOf,
   listAccountRequests, addAccountRequest, setAccountRequestStatus,
 } from "./lib/model.js";
@@ -391,7 +392,7 @@ function agentPatch(body) {
 }
 function agencyLeads(agencyId) {
   const leads = [];
-  for (const a of listAgents(agencyId)) for (const q of a.quotes) leads.push({ ...q, agent: a.profile.name, agentSlug: a.slug, agentId: a.id });
+  for (const id of agencyScopeIds(agencyId)) for (const a of listAgents(id)) for (const q of a.quotes) leads.push({ ...q, agent: a.profile.name, agentSlug: a.slug, agentId: a.id });
   leads.sort((x, y) => y.t - x.t);
   return leads.slice(0, 500);
 }
@@ -425,6 +426,10 @@ async function handleOwner(sub, method, body, req) {
   const ag = ownerSession(req);
   if (!ag) return { status: 401, data: { error: "Please sign in." } };
 
+  // Parent owners see everything beneath them (one level: their agency + its child agencies).
+  const scope = agencyScopeIds(ag.id);
+  const inScope = (a) => a && scope.includes(a.agencyId);
+
   const licensed = agencyLicensed(ag);
   const license = { licensed, daysLeft: licenseDaysLeft(ag), licenseUntil: ag.licenseUntil || null, platform: platformBrand() };
   // When the lease has lapsed, the owner can sign in and look, but can't make
@@ -434,9 +439,10 @@ async function handleOwner(sub, method, body, req) {
   if (!licensed && ((sub === "agents" && method === "POST") || (/^agents\/[a-z0-9]+$/i.test(sub) && method !== "GET"))) return needsRenewal();
 
   if (sub === "data" && method === "GET") {
-    const agents = listAgents(ag.id).map(agentSummary);
+    const children = childAgencies(ag.id);
+    const agents = scope.flatMap((id) => listAgents(id)).map((a) => { const s = agentSummary(a); if (a.agencyId !== ag.id) { const c = getAgency(a.agencyId); s.subAgency = c ? c.name : ""; } return s; });
     const totals = agents.reduce((t, a) => ({ agents: t.agents + 1, newQuotes: t.newQuotes + a.newQuotes, newRequests: t.newRequests + a.newRequests, views: t.views + a.views, sold: t.sold + a.sold }), { agents: 0, newQuotes: 0, newRequests: 0, views: 0, sold: 0 });
-    return { status: 200, data: { owner: { email: ag.ownerEmail, agency: ag.name, brand: ag.brand, mustChange: !!ag.ownerMustChange }, agents, totals, stateNames: STATE_NAMES, platformBrand: platformBrand(), license } };
+    return { status: 200, data: { owner: { email: ag.ownerEmail, agency: ag.name, brand: ag.brand, mustChange: !!ag.ownerMustChange }, agents, totals, subAgencies: children.map((c) => ({ id: c.id, name: c.name })), stateNames: STATE_NAMES, platformBrand: platformBrand(), license } };
   }
   if (sub === "agents" && method === "POST") {
     try { const { agent, tempPassword } = createAgent(ag.id, body); const emailed = await emailAgentWelcome(agent, tempPassword, req); return { status: 200, data: { ok: true, agent: agentSummary(agent), slug: agent.slug, tempPassword, emailed } }; }
@@ -445,13 +451,13 @@ async function handleOwner(sub, method, body, req) {
   const am = sub.match(/^agents\/([a-z0-9]+)$/i);
   if (am) {
     const a = getAgent(am[1]);
-    if (!a || a.agencyId !== ag.id) return { status: 404, data: { error: "Agent not found." } };
+    if (!inScope(a)) return { status: 404, data: { error: "Agent not found." } };
     if (method === "PATCH") { try { const u = updateAgent(a.id, agentPatch(body)); return { status: 200, data: { ok: true, agent: agentSummary(u) } }; } catch (e) { return { status: 400, data: { error: e.message } }; } }
     if (method === "DELETE") { deleteAgent(a.id); return { status: 200, data: { ok: true } }; }
   }
   const dm = sub.match(/^agent\/([a-z0-9]+)\/detail$/i);
   if (dm && method === "GET") {
-    const a = getAgent(dm[1]); if (!a || a.agencyId !== ag.id) return { status: 404, data: { error: "Agent not found." } };
+    const a = getAgent(dm[1]); if (!inScope(a)) return { status: 404, data: { error: "Agent not found." } };
     return { status: 200, data: { profile: normalizeProfile(a.profile), slug: a.slug, active: a.active, links: a.links, quotes: a.quotes, requests: a.requests, visits: a.visits.slice(0, 200), security: a.security.slice(0, 100) } };
   }
   if (sub === "leads" && method === "GET") return { status: 200, data: { leads: agencyLeads(ag.id) } };

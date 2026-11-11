@@ -120,6 +120,7 @@ textarea{min-height:120px;resize:vertical}
             <div><label>Owner email (optional — gives them a login)</label><input id="ag_owner" type="email" placeholder="owner@agency.com"></div>
             <div><label>Corporate landing URL (for off-boarded agents)</label><input id="ag_corp" placeholder="https://agency.com"></div>
           </div>
+          <div class="row"><div><label>Parent agency (optional — makes this a sub-agency)</label><select id="ag_parent"><option value="">None — top-level agency</option></select></div><div></div></div>
           <div class="err" id="ag_err"></div>
           <button class="btn gold sm" id="ag_go" style="margin-top:10px">Create agency</button>
           <div id="ag_result" class="hide" style="margin-top:12px"></div>
@@ -250,10 +251,18 @@ function renderTiles(){ const t=DATA.totals;
 
 function renderAgencies(){
   const box=$('agencies');
+  // Populate the "parent agency" picker with top-level agencies only (one level deep).
+  const par=$('ag_parent'); if(par){ const cur=par.value; par.innerHTML='<option value="">None — top-level agency</option>'+DATA.agencies.filter(a=>!a.parentId).map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join(''); par.value=cur; }
   if(!DATA.agencies.length){box.innerHTML='<p class="muted">No agencies yet.</p>';return;}
-  box.innerHTML=DATA.agencies.map(a=>{
+  // Order so each child agency follows its parent, indented.
+  const byId={}; DATA.agencies.forEach(a=>byId[a.id]=a);
+  const ordered=[]; DATA.agencies.filter(a=>!a.parentId).forEach(p=>{ ordered.push(p); DATA.agencies.filter(c=>c.parentId===p.id).forEach(c=>ordered.push(c)); });
+  DATA.agencies.filter(a=>a.parentId&&!byId[a.parentId]).forEach(a=>ordered.push(a)); // orphaned safety
+  box.innerHTML=ordered.map(a=>{
     const t=a.totals, accent=a.brand&&a.brand.accent||'#d4af37';
-    return `<div class="agency" data-id="${a.id}">
+    const parent=a.parentId?byId[a.parentId]:null;
+    return `<div class="agency${parent?' child':''}" data-id="${a.id}"${parent?' style="margin-left:22px;border-left:2px solid var(--gold-dim)"':''}>
+      ${parent?`<div class="muted" style="font-size:11.5px;margin-bottom:4px">↳ sub-agency of ${esc(parent.name)}</div>`:''}
       <div class="hd">
         <span class="dot" style="background:${esc(accent)}"></span>
         <span class="nm">${esc(a.name)}</span>
@@ -451,7 +460,7 @@ async function agentAction(act,x,a,row){
 // ----- create agency -----
 $('addAgencyBtn').onclick=()=>$('addAgency').classList.toggle('hide');
 $('ag_go').onclick=async()=>{ $('ag_err').textContent='';
-  const body={name:$('ag_name').value.trim(),accent:$('ag_accent').value,ownerEmail:$('ag_owner').value.trim()||undefined,corpLanding:$('ag_corp').value.trim()||undefined};
+  const body={name:$('ag_name').value.trim(),accent:$('ag_accent').value,ownerEmail:$('ag_owner').value.trim()||undefined,corpLanding:$('ag_corp').value.trim()||undefined,parentId:$('ag_parent').value||undefined};
   if(!body.name){$('ag_err').textContent='Agency name required.';return;}
   const r=await(await api('/api/dev/agencies',{method:'POST',body:JSON.stringify(body)})).json();
   if(r.error){$('ag_err').textContent=r.error;return;}

@@ -251,6 +251,7 @@ function renderAgents(){
       <div class="hd">
         <span class="nm">${esc(a.name)}</span>
         <span class="chip ${a.active?'on':'off'}">${a.active?'Active':'Off'}</span>
+        ${a.subAgency?'<span class="chip">'+esc(a.subAgency)+'</span>':''}
         ${a.locked?'<span class="chip off">🔒 Locked out</span>':''}
         ${a.newQuotes?`<span class="chip gold">${a.newQuotes} new quote${a.newQuotes>1?'s':''}</span>`:''}
         ${a.newRequests?`<span class="chip gold">${a.newRequests} request${a.newRequests>1?'s':''}</span>`:''}
