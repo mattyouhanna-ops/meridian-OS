@@ -89,6 +89,14 @@
   .steps-n li{counter-increment:s;position:relative;padding:4px 0 4px 26px;font-size:13.5px;color:var(--muted)}
   .steps-n li:before{content:counter(s);position:absolute;left:0;top:3px;width:18px;height:18px;border-radius:50%;background:var(--gold-dim);color:var(--black);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
   .editrow{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:12px;margin-top:8px}
+  .catrow{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin-top:8px}
+  .catrow .catname{flex:1;font-size:14px}
+  .catrow .catsel{flex:none;background:var(--black);border:1px solid var(--line);color:var(--text);border-radius:9px;padding:8px 10px;font:600 13px Inter,sans-serif}
+  .catchk{display:flex;align-items:flex-start;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:11px 12px;margin-top:8px;cursor:pointer}
+  .catchk input{margin-top:3px;accent-color:var(--gold);flex:none}
+  .catchk span{display:block}
+  .catchk b{display:block;font-size:14px}
+  .catchk em{font-style:normal;font-size:12.5px;color:var(--muted);line-height:1.4}
   .editrow input{margin-bottom:6px}
   /* ===== dashboard v2 ===== */
   .wrap{max-width:1180px}
@@ -382,7 +390,7 @@
 
           <section class="panel" data-sec="offer" hidden>
             <h2 class="gold-text">Promises &amp; products</h2>
-            <p class="muted">What clients read under "How I can help" and "My promise to you." Start a product's description with <b>Coming soon</b> to tag it.</p>
+            <p class="muted">What clients read under "How I can help" and "My promise to you." Set each product to <b>Live</b>, <b>Coming soon</b>, or <b>Hide</b>. Use + Add for anything custom.</p>
             <label>How I can help (products)</label>
             <div id="p_products"></div>
             <button class="btn sm ghost" id="addProduct" style="margin-top:10px">+ Add a product</button>
@@ -538,6 +546,41 @@ function addEditRow(container,t,d,phType,phDesc){
 function readRows(container){
   return [...container.querySelectorAll('.editrow')].map(r=>({t:r.querySelector('.et').value.trim(),d:r.querySelector('.ed').value.trim()})).filter(x=>x.t||x.d);
 }
+// ---------- catalog pickers (products / promises) ----------
+let CATALOG={products:[],promises:[]};
+function cleanSoon(d){ return String(d||'').replace(/^\s*coming soon\.?\s*/i,'').trim(); }
+function renderProducts(p){
+  const box=$('p_products'); box.innerHTML='';
+  const chosen={}; (p.products||[]).forEach(x=>chosen[x.t.toLowerCase()]={soon:/^\s*coming soon/i.test(x.d||''),d:x.d});
+  (CATALOG.products||[]).forEach(c=>{
+    const key=c.t.toLowerCase(), ch=chosen[key]; const sel=ch?(ch.soon?'soon':'live'):'hide';
+    const row=document.createElement('div'); row.className='catrow'; row.dataset.t=c.t; row.dataset.base=cleanSoon(c.d);
+    row.innerHTML='<div class="catname"><b>'+esc(c.t)+'</b></div><select class="catsel"><option value="live"'+(sel==='live'?' selected':'')+'>Show · Live</option><option value="soon"'+(sel==='soon'?' selected':'')+'>Show · Coming soon</option><option value="hide"'+(sel==='hide'?' selected':'')+'>Hide</option></select>';
+    box.appendChild(row); delete chosen[key];
+  });
+  (p.products||[]).forEach(x=>{ if(chosen[x.t.toLowerCase()]) addEditRow(box,x.t,x.d,'Product name','Short description'); });
+}
+function renderPromises(p){
+  const box=$('p_promises'); box.innerHTML='';
+  const chosen={}; (p.promises||[]).forEach(x=>chosen[x.t.toLowerCase()]=true);
+  (CATALOG.promises||[]).forEach(c=>{
+    const on=chosen[c.t.toLowerCase()]===true;
+    const l=document.createElement('label'); l.className='catchk'; l.dataset.t=c.t; l.dataset.d=c.d;
+    l.innerHTML='<input type="checkbox"'+(on?' checked':'')+'><span><b>'+esc(c.t)+'</b><em>'+esc(c.d)+'</em></span>';
+    box.appendChild(l); delete chosen[c.t.toLowerCase()];
+  });
+  (p.promises||[]).forEach(x=>{ if(chosen[x.t.toLowerCase()]) addEditRow(box,x.t,x.d,'Promise title','What it means'); });
+}
+function readProducts(){
+  const out=[];
+  document.querySelectorAll('#p_products .catrow').forEach(r=>{ const v=r.querySelector('.catsel').value; if(v==='hide')return; const base=r.dataset.base; out.push({t:r.dataset.t,d:v==='soon'?('Coming soon. '+base):base}); });
+  return out.concat(readRows($('p_products')));
+}
+function readPromises(){
+  const out=[];
+  document.querySelectorAll('#p_promises .catchk').forEach(l=>{ if(l.querySelector('input').checked) out.push({t:l.dataset.t,d:l.dataset.d}); });
+  return out.concat(readRows($('p_promises')));
+}
 
 // ================= boot: decide which screen =================
 let INVITE="";
@@ -614,6 +657,7 @@ async function loadDash(){
   const r=await api(AB+'/api/admin/state');
   if(r.status===401){ showGate('login'); return; }
   S=await r.json();
+  CATALOG=S.catalog||CATALOG;
   AUD=JSON.parse(JSON.stringify(S.settings.audiences));
   $('gateMono').textContent=initials(S.profile.name); $('topMono').textContent=initials(S.profile.name);
   $('topBrand').textContent=S.profile.brand||'Admin';
@@ -724,12 +768,12 @@ function fillProfile(){
   $('p_name').value=p.name||''; $('p_title').value=p.title||''; $('p_brand').value=p.brand||'';
   $('p_phone').value=p.phone||''; $('p_email').value=p.email||''; $('p_npn').value=p.npn||'';
   stateGrid($('p_states'),p.states||[]);
-  $('p_promises').innerHTML=''; (p.promises||[]).forEach(x=>addEditRow($('p_promises'),x.t,x.d,'Promise title','What it means'));
-  $('p_products').innerHTML=''; (p.products||[]).forEach(x=>addEditRow($('p_products'),x.t,x.d,'Product name','Short description'));
+  renderPromises(p);
+  renderProducts(p);
 }
 $('addPromise').addEventListener('click',()=>addEditRow($('p_promises'),'','','Promise title','What it means'));
 $('addProduct').addEventListener('click',()=>addEditRow($('p_products'),'','','Product name','Short description'));
-function readProfile(){return {name:$('p_name').value,title:$('p_title').value,brand:$('p_brand').value,phone:$('p_phone').value,email:$('p_email').value,npn:$('p_npn').value,states:gridValue($('p_states')),promises:readRows($('p_promises')),products:readRows($('p_products'))};}
+function readProfile(){return {name:$('p_name').value,title:$('p_title').value,brand:$('p_brand').value,phone:$('p_phone').value,email:$('p_email').value,npn:$('p_npn').value,states:gridValue($('p_states')),promises:readPromises(),products:readProducts()};}
 function readDraft(){return {profile:readProfile(),audiences:AUD,defaultAudience:$('defAud').value,sendMessage:$('sendMsg').value};}
 function baseline(){BASE=JSON.stringify(readDraft()); updateSaveBar();}
 function isDirty(){return JSON.stringify(readDraft())!==BASE;}

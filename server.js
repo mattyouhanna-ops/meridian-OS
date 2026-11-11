@@ -10,6 +10,7 @@ import { db, save } from "./lib/store.js";
 import {
   normalizeProfile, normalizeSettings, FIELDS, DEFAULT_MESSAGE, cleanFields,
   hashPass, checkPass, makeSessionCookie, clearCookie, readSession, describeDevice, encField,
+  DEFAULT_PRODUCTS, DEFAULT_PROMISES,
 } from "./lib/core.js";
 import { STATE_NAMES, statesFor } from "./lib/states.js";
 import {
@@ -253,7 +254,7 @@ async function handleAdmin(agent, sub, method, body, req) {
   const S = () => normalizeSettings(agent.settings);
 
   if (sub === "state" && method === "GET")
-    return { status: 200, data: { email: agent.profile.email, fields: FIELDS, stateNames: STATE_NAMES, profile: normalizeProfile(agent.profile), settings: S(), links: agent.links, mustChange: !!agent.mustChange } };
+    return { status: 200, data: { email: agent.profile.email, fields: FIELDS, stateNames: STATE_NAMES, profile: normalizeProfile(agent.profile), settings: S(), links: agent.links, mustChange: !!agent.mustChange, catalog: { products: DEFAULT_PRODUCTS, promises: DEFAULT_PROMISES } } };
 
   if (sub === "profile" && method === "POST") {
     const next = normalizeProfile({ ...agent.profile, ...(body.profile || {}) });
