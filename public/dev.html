@@ -38,6 +38,10 @@ input:focus,textarea:focus{outline:none;border-color:var(--dim)}
 .tile b{display:block;font-size:26px;font-family:'Cormorant Garamond',serif;color:var(--gold2)}
 .tile span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
 .agency{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;background:var(--panel2)}
+.agency .hd{cursor:pointer;user-select:none}
+.agency .chev{margin-left:8px;flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);color:var(--gold);display:inline-flex;align-items:center;justify-content:center;transition:transform .2s}
+.agency .chev:after{content:"";width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-1px) rotate(45deg)}
+.agency.open .chev{transform:rotate(180deg)}
 .credline{font-size:12.5px;color:var(--muted);margin:8px 0;padding:8px 10px;border:1px dashed #33333a;border-radius:10px;background:#0e0e10;word-break:break-word}
 .credline code{color:var(--gold2);font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:#1a1708;padding:1px 6px;border-radius:6px}
 .credline b{color:var(--text)}
@@ -110,7 +114,7 @@ textarea{min-height:120px;resize:vertical}
     <section id="tab-agencies">
       <div class="tiles" id="tiles"></div>
       <div class="card">
-        <div class="flexb"><h2>Agencies</h2><button class="btn sm" id="addAgencyBtn">+ New agency</button></div>
+        <div class="flexb"><h2>Agencies</h2><div class="row"><button class="btn sm ghost" id="expandAll">Expand all</button><button class="btn sm" id="addAgencyBtn">+ New agency</button></div></div>
         <div id="addAgency" class="hide" style="margin:10px 0 4px">
           <div class="row">
             <div><label>Agency name</label><input id="ag_name" placeholder="Summit Insurance Group"></div>
@@ -263,7 +267,7 @@ function renderAgencies(){
     const parent=a.parentId?byId[a.parentId]:null;
     return `<div class="agency${parent?' child':''}" data-id="${a.id}"${parent?' style="margin-left:22px;border-left:2px solid var(--gold-dim)"':''}>
       ${parent?`<div class="muted" style="font-size:11.5px;margin-bottom:4px">↳ sub-agency of ${esc(parent.name)}</div>`:''}
-      <div class="hd">
+      <div class="hd" data-toggle>
         <span class="dot" style="background:${esc(accent)}"></span>
         <span class="nm">${esc(a.name)}</span>
         <span class="chip ${a.active?'on':'off'}">${a.active?'Active':'Suspended'}</span>
@@ -273,7 +277,9 @@ function renderAgencies(){
         ${t.newQuotes?`<span class="chip gold">${t.newQuotes} new</span>`:''}
         <span class="sp"></span>
         <span class="muted" style="font-size:12px">${t.agents} agents · ${t.views} views · ${t.sold} sold</span>
+        <span class="chev"></span>
       </div>
+      <div class="agencybody"${openAgencies.has(a.id)?'':' hidden'}>
       ${a.hasOwner?`<div class="credline">👤 <b>Owner login:</b> ${esc(a.ownerEmail||'')} · ${a.ownerCurPass?`password <code>${esc(a.ownerCurPass)}</code> <span class="muted">(${a.ownerIssuedPass?'temporary':'their current password'})</span>`:'<span class="muted">no password on file — use “Reset owner login”</span>'}</div>`:'<div class="credline muted">No owner yet — you manage this agency directly.</div>'}
       <div class="acts">
         <button class="btn sm ghost" data-act="notify">🔔 Alert recipients${(a.alertEmails&&a.alertEmails.length||a.alertSms&&a.alertSms.length)?' ('+((a.alertEmails||[]).length+(a.alertSms||[]).length)+')':''}</button>
@@ -287,12 +293,18 @@ function renderAgencies(){
       <div class="ownerbox hide" style="margin-top:8px"></div>
       <div class="notifybox hide" style="margin-top:8px"></div>
       <div class="sub agents-wrap"></div>
+      </div>
     </div>`;
   }).join('');
   box.querySelectorAll('.agency').forEach(el=>{
     const id=el.dataset.id, a=DATA.agencies.find(x=>x.id===id);
+    const body=el.querySelector('.agencybody');
+    if(openAgencies.has(id)){ el.classList.add('open'); loadAgents(a,el); }
+    el.querySelector('.hd[data-toggle]').onclick=()=>{
+      if(openAgencies.has(id)){ openAgencies.delete(id); body.hidden=true; el.classList.remove('open'); }
+      else { openAgencies.add(id); body.hidden=false; el.classList.add('open'); loadAgents(a,el); }
+    };
     el.querySelectorAll('.acts [data-act]').forEach(b=>b.onclick=()=>agencyAction(b.dataset.act,a,el));
-    loadAgents(a,el); // always show agents nested, no click needed
   });
 }
 
@@ -459,6 +471,7 @@ async function agentAction(act,x,a,row){
 
 // ----- create agency -----
 $('addAgencyBtn').onclick=()=>$('addAgency').classList.toggle('hide');
+$('expandAll').onclick=()=>{ const all=DATA&&DATA.agencies||[]; const allOpen=all.length&&all.every(a=>openAgencies.has(a.id)); if(allOpen){ openAgencies.clear(); $('expandAll').textContent='Expand all'; } else { all.forEach(a=>openAgencies.add(a.id)); $('expandAll').textContent='Collapse all'; } renderAgencies(); };
 $('ag_go').onclick=async()=>{ $('ag_err').textContent='';
   const body={name:$('ag_name').value.trim(),accent:$('ag_accent').value,ownerEmail:$('ag_owner').value.trim()||undefined,corpLanding:$('ag_corp').value.trim()||undefined,parentId:$('ag_parent').value||undefined};
   if(!body.name){$('ag_err').textContent='Agency name required.';return;}
