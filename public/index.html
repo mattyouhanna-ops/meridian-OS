@@ -266,6 +266,10 @@
     </div>
   </div>
 
+  <div id="unlicNote" hidden style="margin:14px 0;padding:14px 16px;border:1px solid var(--gold-dim);border-radius:14px;background:rgba(201,168,107,.06);color:var(--text);font-size:14px;line-height:1.55">
+    Currently completing state licensing. For anything that needs a licensed agent, I'll connect you with one on my team right away.
+  </div>
+
   <section class="acc open" id="verify" data-f="any">
     <button type="button" class="acc-head" data-acc><div><h2 class="gold-text">Verify my license</h2><div class="peek">Look me up on official state records — one minute</div></div><span class="chev"></span></button>
     <div class="acc-body">
@@ -539,13 +543,17 @@
     pk.hidden=false; pn.hidden=true; document.body.style.paddingBottom='';
     const l=$('loading'); if(l) l.remove();
     D=res; const f=res.f||{};
+    const LICENSED=res.licensed!==false;
+    let shownTitle=res.title||'';
+    if(!LICENSED){ f.npn=false; f.states=false; f.nipr=false; f.lastResort=false; shownTitle=(shownTitle.replace(/licensed/ig,'').trim())||'Agent in training'; }
     $('brandText').textContent=res.brand||'';
     $('nameText').textContent=res.name||'';
-    $('titleText').textContent=res.title||'';
+    $('titleText').textContent=shownTitle;
+    { const un=$('unlicNote'); if(un) un.hidden=LICENSED; }
     if(res.photo){ $('mono').innerHTML='<img src="'+res.photo+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'; }
     else { $('mono').textContent=initials(res.name)||'✦'; }
     renderSocials(res.socials);
-    document.title=(res.name||'Agent')+' · '+(res.title||'Licensed Insurance Agent');
+    document.title=(res.name||'Agent')+(shownTitle?' · '+shownTitle:'');
     document.querySelectorAll('.v-name').forEach(e=>e.textContent=res.name||'');
     $('footName').textContent=(res.name||'')+(res.brand?' · '+res.brand:'');
     if(res.compliance){ $('complianceBox').textContent=res.compliance; $('complianceBox').hidden=false; } else { $('complianceBox').hidden=true; }

@@ -169,10 +169,13 @@ async function handleCard(agent, url, req) {
 
   const agc = agencyOf(agent);
   const compliance = [getDeveloper().compliance, agc && agc.compliance].filter(Boolean).join("\n\n");
-  const base = { name: P.name, title: P.title, brand: P.brand, photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null, compliance, ver: agent.cardVer || 0 };
+  const licensed = agent.licensed !== false; // unlicensed agents can't hold out as licensed
+  const base = { name: P.name, title: P.title, brand: P.brand, licensed, photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null, compliance, ver: agent.cardVer || 0 };
   if (revoked) return { ...base, revoked: true, f: {} };
   if (limited) return { ...base, limited: true, f: {} };
   if (!fields) fields = settings.audiences[settings.defaultAudience]?.fields || {};
+  // An unlicensed agent never shows an NPN, state licenses, or the verify-license flow.
+  if (!licensed) fields = { ...fields, npn: false, states: false };
   const out = { ...base, f: { ...fields } };
   if (fields.phone) { out.phone = P.phone; out.phoneTel = P.phoneTel; }
   if (fields.email) out.email = P.email;
@@ -431,6 +434,7 @@ function agentPatch(body) {
   const patch = {};
   if (body.profile) patch.profile = body.profile;
   if (typeof body.carrier === "string") patch.carrier = body.carrier;
+  if (typeof body.licensed === "boolean") patch.licensed = body.licensed;
   if (typeof body.active === "boolean") patch.active = body.active;
   if (body.password) patch.password = String(body.password);
   if (body.unlock) patch.unlock = true;
@@ -702,14 +706,16 @@ async function serveCardImage(agent, res, req) {
   const k = (() => { try { return new URL(req.url, "http://h").searchParams.get("k"); } catch { return null; } })();
   const fields = previewFields(agent, k);
   const key = agent.id + ":" + agent.cardVer + ":" + (fields.npn ? 1 : 0) + (fields.phone ? 1 : 0) + (fields.email ? 1 : 0);
-  let buf = ogCache.get(key);
+  const licensed = agent.licensed !== false;
+  const key2 = key + ":" + (licensed ? 1 : 0);
+  let buf = ogCache.get(key2);
   if (!buf) {
     const prof = normalizeProfile(agent.profile);
     // Only show what this link's audience allows.
     if (!fields.npn) prof.npn = "";
     if (!fields.phone) prof.phone = "";
     if (!fields.email) prof.email = "";
-    buf = await cardPNG(prof); ogCache.set(key, buf); if (ogCache.size > 200) ogCache.delete(ogCache.keys().next().value);
+    buf = await cardPNG(prof, { licensed }); ogCache.set(key2, buf); if (ogCache.size > 200) ogCache.delete(ogCache.keys().next().value);
   }
   res.writeHead(200, { "content-type": "image/jpeg", "cache-control": "public, max-age=86400" }).end(buf);
 }
