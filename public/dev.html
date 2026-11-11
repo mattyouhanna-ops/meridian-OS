@@ -423,10 +423,21 @@ async function loadAgents(a,el){
     row.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>agentAction(b.dataset.act,ag,a,row));
   });
 }
+function presence(ts){
+  if(!ts) return {cls:'off',dot:'#ff6b6b',label:'Never active'};
+  const d=(Date.now()-ts)/86400000;
+  if(d<1) return {cls:'on',dot:'#49d17a',label:'Active today'};
+  if(d<3) return {cls:'on',dot:'#49d17a',label:'Active '+Math.floor(d)+'d ago'};
+  if(d<14) return {cls:'gold',dot:'#e7c15b',label:'Quiet '+Math.floor(d)+'d'};
+  if(d<60) return {cls:'off',dot:'#ff9f45',label:'Dormant '+Math.floor(d/7)+'wk'};
+  return {cls:'off',dot:'#ff6b6b',label:'Dormant '+Math.floor(d/30)+'mo'};
+}
 function agentRow(x,a){
   const admin=ORIGIN+'/a/'+x.slug+'/admin';
+  const pr=presence(x.lastActive);
   return `<div class="agent" data-id="${x.id}">
     <div class="r1"><b>${esc(x.name)}</b><span class="chip ${x.active?'on':'off'}">${x.active?'On':'Off'}</span>
+    <span class="chip ${pr.cls}" title="Based on their most recent visit"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${pr.dot};margin-right:5px;vertical-align:middle"></span>${pr.label}</span>
     ${x.locked?'<span class="chip off">🔒 Locked</span>':''}
     ${x.denied?'<span class="chip off">🚫 Denied</span>':''}
     ${x.reinstateRequested?'<span class="chip gold">Wants back in</span>':''}
