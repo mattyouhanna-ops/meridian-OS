@@ -271,7 +271,7 @@
   </div>
 
   <section class="acc open" id="verify" data-f="any">
-    <button type="button" class="acc-head" data-acc><div><h2 class="gold-text">Verify my license</h2><div class="peek">Look me up on official state records — one minute</div></div><span class="chev"></span></button>
+    <button type="button" class="acc-head" data-acc><div><h2 class="gold-text">Verify my license</h2><div class="peek">Look me up on official state records, one minute</div></div><span class="chev"></span></button>
     <div class="acc-body">
       <p class="sub">Anyone can build a website. A state license can't be faked. <b class="hl">Look me up on the official government records below.</b></p>
 
@@ -495,7 +495,7 @@
     if(D.phoneTel) L.push('TEL;TYPE=CELL,VOICE:'+D.phoneTel);
     if(D.email) L.push('EMAIL;TYPE=INTERNET,WORK:'+D.email);
     L.push('URL:'+CARDURL);
-    // A clear note so the client — and their beneficiaries — know who to contact and can verify the license.
+    // A clear note so the client, and their beneficiaries, know who to contact and can verify the license.
     const note='Your licensed life insurance agent. Keep this so you and your beneficiaries can reach me about your policy'+(D.npn?'. NPN '+D.npn:'')+'. Verify my license at '+CARDURL;
     L.push('NOTE:'+note.replace(/\r?\n/g,' '));
     L.push('END:VCARD'); return L.join('\r\n');
@@ -607,7 +607,7 @@
       } else if(locked && !res.revoked && !res.limited && !res.notSetup){
         location.reload();
       } else if(!locked && !res.revoked && !res.limited && !res.notSetup && res.ver && CARDVER && res.ver!==CARDVER){
-        // The agent edited their card — refresh the content live, unless the client is mid-form.
+        // The agent edited their card, refresh the content live, unless the client is mid-form.
         if($('quote').hidden){ render(res); }
       }
     }

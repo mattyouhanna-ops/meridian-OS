@@ -62,8 +62,8 @@ input:focus,textarea:focus{border-color:#d4af37}
 
     <div class="seclabel">Choose your industry</div>
     <div class="inds" id="inds">
-      <div class="ind on" data-ind="Life Insurance"><span class="ic">🛡️</span><div class="t"><b>Life Insurance</b><span>Licensed agents — verify, quote, get leads</span></div><span class="badge">Live</span></div>
-      <div class="ind" data-ind="Mortgage"><span class="ic">🏠</span><div class="t"><b>Mortgage</b><span>Loan officers — your digital business card</span></div><span class="badge">New</span></div>
+      <div class="ind on" data-ind="Life Insurance"><span class="ic">🛡️</span><div class="t"><b>Life Insurance</b><span>Licensed agents, verify, quote, get leads</span></div><span class="badge">Live</span></div>
+      <div class="ind" data-ind="Mortgage"><span class="ic">🏠</span><div class="t"><b>Mortgage</b><span>Loan officers, your digital business card</span></div><span class="badge">New</span></div>
     </div>
     <div class="moresoon">More sales industries are being added soon.</div>
 
@@ -77,7 +77,7 @@ input:focus,textarea:focus{border-color:#d4af37}
     <button type="button" class="back" id="backFromLogin">← Back</button>
     <div class="crest"><img src="/logo.svg" alt="Meridian OS"></div>
     <h1>Agent log in</h1>
-    <p class="sub">One login for your whole team — you'll land on your own dashboard.</p>
+    <p class="sub">One login for your whole team, you'll land on your own dashboard.</p>
     <label for="email">Email</label>
     <input id="email" type="email" autocomplete="username" inputmode="email" placeholder="you@email.com" required>
     <label for="pass">Password</label>
@@ -114,7 +114,7 @@ input:focus,textarea:focus{border-color:#d4af37}
     <div class="ok">
       <div class="big">✅</div>
       <h1>Request sent</h1>
-      <p class="sub">Thanks — your request is in. If you're approved, you'll get a welcome email with your login. No account is active until then.</p>
+      <p class="sub">Thanks, your request is in. If you're approved, you'll get a welcome email with your login. No account is active until then.</p>
       <button class="btn ghost" id="doneBack">Back to start</button>
     </div>
     <div class="foot">POWERED BY MERIDIAN OS</div>
@@ -161,7 +161,7 @@ $('vLogin').addEventListener('submit',async e=>{
     if(j.ok&&j.url){ return route(j.url); }
     $('loginErr').textContent=j.error||'Could not sign in.';
     if(j.denied&&j.slug) showReinstate(j.slug);
-  }catch(e){ $('loginErr').textContent='Network error — try again.'; }
+  }catch(e){ $('loginErr').textContent='Network error, try again.'; }
   $('go').disabled=false; $('go').textContent='Sign in';
 });
 
@@ -188,7 +188,7 @@ $('vRequest').addEventListener('submit',async e=>{
     const j=await r.json();
     if(j.ok){ show('done'); }
     else $('reqErr').textContent=j.error||'Could not send request.';
-  }catch(e){ $('reqErr').textContent='Network error — try again.'; }
+  }catch(e){ $('reqErr').textContent='Network error, try again.'; }
   $('reqGo').disabled=false; $('reqGo').textContent='Send request';
 });
 

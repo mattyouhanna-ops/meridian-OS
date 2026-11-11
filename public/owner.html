@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Meridian OS — Owner Dashboard</title>
+<title>Meridian OS: Owner Dashboard</title>
 <meta name="theme-color" content="#0b0b0c">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -135,8 +135,8 @@
           <div><label>NPN / license # (optional)</label><input id="a_npn" placeholder="12345678"></div>
         </div>
         <label>Mobile carrier (for free text alerts)</label>
-        <select id="a_carrier"><option value="">— carrier —</option><option value="verizon">Verizon</option><option value="att">AT&T</option><option value="tmobile">T-Mobile</option><option value="metro">Metro by T-Mobile</option><option value="cricket">Cricket</option><option value="boost">Boost Mobile</option><option value="uscellular">US Cellular</option><option value="googlefi">Google Fi</option><option value="xfinity">Xfinity Mobile</option><option value="visible">Visible</option><option value="mint">Mint Mobile</option><option value="straighttalk">Straight Talk</option></select>
-        <label>Licensed states — tap each one they hold a license in</label>
+        <select id="a_carrier"><option value="">Carrier</option><option value="verizon">Verizon</option><option value="att">AT&T</option><option value="tmobile">T-Mobile</option><option value="metro">Metro by T-Mobile</option><option value="cricket">Cricket</option><option value="boost">Boost Mobile</option><option value="uscellular">US Cellular</option><option value="googlefi">Google Fi</option><option value="xfinity">Xfinity Mobile</option><option value="visible">Visible</option><option value="mint">Mint Mobile</option><option value="straighttalk">Straight Talk</option></select>
+        <label>Licensed states, tap each one they hold a license in</label>
         <div id="a_states"></div>
         <div class="err" id="a_err"></div>
         <button class="btn gold" id="a_go" style="margin-top:12px">Create agent</button>
@@ -322,7 +322,7 @@ function genPass(){ const w=['Oak','Pine','Gold','Ridge','Harbor','Vale','Stone'
 function welcomeText(a,pass){
   const card=ORIGIN+'/a/'+a.slug;
   const p=pass?`\n2) Sign in: ${a.email} / ${pass}`:`\n2) Sign in with your email: ${a.email}`;
-  return `Hey ${first(a.name)} — your Meridian card is ready.\n\n1) Open ${card}/admin${p}\n3) Change your password, check your info, and you're live.\n\nYour card to text out: ${card}\nTip: open it on your phone, Share → Add to Home Screen for the Meridian icon.`;
+  return `Hey ${first(a.name)}, your Meridian card is ready.\n\n1) Open ${card}/admin${p}\n3) Change your password, check your info, and you're live.\n\nYour card to text out: ${card}\nTip: open it on your phone, Share → Add to Home Screen for the Meridian icon.`;
 }
 function showWelcome(box2,a,pass){
   box2.classList.remove('hide');
@@ -354,10 +354,10 @@ $('a_go').onclick=async()=>{
       const txt=welcomeText(a,r.tempPassword);
       $('a_result').classList.remove('hide');
       $('a_result').innerHTML=`<div class="banner">✅ <b>${esc(r.agent.name)}</b> created. Card: <a href="${card}" target="_blank">${esc(card)}</a></div>
-        <label>Welcome message (password included — send it to them)</label>
+        <label>Welcome message (password included, send it to them)</label>
         <textarea rows="8" readonly style="font-size:13px">${esc(txt)}</textarea>
         <button class="btn gold sm" id="wcopy" style="margin-top:8px">Copy welcome message</button>`;
-      $('wcopy').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied — send it to '+first(a.name)));
+      $('wcopy').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied, send it to '+first(a.name)));
       ['a_name','a_email','a_phone','a_npn'].forEach(x=>$(x).value='');
       if($('a_states').__stateMap) $('a_states').__stateMap.clear();
       toast('Agent created');
@@ -374,7 +374,7 @@ async function loadLeads(){
   box.innerHTML=r.leads.map(q=>{
     const kind=q.kind==='appointment'?'📅 Appointment':'💬 Quote';
     const bits=[q.product,q.coverage,q.budget,q.when].filter(Boolean).join(' · ');
-    return `<div class="lead"><div class="flexb"><b>${kind}${q.name?' — '+esc(q.name):''}</b><span class="chip ${q.status==='new'?'gold':''}">${esc(q.status)}</span></div>
+    return `<div class="lead"><div class="flexb"><b>${kind}${q.name?', '+esc(q.name):''}</b><span class="chip ${q.status==='new'?'gold':''}">${esc(q.status)}</span></div>
       <div class="t">${esc(q.agent)} · ${new Date(q.t).toLocaleString()}</div>
       ${bits?`<div style="margin-top:4px">${esc(bits)}</div>`:''}
       ${q.phone||q.email?`<div class="muted" style="margin-top:4px">${esc([q.phone,q.email].filter(Boolean).join(' · '))}</div>`:''}

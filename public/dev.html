@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Meridian OS — Developer</title>
+<title>Meridian OS: Developer</title>
 <meta name="theme-color" content="#0b0b0c">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -134,10 +134,10 @@ textarea{min-height:120px;resize:vertical}
             <div><label>Brand accent color</label><input id="ag_accent" type="color" value="#d4af37" style="height:46px;padding:4px"></div>
           </div>
           <div class="row">
-            <div><label>Owner email (optional — gives them a login)</label><input id="ag_owner" type="email" placeholder="owner@agency.com"></div>
+            <div><label>Owner email (optional, gives them a login)</label><input id="ag_owner" type="email" placeholder="owner@agency.com"></div>
             <div><label>Corporate landing URL (for off-boarded agents)</label><input id="ag_corp" placeholder="https://agency.com"></div>
           </div>
-          <div class="row"><div><label>Parent agency (optional — makes this a sub-agency)</label><select id="ag_parent"><option value="">None — top-level agency</option></select></div><div></div></div>
+          <div class="row"><div><label>Parent agency (optional, makes this a sub-agency)</label><select id="ag_parent"><option value="">None (top-level agency)</option></select></div><div></div></div>
           <div class="err" id="ag_err"></div>
           <button class="btn gold sm" id="ag_go" style="margin-top:10px">Create agency</button>
           <div id="ag_result" class="hide" style="margin-top:12px"></div>
@@ -169,7 +169,7 @@ textarea{min-height:120px;resize:vertical}
           <li>Approve a request above (or just go straight to an agency).</li>
           <li>Open the <b>Agencies</b> tab → pick the agency → <b>+ Add agent</b>.</li>
           <li>Enter their name, email, phone, carrier and states → <b>Create agent</b>.</li>
-          <li>A welcome email with their login sends automatically — the password also shows under their name here so you can resend it.</li>
+          <li>A welcome email with their login sends automatically, the password also shows under their name here so you can resend it.</li>
           <li>They open their card <code>/a/their-name/admin</code>, set their own password, and they're live.</li>
         </ol>
       </div>
@@ -204,7 +204,7 @@ textarea{min-height:120px;resize:vertical}
         <p class="muted" style="font-size:12px;margin-top:8px">Per-agency wording: expand an agency and use its <b>📋 Compliance</b> button.</p>
       </div>
       <div class="card">
-        <h2>📬 Alert health — test it</h2>
+        <h2>📬 Alert health, test it</h2>
         <p class="muted">Not getting emails/texts? Send yourself a test and see exactly what's working.</p>
         <label>Send the test to (defaults to your developer email)</label><input id="ta_to" type="email" placeholder="you@email.com">
         <button class="btn gold" id="ta_go" style="margin-top:10px">Send me a test alert</button>
@@ -212,9 +212,9 @@ textarea{min-height:120px;resize:vertical}
       </div>
       <div class="card">
         <h2>Copy me on every lead</h2>
-        <p class="muted">Get CC'd on every quote &amp; appointment across all agencies — on top of the agent who owns the card.</p>
+        <p class="muted">Get CC'd on every quote &amp; appointment across all agencies, on top of the agent who owns the card.</p>
         <label>Your emails (one per line)</label><textarea id="cc_emails" rows="3" placeholder="mattyouhanna@gmail.com"></textarea>
-        <label>Your texts — one per line as phone@carrier-gateway (e.g. 2488546535@vtext.com)</label><textarea id="cc_sms" rows="2" placeholder="2488546535@vtext.com"></textarea>
+        <label>Your texts, one per line as phone@carrier-gateway (e.g. 2488546535@vtext.com)</label><textarea id="cc_sms" rows="2" placeholder="2488546535@vtext.com"></textarea>
         <div class="err" id="cc_err"></div>
         <button class="btn gold" id="cc_go" style="margin-top:10px">Save</button>
       </div>
@@ -237,7 +237,7 @@ const $=id=>document.getElementById(id);
 const api=(u,o)=>fetch(u,Object.assign({headers:{'content-type':'application/json'},cache:'no-store'},o));
 let STATE_NAMES={}, DATA=null, ORIGIN=location.origin;
 const openAgencies=new Set();
-const CARRIER_OPTS=[['','— mobile carrier (enables free texts) —'],['verizon','Verizon'],['att','AT&T'],['tmobile','T-Mobile'],['metro','Metro by T-Mobile'],['cricket','Cricket'],['boost','Boost Mobile'],['uscellular','US Cellular'],['googlefi','Google Fi'],['xfinity','Xfinity Mobile'],['visible','Visible'],['mint','Mint Mobile'],['straighttalk','Straight Talk']];
+const CARRIER_OPTS=[['','Mobile carrier (enables free texts)'],['verizon','Verizon'],['att','AT&T'],['tmobile','T-Mobile'],['metro','Metro by T-Mobile'],['cricket','Cricket'],['boost','Boost Mobile'],['uscellular','US Cellular'],['googlefi','Google Fi'],['xfinity','Xfinity Mobile'],['visible','Visible'],['mint','Mint Mobile'],['straighttalk','Straight Talk']];
 function carrierSelect(cls,sel){ return `<select class="${cls}">`+CARRIER_OPTS.map(([v,l])=>`<option value="${v}" ${v===(sel||'')?'selected':''}>${l}</option>`).join('')+`</select>`; }
 // Searchable state picker showing full state names (easier than bare codes). `gridCls` keeps the old selector for reading values.
 function statesField(gridCls,sel){ sel=sel||new Set(); const arr=sel.size?[...sel]:(Array.isArray(sel)?sel:[]);
@@ -273,14 +273,14 @@ async function loadDash(){
   if(eh.failing || (eh.configured===false)){
     eb.classList.remove('hide');
     eb.innerHTML = (eh.configured===false)
-      ? '🔴 <b>No email provider is set up</b> — leads can\'t be emailed or texted. Set GMAIL_USER + GMAIL_APP_PASSWORD on Railway. <a href="#" id="ebTest" style="color:#f1d78a">Run a test</a>'
-      : '🔴 <b>Alerts are failing to send right now.</b> Last error: '+esc(eh.lastError||'unknown')+'. Your Gmail App Password was likely revoked — generate a new one and update GMAIL_APP_PASSWORD on Railway. <a href="#" id="ebTest" style="color:#f1d78a">Run a test</a>';
+      ? '🔴 <b>No email provider is set up</b>, leads can\'t be emailed or texted. Set GMAIL_USER + GMAIL_APP_PASSWORD on Railway. <a href="#" id="ebTest" style="color:#f1d78a">Run a test</a>'
+      : '🔴 <b>Alerts are failing to send right now.</b> Last error: '+esc(eh.lastError||'unknown')+'. Your Gmail App Password was likely revoked, generate a new one and update GMAIL_APP_PASSWORD on Railway. <a href="#" id="ebTest" style="color:#f1d78a">Run a test</a>';
     const t=$('ebTest'); if(t) t.onclick=(e)=>{e.preventDefault();document.querySelector('[data-tab=settings]').click();setTimeout(()=>$('ta_go')&&$('ta_go').scrollIntoView({behavior:'smooth'}),50);};
   } else eb.classList.add('hide');
 }
 function applyFreezeUI(frozen){
   const b=$('freezeBtn'), s=$('freezeState');
-  if(frozen){ b.textContent='Unfreeze — bring everything back online'; b.classList.remove('danger'); b.classList.add('gold'); s.classList.remove('hide'); s.innerHTML='🚨 <b>Platform is FROZEN.</b> Every card is dark and all owner/agent logins are blocked right now.'; }
+  if(frozen){ b.textContent='Unfreeze, bring everything back online'; b.classList.remove('danger'); b.classList.add('gold'); s.classList.remove('hide'); s.innerHTML='🚨 <b>Platform is FROZEN.</b> Every card is dark and all owner/agent logins are blocked right now.'; }
   else { b.textContent='Freeze everything'; b.classList.add('danger'); b.classList.remove('gold'); s.classList.add('hide'); s.innerHTML=''; }
   b.dataset.frozen=frozen?'1':'';
 }
@@ -297,7 +297,7 @@ function renderTiles(){ const el=$('tiles'); if(!el) return; const t=DATA.totals
 function renderAgencies(){
   const box=$('agencies');
   // Populate the "parent agency" picker with top-level agencies only (one level deep).
-  const par=$('ag_parent'); if(par){ const cur=par.value; par.innerHTML='<option value="">None — top-level agency</option>'+DATA.agencies.filter(a=>!a.parentId).map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join(''); par.value=cur; }
+  const par=$('ag_parent'); if(par){ const cur=par.value; par.innerHTML='<option value="">None (top-level agency)</option>'+DATA.agencies.filter(a=>!a.parentId).map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join(''); par.value=cur; }
   if(!DATA.agencies.length){box.innerHTML='<p class="muted">No agencies yet.</p>';return;}
   // Order so each child agency follows its parent, indented.
   const byId={}; DATA.agencies.forEach(a=>byId[a.id]=a);
@@ -323,7 +323,7 @@ function renderAgencies(){
         <span class="chev"></span>
       </div>
       <div class="agencybody"${openAgencies.has(a.id)?'':' hidden'}>
-      ${a.hasOwner?`<div class="credline">👤 <b>Owner signs in at</b> <code>${esc(ORIGIN)}/owner</code> · ${esc(a.ownerEmail||'')} · ${a.ownerCurPass?`password <code>${esc(a.ownerCurPass)}</code> <span class="muted">(${a.ownerIssuedPass?'temporary':'current'})</span>`:'<span class="muted">no password on file — use “Reset owner login”</span>'}</div>`:'<div class="credline muted">No owner yet — you manage this agency directly.</div>'}
+      ${a.hasOwner?`<div class="credline">👤 <b>Owner signs in at</b> <code>${esc(ORIGIN)}/owner</code> · ${esc(a.ownerEmail||'')} · ${a.ownerCurPass?`password <code>${esc(a.ownerCurPass)}</code> <span class="muted">(${a.ownerIssuedPass?'temporary':'current'})</span>`:'<span class="muted">no password on file, use “Reset owner login”</span>'}</div>`:'<div class="credline muted">No owner yet, you manage this agency directly.</div>'}
       <div class="acts">
         <button class="btn sm ghost" data-act="notify">🔔 Alert recipients${(a.alertEmails&&a.alertEmails.length||a.alertSms&&a.alertSms.length)?' ('+((a.alertEmails||[]).length+(a.alertSms||[]).length)+')':''}</button>
         <button class="btn sm ghost" data-act="owner">${a.hasOwner?'Reset owner login':'Add owner login'}</button>
@@ -355,11 +355,11 @@ function renderAgencies(){
 
 async function agencyAction(act,a,el){
   if(act==='manage'){ if(openAgencies.has(a.id)){openAgencies.delete(a.id);} else {openAgencies.add(a.id);} renderAgencies(); return; }
-  if(act==='suspend'){ await api('/api/dev/agencies/'+a.id,{method:'PATCH',body:JSON.stringify({active:!a.active})}); toast(a.active?'Suspended — all its cards now redirect':'Activated'); loadDash(); return; }
+  if(act==='suspend'){ await api('/api/dev/agencies/'+a.id,{method:'PATCH',body:JSON.stringify({active:!a.active})}); toast(a.active?'Suspended, all its cards now redirect':'Activated'); loadDash(); return; }
   if(act==='unlockOwner'){ await api('/api/dev/agencies/'+a.id,{method:'PATCH',body:JSON.stringify({unlockOwner:true})}); toast('Owner login unlocked'); loadDash(); return; }
   if(act==='compliance'){
     const box=el.querySelector('.compbox'); box.classList.remove('hide');
-    box.innerHTML=`<div class="banner">Locked wording for <b>${esc(a.name)}</b> only — shows on its cards under the global disclaimer. Agents can't edit it.</div>
+    box.innerHTML=`<div class="banner">Locked wording for <b>${esc(a.name)}</b> only, shows on its cards under the global disclaimer. Agents can't edit it.</div>
       <textarea class="cx_txt" rows="3" placeholder="Agency-specific compliance / licensing wording">${esc(a.compliance||'')}</textarea>
       <div class="acts"><button class="btn gold sm cx_save">Save</button><button class="btn sm ghost cx_cancel">Cancel</button></div>`;
     box.querySelector('.cx_cancel').onclick=()=>{box.classList.add('hide');box.innerHTML='';};
@@ -369,9 +369,9 @@ async function agencyAction(act,a,el){
   if(act==='del'){ if(confirm('Delete '+a.name+' and ALL its agents? This cannot be undone.')){ await api('/api/dev/agencies/'+a.id,{method:'DELETE'}); openAgencies.delete(a.id); toast('Agency deleted'); loadDash(); } return; }
   if(act==='notify'){
     const box=el.querySelector('.notifybox'); box.classList.remove('hide');
-    box.innerHTML=`<div class="banner">People copied on <b>every</b> lead in ${esc(a.name)} — on top of the agent and you.</div>
+    box.innerHTML=`<div class="banner">People copied on <b>every</b> lead in ${esc(a.name)}, on top of the agent and you.</div>
       <label>Extra emails (one per line)</label><textarea class="nx_emails" rows="3" placeholder="manager@agency.com">${esc((a.alertEmails||[]).join('\n'))}</textarea>
-      <label>Extra texts — one per line as phone@carrier-gateway</label><textarea class="nx_sms" rows="2" placeholder="2481234567@vtext.com">${esc((a.alertSms||[]).join('\n'))}</textarea>
+      <label>Extra texts, one per line as phone@carrier-gateway</label><textarea class="nx_sms" rows="2" placeholder="2481234567@vtext.com">${esc((a.alertSms||[]).join('\n'))}</textarea>
       <p class="muted" style="font-size:12px">Gateways: Verizon @vtext.com · AT&T @txt.att.net · T-Mobile @tmomail.net · Cricket @sms.cricketwireless.net</p>
       <div class="acts"><button class="btn gold sm nx_save">Save</button><button class="btn sm ghost nx_cancel">Cancel</button></div>`;
     box.querySelector('.nx_cancel').onclick=()=>{box.classList.add('hide');box.innerHTML='';};
@@ -387,8 +387,8 @@ async function agencyAction(act,a,el){
   if(act==='license'){
     const box=el.querySelector('.licensebox'); box.classList.remove('hide');
     const until=a.licenseUntil?new Date(a.licenseUntil).toLocaleDateString():'—';
-    const status=a.licenseUntil===null?'Open — no expiry':(a.daysLeft<=0?('Expired '+(-a.daysLeft)+' days ago'):(a.daysLeft+' days left, through '+until));
-    box.innerHTML=`<div class="banner"><b>${esc(a.name)} license:</b> ${status}.<br>Owners run day to day only while this is active. When it lapses they can still sign in and look, but they're locked out of adding or editing agents until you renew — so they come back to you.</div>
+    const status=a.licenseUntil===null?'Open, no expiry':(a.daysLeft<=0?('Expired '+(-a.daysLeft)+' days ago'):(a.daysLeft+' days left, through '+until));
+    box.innerHTML=`<div class="banner"><b>${esc(a.name)} license:</b> ${status}.<br>Owners run day to day only while this is active. When it lapses they can still sign in and look, but they're locked out of adding or editing agents until you renew, so they come back to you.</div>
       <div class="acts">
         <button class="btn sm gold" data-d="30">Renew +30 days</button>
         <button class="btn sm" data-d="90">+90 days</button>
@@ -456,10 +456,10 @@ function agentRow(x,a){
     ${x.incomplete?`<span class="chip off" title="Missing: ${esc((x.needs||[]).join(', '))}">⚠ Needs setup</span>`:''}
     ${x.newQuotes?`<span class="chip gold">${x.newQuotes} new</span>`:''}<span class="sp"></span>
     <span class="muted" style="font-size:12px">${x.views} views · ${(x.states||[]).join(', ')||'—'}</span></div>
-    <div class="credline" style="border-style:solid"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${pr.dot};margin-right:6px;vertical-align:middle"></span><b>Last opened their dashboard:</b> <span class="muted">${x.lastOpenedAt?fmtWhen(x.lastOpenedAt):'never — they haven\'t signed in yet'}</span></div>
+    <div class="credline" style="border-style:solid"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${pr.dot};margin-right:6px;vertical-align:middle"></span><b>Last opened their dashboard:</b> <span class="muted">${x.lastOpenedAt?fmtWhen(x.lastOpenedAt):'never, they haven\'t signed in yet'}</span></div>
     ${x.incomplete?`<div class="credline" style="border-color:#5e2c2c;background:#1a0c0c"><b style="color:#ffc9c9">⚠ Incomplete until they finish:</b> <span class="muted">${esc((x.needs||[]).join(' · '))}</span></div>`:''}
-    <div class="credline" style="border-style:solid">🔐 <b>They sign in at</b> <code>${esc(admin)}</code> <span class="muted">— tell them to go there and sign in.</span></div>
-    <div class="credline">🔑 <b>Login:</b> ${esc(x.email)} · ${x.curPass?`password <code>${esc(x.curPass)}</code> <span class="muted">(${x.issuedPass?'temporary':'their current password'})</span>`:'<span class="muted">no password on file — use “Reset pw”</span>'}</div>
+    <div class="credline" style="border-style:solid">🔐 <b>They sign in at</b> <code>${esc(admin)}</code> <span class="muted">then tell them to go there and sign in.</span></div>
+    <div class="credline">🔑 <b>Login:</b> ${esc(x.email)} · ${x.curPass?`password <code>${esc(x.curPass)}</code> <span class="muted">(${x.issuedPass?'temporary':'their current password'})</span>`:'<span class="muted">no password on file, use “Reset pw”</span>'}</div>
     <div class="acts">
       ${x.locked?'<button class="btn sm gold" data-act="unlock">🔓 Unlock</button>':''}
       <button class="btn sm" data-act="edit">✏️ Edit info</button>
@@ -494,12 +494,12 @@ async function createAgent(w,a,wrap){
   const txt=welcomeText(ag,r.tempPassword);
   const res=w.querySelector('.n_result'); res.classList.remove('hide');
   const sent=r.emailed?`📧 Welcome email sent to ${esc(ag.email)}. Backup copy:`:'Send their welcome message:';
-  res.innerHTML=`<div class="banner">✅ ${esc(ag.name)} created — ${sent}</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`;
+  res.innerHTML=`<div class="banner">✅ ${esc(ag.name)} created, ${sent}</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`;
   res.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied'));
   toast('Agent created'); loadDash();
 }
 function welcomeText(a,pass){ const card=ORIGIN+'/a/'+a.slug;
-  return `Hey ${first(a.name)} — your Meridian card is ready.\n\n1) Open ${card}/admin\n2) Sign in: ${a.email} / ${pass}\n3) Change your password, check your info, done.\n\nYour card to text out: ${card}\nTip: open it on your phone → Share → Add to Home Screen.`; }
+  return `Hey ${first(a.name)}, your Meridian card is ready.\n\n1) Open ${card}/admin\n2) Sign in: ${a.email} / ${pass}\n3) Change your password, check your info, done.\n\nYour card to text out: ${card}\nTip: open it on your phone → Share → Add to Home Screen.`; }
 function showEditAgent(x,a,row){
   const box=row.querySelector('.msgbox'); box.classList.remove('hide');
   const states=new Set(x.states||[]);
@@ -508,7 +508,7 @@ function showEditAgent(x,a,row){
     <div class="row"><div><label>Phone</label><input class="e_phone"></div><div><label>Email (their login)</label><input class="e_email" type="email"></div></div>
     <label>NPN / license # <span class="muted" style="font-weight:400">(optional)</span></label><input class="e_npn">
     <label>License status</label>
-    <select class="e_licensed"><option value="yes">Licensed — show verify-license and NPN</option><option value="no">Not yet licensed — hide license, show "licensing in progress"</option></select>
+    <select class="e_licensed"><option value="yes">Licensed, show verify-license and NPN</option><option value="no">Not yet licensed, hide license, show "licensing in progress"</option></select>
     <label>Mobile carrier (for free text alerts)</label>${carrierSelect('e_carrier',x.carrier)}
     <label style="margin-top:10px">Licensed states</label>${statesField('e_states',states)}
     <div class="err e_err"></div>
@@ -539,13 +539,13 @@ async function agentAction(act,x,a,row){
   else if(act==='welcome'){
     const r=await(await api('/api/dev/agents/'+x.id+'/resend-welcome',{method:'POST'})).json();
     if(r.emailed){ toast('📧 Welcome email resent to '+x.email); }
-    else { box.classList.remove('hide'); const txt=welcomeText(x,'(their current password)'); box.innerHTML=`<div class="banner">Couldn't send the email — copy & send this instead:</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`; box.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); }
+    else { box.classList.remove('hide'); const txt=welcomeText(x,'(their current password)'); box.innerHTML=`<div class="banner">Couldn't send the email, copy & send this instead:</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`; box.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); }
   }
   else if(act==='reset'){ if(!confirm('Reset '+x.name+"'s password?"))return; const pass='Meridian-'+['Oak','Gold','Ridge','Vale','Stone','North'][Math.floor(Math.random()*6)]+'-'+Math.floor(1000+Math.random()*9000);
     const r=await(await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({password:pass})})).json();
     if(r.ok){ box.classList.remove('hide'); const txt=welcomeText(x,pass); box.innerHTML=`<div class="banner">New password set.</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`; box.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); toast('Password reset'); } }
   else if(act==='unlock'){ await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({unlock:true})}); const el=row.closest('.agency'); loadAgents(a,el); toast(x.name+' unlocked'); }
-  else if(act==='deny'){ if(!confirm('Deny access for '+x.name+'?\n\nTheir login is blocked immediately and their card goes dark. They can request reinstatement, which only you approve.'))return; await api('/api/dev/agents/'+x.id+'/deny',{method:'POST',body:JSON.stringify({reason:''})}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); toast(x.name+' denied — access revoked'); }
+  else if(act==='deny'){ if(!confirm('Deny access for '+x.name+'?\n\nTheir login is blocked immediately and their card goes dark. They can request reinstatement, which only you approve.'))return; await api('/api/dev/agents/'+x.id+'/deny',{method:'POST',body:JSON.stringify({reason:''})}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); toast(x.name+' denied, access revoked'); }
   else if(act==='reinstate'){ await api('/api/dev/agents/'+x.id+'/reinstate',{method:'POST'}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); toast(x.name+' reinstated'); }
   else if(act==='toggle'){ await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({active:!x.active})}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); }
   else if(act==='del'){ if(confirm('Delete '+x.name+'?')){ await api('/api/dev/agents/'+x.id,{method:'DELETE'}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); toast('Agent deleted'); } }
@@ -565,7 +565,7 @@ $('ag_go').onclick=async()=>{ $('ag_err').textContent='';
     const sent=r.emailed?` 📧 Sent to ${esc(body.ownerEmail)}. Backup:`:' Owner login:';
     res.innerHTML=`<div class="banner">${msg}${sent}</div><textarea readonly>${esc(txt)}</textarea><button class="btn sm gold" style="margin-top:6px">Copy</button>`;
     res.querySelector('button').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied')); }
-  else res.innerHTML=`<div class="banner">${msg} You manage it directly — open its agents below.</div>`;
+  else res.innerHTML=`<div class="banner">${msg} You manage it directly, open its agents below.</div>`;
   ['ag_name','ag_owner','ag_corp'].forEach(x=>$(x).value='');
   toast('Agency created'); loadDash();
 };
@@ -586,7 +586,7 @@ function downloadLeads(){
 async function loadLeads(){ const r=await(await api('/api/dev/leads')).json(); const box=$('leads'); LEADS=r.leads||[];
   if(!r.leads||!r.leads.length){box.innerHTML='<p class="muted">No leads yet.</p>';return;}
   box.innerHTML=r.leads.map(q=>{ const kind=q.kind==='appointment'?'📅 Appointment':'💬 Quote'; const bits=[q.product,q.coverage,q.budget,q.when].filter(Boolean).join(' · ');
-    return `<div class="lead" data-slug="${esc(q.agentSlug||'')}" data-id="${esc(q.id||'')}"><div class="flexb"><b>${kind}${q.name?' — '+esc(q.name):''}</b><div class="row"><span class="chip ${q.status==='new'?'gold':''}">${esc(q.status)}</span><button class="btn sm danger" data-del>🗑</button></div></div>
+    return `<div class="lead" data-slug="${esc(q.agentSlug||'')}" data-id="${esc(q.id||'')}"><div class="flexb"><b>${kind}${q.name?', '+esc(q.name):''}</b><div class="row"><span class="chip ${q.status==='new'?'gold':''}">${esc(q.status)}</span><button class="btn sm danger" data-del>🗑</button></div></div>
       <div class="t">${esc(q.agency)} › ${esc(q.agent)} · ${new Date(q.t).toLocaleString()}</div>
       ${bits?`<div style="margin-top:4px">${esc(bits)}</div>`:''}
       ${q.phone||q.email?`<div class="muted" style="margin-top:4px">${esc([q.phone,q.email].filter(Boolean).join(' · '))}</div>`:''}</div>`;}).join('');
@@ -650,7 +650,7 @@ async function loadMetrics(){
     <div class="card"><h2 style="font-size:17px">🏅 Agent leaderboard</h2><p class="muted" style="font-size:12px;margin:2px 0 10px">Ranked by policies sold, then link taps and views.</p>${lbHtml}</div>
     <div class="row" style="gap:12px;align-items:stretch;flex-wrap:wrap">
       <div class="card" style="flex:1;min-width:260px"><h2 style="font-size:17px">🔗 Most-tapped links</h2><p class="muted" style="font-size:12px;margin:2px 0 10px">Which socials & links clients tap most.</p>${linkHtml}</div>
-      <div class="card" style="flex:1;min-width:260px"><h2 style="font-size:17px">😴 Going quiet</h2><p class="muted" style="font-size:12px;margin:2px 0 10px">Cards not opened in 14+ days — possible lapsing agents.</p>${inactiveHtml}</div>
+      <div class="card" style="flex:1;min-width:260px"><h2 style="font-size:17px">😴 Going quiet</h2><p class="muted" style="font-size:12px;margin:2px 0 10px">Cards not opened in 14+ days, possible lapsing agents.</p>${inactiveHtml}</div>
     </div>`;
   // ---- per-agency breakdown ----
   const box=$('mAgencies');
@@ -689,7 +689,7 @@ async function loadRequests(){
     const id=el.dataset.id;
     el.querySelectorAll('[data-ract]').forEach(b=>b.onclick=async()=>{
       await api('/api/dev/requests/'+id,{method:'POST',body:JSON.stringify({action:b.dataset.ract})});
-      toast(b.dataset.ract==='approve'?'Approved — now add them in Agencies':'Declined'); loadRequests();
+      toast(b.dataset.ract==='approve'?'Approved, now add them in Agencies':'Declined'); loadRequests();
     });
   });
 }
@@ -708,13 +708,13 @@ $('ta_go').onclick=async()=>{
   const r=await(await api('/api/dev/test-alert',{method:'POST',body:JSON.stringify({to:$('ta_to').value.trim()||undefined})})).json();
   $('ta_go').disabled=false; $('ta_go').textContent='Send me a test alert';
   const s=r.status||{}; const out=$('ta_out'); out.classList.remove('hide');
-  const channel = s.smtp?('Gmail SMTP ('+(s.gmailUser||'?')+')'):(s.brevo?'Brevo':(s.resend?'Resend':'NONE — no email provider configured'));
-  let h='<div class="banner" style="'+(r.emailed?'':'border-color:#7a2d2d')+'">'+(r.emailed?'✅ Test email sent to <b>'+esc(r.to||'')+'</b> — check your inbox (and spam).':'❌ Email did NOT send.')+'</div>';
+  const channel = s.smtp?('Gmail SMTP ('+(s.gmailUser||'?')+')'):(s.brevo?'Brevo':(s.resend?'Resend':'NONE, no email provider configured'));
+  let h='<div class="banner" style="'+(r.emailed?'':'border-color:#7a2d2d')+'">'+(r.emailed?'✅ Test email sent to <b>'+esc(r.to||'')+'</b>, check your inbox (and spam).':'❌ Email did NOT send.')+'</div>';
   h+='<div class="credline">Email channel: <b>'+esc(channel)+'</b></div>';
   h+='<div class="credline">Copy-me email (OWNER_ALERT_EMAIL): <b>'+(s.ownerEmail?esc(s.ownerEmail):'not set')+'</b></div>';
   h+='<div class="credline">Copy-me text (OWNER_ALERT_SMS): <b>'+(s.ownerSms?esc(s.ownerSms)+(r.smsSent?' · ✅ sent':' · attempted'):'not set')+'</b></div>';
   if(!s.smtp && !s.brevo && !s.resend) h+='<div class="banner" style="border-color:#7a2d2d;margin-top:8px">No email provider is configured on Railway. Set <b>GMAIL_USER</b> and <b>GMAIL_APP_PASSWORD</b> (a Google App Password) and redeploy.</div>';
-  else if(!r.emailed) h+='<div class="banner" style="border-color:#7a2d2d;margin-top:8px">Provider is set but sending failed — the Gmail App Password may be wrong/revoked. Generate a new one and update GMAIL_APP_PASSWORD on Railway.</div>';
+  else if(!r.emailed) h+='<div class="banner" style="border-color:#7a2d2d;margin-top:8px">Provider is set but sending failed, the Gmail App Password may be wrong/revoked. Generate a new one and update GMAIL_APP_PASSWORD on Railway.</div>';
   out.innerHTML=h;
 };
 $('comp_go').onclick=async()=>{ $('comp_err').textContent='';

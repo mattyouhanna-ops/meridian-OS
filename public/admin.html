@@ -262,7 +262,7 @@
 
     <div id="wizPanel2" hidden>
       <h2 style="font-family:Georgia,serif;font-size:23px;margin:0 0 4px;color:#f1d78a">Confirm your info</h2>
-      <p style="color:#a9a397;font-size:14px">We pre-filled this — just check it's right. You can change it anytime.</p>
+      <p style="color:#a9a397;font-size:14px">We pre-filled this, just check it's right. You can change it anytime.</p>
       <div style="display:grid;gap:8px;margin-top:12px">
         <input id="w_name" placeholder="Full name" style="background:#0e0e10;border:1px solid #2a2a2e;border-radius:10px;color:#f3efe6;padding:11px;font-size:16px">
         <input id="w_title" placeholder="Title" style="background:#0e0e10;border:1px solid #2a2a2e;border-radius:10px;color:#f3efe6;padding:11px;font-size:16px">
@@ -272,12 +272,12 @@
       </div>
       <div id="w_infoErr" style="color:#ffb4b4;font-size:14px;margin-top:8px;min-height:1em"></div>
       <button id="w_infoGo" class="btn" style="width:100%;margin-top:10px;background:linear-gradient(180deg,#f1d78a,#d4af37);color:#231c00;border:none;padding:13px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer">Looks good →</button>
-      <button id="wizSkipInfo" style="width:100%;margin-top:8px;background:transparent;border:none;color:#a9a397;font-size:13px;cursor:pointer">Skip — I'll do this later</button>
+      <button id="wizSkipInfo" style="width:100%;margin-top:8px;background:transparent;border:none;color:#a9a397;font-size:13px;cursor:pointer">Skip, I'll do this later</button>
     </div>
 
     <div id="wizPanel3" hidden>
       <h2 style="font-family:Georgia,serif;font-size:23px;margin:0 0 4px;color:#f1d78a">You're live</h2>
-      <p style="color:#a9a397;font-size:14px">This is your card — text it to anyone and it unfurls as your business card.</p>
+      <p style="color:#a9a397;font-size:14px">This is your card, text it to anyone and it unfurls as your business card.</p>
       <div id="wizCardLink2" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#f1d78a;word-break:break-all;background:#0e0e10;border:1px solid #2a2a2e;border-radius:8px;padding:9px;margin:10px 0"></div>
       <button id="wizOpenCard" class="btn" style="width:100%;background:#1a1a1d;border:1px solid #2a2a2e;color:#f3efe6;padding:11px;border-radius:12px;font-weight:600;cursor:pointer">Open my card</button>
       <div style="background:#1a1708;border:1px solid #8f7426;border-radius:12px;padding:12px 14px;margin:12px 0;font-size:13px;color:#f3efe6;line-height:1.6">
@@ -313,8 +313,8 @@
       <label>Phone (call &amp; text) *</label><input id="s_phone" placeholder="(555) 123-4567" inputmode="tel" autocomplete="tel">
       <label>Email *</label><input id="s_email" placeholder="you@email.com" inputmode="email" autocomplete="email">
       <label>NPN (National Producer Number)</label><input id="s_npn" placeholder="e.g. 1234567" inputmode="numeric">
-      <label>Your phone carrier <span class="muted" style="font-weight:400">(so lead alerts can text you — never shown on your card)</span></label>
-      <select id="s_carrier"><option value="">— select your carrier —</option><option value="verizon">Verizon</option><option value="att">AT&amp;T</option><option value="tmobile">T-Mobile</option><option value="metro">Metro by T-Mobile</option><option value="cricket">Cricket</option><option value="boost">Boost Mobile</option><option value="uscellular">US Cellular</option><option value="googlefi">Google Fi</option><option value="xfinity">Xfinity Mobile</option><option value="visible">Visible</option><option value="mint">Mint Mobile</option><option value="straighttalk">Straight Talk</option></select>
+      <label>Your phone carrier <span class="muted" style="font-weight:400">(so lead alerts can text you, never shown on your card)</span></label>
+      <select id="s_carrier"><option value="">Select your carrier</option><option value="verizon">Verizon</option><option value="att">AT&amp;T</option><option value="tmobile">T-Mobile</option><option value="metro">Metro by T-Mobile</option><option value="cricket">Cricket</option><option value="boost">Boost Mobile</option><option value="uscellular">US Cellular</option><option value="googlefi">Google Fi</option><option value="xfinity">Xfinity Mobile</option><option value="visible">Visible</option><option value="mint">Mint Mobile</option><option value="straighttalk">Straight Talk</option></select>
       <label>States you're licensed in</label>
       <p class="muted">Tap every state where you hold a license. Each one gets its own official lookup link on your card.</p>
       <div class="stgrid" id="s_states"></div>
@@ -327,7 +327,7 @@
     <!-- RECOVERY CODE (shown once) -->
     <div class="card" id="recov" hidden>
       <h2 class="gold-text">Save your recovery code</h2>
-      <p class="muted">This is the <b>only</b> way to get back in if you forget your passcode. Screenshot it or write it down now — you won't see it again.</p>
+      <p class="muted">This is the <b>only</b> way to get back in if you forget your passcode. Screenshot it or write it down now, you won't see it again.</p>
       <div class="code" id="recovCode"></div>
       <div class="row"><button class="btn sm ghost" id="recovCopy">Copy code</button></div>
 
@@ -340,7 +340,7 @@
       <div class="link-url" id="linkAdmin"></div>
       <button class="btn sm ghost" id="linkAdminCopy">Copy dashboard link</button>
 
-      <button class="btn" id="recovGo" style="margin-top:18px">I saved it — open my dashboard</button>
+      <button class="btn" id="recovGo" style="margin-top:18px">I saved it, open my dashboard</button>
     </div>
 
     <!-- LOGIN -->
@@ -433,7 +433,7 @@
             <label>States you're licensed in</label>
             <div class="stgrid" id="p_states"></div>
             <label style="margin-top:20px">Social & links</label>
-            <p class="muted" style="font-size:12px;margin:0 0 8px">Add your Instagram, Facebook, LinkedIn, a booking link, Google reviews — they show as buttons on your card.</p>
+            <p class="muted" style="font-size:12px;margin:0 0 8px">Add your Instagram, Facebook, LinkedIn, a booking link, Google reviews, they show as buttons on your card.</p>
             <div id="p_socials"></div>
             <button type="button" class="btn sm ghost" id="addSocial" style="margin-top:8px">+ Add a link</button>
             <div class="err" id="p_err"></div>
@@ -473,7 +473,7 @@
               <button class="btn sm ghost" id="sendMsgReset" type="button">Reset</button>
               <p id="sendMsgPrev"></p>
             </div>
-            <p class="hint" style="margin-top:22px">Send buttons send just your link — so the card preview pops up in their text and a tap opens the full card.</p>
+            <p class="hint" style="margin-top:22px">Send buttons send just your link, so the card preview pops up in their text and a tap opens the full card.</p>
           </section>
 
           <section class="panel" data-sec="sec" hidden>
@@ -483,7 +483,7 @@
             <div class="err" id="pc_err"></div>
             <div class="row" style="margin-top:10px"><button class="btn sm" id="pc_go">Update passcode</button><button class="btn sm danger" id="signoutAll">Sign out all devices</button></div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px"><div class="sec" style="margin:0">Who viewed your card</div><button type="button" class="btn sm ghost" id="clearVisitsSec">Clear</button></div>
-            <p class="muted" style="font-size:12px;margin:4px 0 0">Every open of your card — the link used, device, place and time.</p>
+            <p class="muted" style="font-size:12px;margin:4px 0 0">Every open of your card, the link used, device, place and time.</p>
             <div id="visitLogSec"></div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px"><div class="sec" style="margin:0">Admin sign-ins &amp; security events</div><button type="button" class="btn sm ghost" id="clearSec">Clear</button></div>
             <div id="secLog"></div>
@@ -785,7 +785,7 @@ function pgHide(){ $('pushGate').hidden=true; }
 async function pushSubscribe(reg){
   try{
     const k=await (await api(AB+'/api/push/vapid')).json();
-    if(!k.key){ pgHide(); return true; } // push not configured on server — don't block
+    if(!k.key){ pgHide(); return true; } // push not configured on server, don't block
     const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8(k.key)});
     await api(AB+'/api/admin/push-subscribe',{method:'POST',body:JSON.stringify({subscription:sub})});
     return true;
@@ -797,7 +797,7 @@ async function ensurePush(){
   const supported=('serviceWorker'in navigator)&&('PushManager'in window)&&('Notification'in window);
   // iPhone requires the app be added to the Home Screen for notifications to work at all
   if(isIOS&&!standalone){
-    return pgShow('<div class="pg-ic">📲</div><h2>Add Meridian to your Home Screen</h2><p>To get instant lead alerts on your phone, add this app to your home screen first.</p><ol class="pg-steps"><li>Tap the <b>Share</b> button in your browser</li><li>Tap <b>Add to Home Screen</b></li><li>Open <b>Meridian</b> from your home screen and sign in again</li></ol><button class="pg-btn" onclick="location.reload()">I’ve added it — reload</button>');
+    return pgShow('<div class="pg-ic">📲</div><h2>Add Meridian to your Home Screen</h2><p>To get instant lead alerts on your phone, add this app to your home screen first.</p><ol class="pg-steps"><li>Tap the <b>Share</b> button in your browser</li><li>Tap <b>Add to Home Screen</b></li><li>Open <b>Meridian</b> from your home screen and sign in again</li></ol><button class="pg-btn" onclick="location.reload()">I’ve added it, reload</button>');
   }
   if(!supported){
     return pgShow('<div class="pg-ic">✉️</div><h2>Notifications not supported here</h2><p>This browser can’t show push alerts, but you’ll still get every lead by email.</p><button class="pg-btn" onclick="pgHide()">Continue</button>');
@@ -806,9 +806,9 @@ async function ensurePush(){
   const perm=Notification.permission;
   if(perm==='granted'){ await pushSubscribe(reg); return pgHide(); }
   if(perm==='denied'){
-    return pgShow('<div class="pg-ic">🔔</div><h2>Turn on notifications</h2><p>Notifications are blocked. To get instant lead alerts, enable them:</p><ol class="pg-steps"><li>Open your phone <b>Settings</b></li><li>Find <b>Meridian</b> (or your browser)</li><li>Turn <b>Notifications</b> on</li></ol><button class="pg-btn" onclick="ensurePush()">I turned it on — retry</button>');
+    return pgShow('<div class="pg-ic">🔔</div><h2>Turn on notifications</h2><p>Notifications are blocked. To get instant lead alerts, enable them:</p><ol class="pg-steps"><li>Open your phone <b>Settings</b></li><li>Find <b>Meridian</b> (or your browser)</li><li>Turn <b>Notifications</b> on</li></ol><button class="pg-btn" onclick="ensurePush()">I turned it on, retry</button>');
   }
-  // permission 'default' — ask
+  // permission 'default', ask
   pgShow('<div class="pg-ic">🔔</div><h2>Turn on lead alerts</h2><p>Get an instant notification on your phone the moment a client sends a quote or books a time.</p><button class="pg-btn" id="pgAllow">Enable notifications</button>');
   const btn=$('pgAllow'); if(btn) btn.onclick=async()=>{
     const r=await Notification.requestPermission();
@@ -1059,11 +1059,11 @@ $('sendMsg').addEventListener('input',showMsgPrev);
 $('sendMsgReset').addEventListener('click',()=>{ $('sendMsg').value=DEFAULT_MSG; showMsgPrev(); onDraft(); });
 let SM={phone:''};
 function sendLink(url,name,phone){
-  // Send the bare link only — no message text — so the card preview unfurls and the tap opens the full card.
+  // Send the bare link only, no message text, so the card preview unfurls and the tap opens the full card.
   if(navigator.share){ navigator.share({url}).catch(()=>{}); return; }
   const digits=(phone||'').replace(/[^\d+]/g,'');
   if(digits && /Android|iPhone|iPad/i.test(navigator.userAgent)){ location.href='sms:'+digits+'?&body='+encodeURIComponent(url); return; }
-  navigator.clipboard.writeText(url).then(()=>toast('Link copied — paste it to send')).catch(()=>toast('Press and hold the link to copy'));
+  navigator.clipboard.writeText(url).then(()=>toast('Link copied, paste it to send')).catch(()=>toast('Press and hold the link to copy'));
 }
 const closeSm=()=>$('sendModal').hidden=true;
 $('sm_cancel').onclick=closeSm; $('sendModal').addEventListener('click',e=>{ if(e.target.id==='sendModal') closeSm(); });
