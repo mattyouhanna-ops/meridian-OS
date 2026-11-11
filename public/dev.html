@@ -714,7 +714,13 @@ $('ta_go').onclick=async()=>{
   h+='<div class="credline">Copy-me email (OWNER_ALERT_EMAIL): <b>'+(s.ownerEmail?esc(s.ownerEmail):'not set')+'</b></div>';
   h+='<div class="credline">Copy-me text (OWNER_ALERT_SMS): <b>'+(s.ownerSms?esc(s.ownerSms)+(r.smsSent?' · ✅ sent':' · attempted'):'not set')+'</b></div>';
   if(!s.smtp && !s.brevo && !s.resend) h+='<div class="banner" style="border-color:#7a2d2d;margin-top:8px">No email provider is configured on Railway. Set <b>GMAIL_USER</b> and <b>GMAIL_APP_PASSWORD</b> (a Google App Password) and redeploy.</div>';
-  else if(!r.emailed) h+='<div class="banner" style="border-color:#7a2d2d;margin-top:8px">Provider is set but sending failed, the Gmail App Password may be wrong/revoked. Generate a new one and update GMAIL_APP_PASSWORD on Railway.</div>';
+  else if(!r.emailed){
+    h+='<div class="banner" style="border-color:#7a2d2d;margin-top:8px">Provider is set but sending failed.</div>';
+    if(r.error) h+='<div class="credline" style="border-color:#7a2d2d"><b>Exact error:</b> <span style="color:#ffc9c9">'+esc(r.error)+'</span></div>';
+    const er=(r.error||'').toLowerCase();
+    if(/timeout|etimedout|econnrefused|connection|greeting|socket/.test(er)) h+='<div class="banner" style="border-color:#8f7426;margin-top:8px">This looks like the SMTP port being blocked by the host, not a password problem. The fix is an HTTP email provider: set <b>BREVO_API_KEY</b> (free) on Railway and it will send over HTTPS instead.</div>';
+    else if(/invalid login|535|username|password|auth|credential|badcredentials/.test(er)) h+='<div class="banner" style="border-color:#8f7426;margin-top:8px">Google rejected the login. Regenerate a 16 character App Password on an account with 2 step verification on, paste it with no spaces as <b>GMAIL_APP_PASSWORD</b>, and confirm <b>GMAIL_USER</b> is the exact Gmail address.</div>';
+  }
   out.innerHTML=h;
 };
 $('comp_go').onclick=async()=>{ $('comp_err').textContent='';

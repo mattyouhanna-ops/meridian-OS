@@ -570,8 +570,9 @@ async function handleDev(sub, method, body, req) {
     const to = String(body.to || "").trim() || dev.email || process.env.OWNER_ALERT_EMAIL || null;
     const emailed = to ? await sendTestEmail(to) : false;
     const smsTo = process.env.OWNER_ALERT_SMS || null;
-    const smsSent = (smsTo && smsTo.includes("@")) ? await sendEmail(smsTo, "Meridian: test", "Test alert — your text alerts are working.") : false;
-    return { status: 200, data: { ok: true, status: st, to, emailed, smsTo, smsSent } };
+    const smsSent = (smsTo && smsTo.includes("@")) ? await sendEmail(smsTo, "Meridian: test", "Test alert. Your text alerts are working.") : false;
+    const h = emailHealth();
+    return { status: 200, data: { ok: true, status: st, to, emailed, smsTo, smsSent, error: emailed ? "" : (h.lastError || "no email provider configured") } };
   }
   // Per-agency + per-agent analytics for the Metrics tab
   if (sub === "metrics" && method === "GET") {
