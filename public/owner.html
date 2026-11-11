@@ -242,16 +242,27 @@ function renderTiles(){
   ].map(([l,v])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join('');
 }
 
+function presence(ts){
+  if(!ts) return {cls:'off',dot:'#ff6b6b',label:'Never active'};
+  const d=(Date.now()-ts)/86400000;
+  if(d<1) return {cls:'on',dot:'#49d17a',label:'Active today'};
+  if(d<3) return {cls:'on',dot:'#49d17a',label:'Active '+Math.floor(d)+'d ago'};
+  if(d<14) return {cls:'gold',dot:'#e7c15b',label:'Quiet '+Math.floor(d)+'d'};
+  if(d<60) return {cls:'off',dot:'#ff9f45',label:'Dormant '+Math.floor(d/7)+'wk'};
+  return {cls:'off',dot:'#ff6b6b',label:'Dormant '+Math.floor(d/30)+'mo'};
+}
 function renderAgents(){
   const box=$('agents');
   if(!DATA.agents.length){ box.innerHTML='<p class="muted">No agents yet. Use “Add agent” to create your first one.</p>'; return; }
   box.innerHTML=DATA.agents.map(a=>{
     const card=ORIGIN+'/a/'+a.slug, adm=card+'/admin';
     const st=(a.states||[]).join(', ')||'—';
+    const pr=presence(a.lastActive);
     return `<div class="agent" data-id="${a.id}">
       <div class="hd">
         <span class="nm">${esc(a.name)}</span>
-        <span class="chip ${a.active?'on':'off'}">${a.active?'Active':'Off'}</span>
+        <span class="chip ${a.active?'on':'off'}">${a.active?'On':'Off'}</span>
+        <span class="chip ${pr.cls}" title="Based on their most recent visit"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${pr.dot};margin-right:5px;vertical-align:middle"></span>${pr.label}</span>
         ${a.subAgency?'<span class="chip">'+esc(a.subAgency)+'</span>':''}
         ${a.locked?'<span class="chip off">🔒 Locked out</span>':''}
         ${a.newQuotes?`<span class="chip gold">${a.newQuotes} new quote${a.newQuotes>1?'s':''}</span>`:''}
