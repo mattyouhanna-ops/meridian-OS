@@ -523,10 +523,14 @@ async function handleDev(sub, method, body, req) {
   if (sub === "metrics" && method === "GET") {
     const agencies = listAgencies().map((ag) => {
       const agents = listAgents(ag.id).map(agentSummary);
-      const t = agents.reduce((s, a) => ({ agents: s.agents + 1, views: s.views + a.views, newQuotes: s.newQuotes + a.newQuotes, sold: s.sold + a.sold, clients: s.clients + a.clients, producing: s.producing + (a.sold > 0 ? 1 : 0), engaged: s.engaged + (a.views > 0 ? 1 : 0), onboarded: s.onboarded + (a.mustChange ? 0 : 1) }), { agents: 0, views: 0, newQuotes: 0, sold: 0, clients: 0, producing: 0, engaged: 0, onboarded: 0 });
+      const t = agents.reduce((s, a) => ({ agents: s.agents + 1, views: s.views + a.views, clicks: s.clicks + a.totalViews, unique: s.unique + a.unique, newQuotes: s.newQuotes + a.newQuotes, quotes: s.quotes + a.totalQuotes, sold: s.sold + a.sold, clients: s.clients + a.clients, producing: s.producing + (a.sold > 0 ? 1 : 0), engaged: s.engaged + (a.totalViews > 0 ? 1 : 0), active: s.active + ((a.active && !a.denied) ? 1 : 0) }), { agents: 0, views: 0, clicks: 0, unique: 0, newQuotes: 0, quotes: 0, sold: 0, clients: 0, producing: 0, engaged: 0, active: 0 });
+      t.activeRatio = t.agents ? Math.round((t.engaged / t.agents) * 100) : 0;       // % of cards actually opened
+      t.conversion = t.clicks ? Math.round((t.quotes / t.clicks) * 100) : 0;          // clicks that became a lead
       return { id: ag.id, name: ag.name, active: ag.active, licensed: agencyLicensed(ag), totals: t, agents };
     });
-    const platform = agencies.reduce((s, a) => ({ agencies: s.agencies + 1, agents: s.agents + a.totals.agents, views: s.views + a.totals.views, newQuotes: s.newQuotes + a.totals.newQuotes, sold: s.sold + a.totals.sold, producing: s.producing + a.totals.producing }), { agencies: 0, agents: 0, views: 0, newQuotes: 0, sold: 0, producing: 0 });
+    const platform = agencies.reduce((s, a) => ({ agencies: s.agencies + 1, agents: s.agents + a.totals.agents, views: s.views + a.totals.views, clicks: s.clicks + a.totals.clicks, unique: s.unique + a.totals.unique, newQuotes: s.newQuotes + a.totals.newQuotes, quotes: s.quotes + a.totals.quotes, sold: s.sold + a.totals.sold, producing: s.producing + a.totals.producing, engaged: s.engaged + a.totals.engaged }), { agencies: 0, agents: 0, views: 0, clicks: 0, unique: 0, newQuotes: 0, quotes: 0, sold: 0, producing: 0, engaged: 0 });
+    platform.activeRatio = platform.agents ? Math.round((platform.engaged / platform.agents) * 100) : 0;
+    platform.conversion = platform.clicks ? Math.round((platform.quotes / platform.clicks) * 100) : 0;
     return { status: 200, data: { platform, agencies } };
   }
   if (sub === "agencies" && method === "POST") {

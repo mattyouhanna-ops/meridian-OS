@@ -522,20 +522,28 @@ function health(a){ if(a.sold>0) return ['Producing','on']; if(a.views>0) return
 async function loadMetrics(){
   const r=await(await api('/api/dev/metrics')).json(); const P=r.platform||{}, ags=r.agencies||[];
   $('mPlatform').innerHTML=[
-    ['Agencies',P.agencies||0],['Agents',P.agents||0],['New quotes',P.newQuotes||0],['Views',P.views||0],['Policies sold',P.sold||0]
+    ['Agencies',P.agencies||0],['Agents',P.agents||0],['Total clicks',P.clicks||0],['Unique scans',P.unique||0],['Policies sold',P.sold||0]
   ].map(([l,v])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join('');
   const box=$('mAgencies');
-  if(!ags.length){ box.innerHTML='<div class="card"><p class="muted">No agencies yet.</p></div>'; return; }
-  box.innerHTML=ags.map(a=>{
-    const t=a.totals, conv=t.views?Math.round((t.newQuotes/t.views)*100):0;
-    const headline = t.agents===0 ? 'No agents yet' : `${t.producing}/${t.agents} producing · ${t.sold} sold · ${conv}% of views become quotes`;
+  // Platform-wide KPIs (the digital-business-card metrics)
+  const kpis=`<div class="card"><h2 style="font-size:17px">Key performance</h2>
+    <div class="tiles" style="margin-top:10px">${[
+      ['Active cards ratio',(P.activeRatio||0)+'%','% of agents whose card has been opened'],
+      ['Lead conversion',(P.conversion||0)+'%','clicks that became a quote/appointment'],
+      ['New quotes',P.newQuotes||0,'open leads waiting'],
+      ['Total views',P.views||0,'tracked link opens']
+    ].map(([l,v,h])=>`<div class="tile" title="${esc(h)}"><b>${v}</b><span>${l}</span></div>`).join('')}</div></div>`;
+  if(!ags.length){ box.innerHTML=kpis+'<div class="card"><p class="muted">No agencies yet.</p></div>'; return; }
+  box.innerHTML=kpis+ags.map(a=>{
+    const t=a.totals;
+    const headline = t.agents===0 ? 'No agents yet' : `${t.active}/${t.agents} active · ${t.activeRatio}% using their card · ${t.conversion}% of clicks convert · ${t.sold} sold`;
     const rows = a.agents.length ? a.agents.map(x=>{ const [lbl,cls]=health(x);
-      return `<div class="agent"><div class="r1"><b>${esc(x.name)}</b><span class="chip ${cls}">${lbl}</span><span class="sp"></span><span class="muted" style="font-size:12px">${x.views} views · ${x.newQuotes} quotes · ${x.sold} sold · ${x.clients} clients</span></div></div>`;
+      return `<div class="agent"><div class="r1"><b>${esc(x.name)}</b><span class="chip ${cls}">${lbl}</span><span class="sp"></span><span class="muted" style="font-size:12px">${x.totalViews} clicks · ${x.unique} unique · ${x.newQuotes} quotes · ${x.sold} sold</span></div></div>`;
     }).join('') : '<p class="muted">No agents.</p>';
     return `<div class="card">
       <div class="flexb"><h2 style="font-size:17px">${esc(a.name)} ${a.active?'':'<span class=\"chip off\">Suspended</span>'} ${a.licensed?'':'<span class=\"chip off\">License lapsed</span>'}</h2></div>
       <p class="muted" style="margin:2px 0 12px">${headline}</p>
-      <div class="tiles">${[['Agents',t.agents],['Views',t.views],['New quotes',t.newQuotes],['Sold',t.sold],['Clients',t.clients]].map(([l,v])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join('')}</div>
+      <div class="tiles">${[['Agents',t.agents],['Clicks',t.clicks],['Unique',t.unique],['Quotes',t.newQuotes],['Sold',t.sold]].map(([l,v])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join('')}</div>
       <div style="margin-top:12px">${rows}</div>
     </div>`;
   }).join('');
