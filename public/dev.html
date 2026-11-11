@@ -424,26 +424,33 @@ async function loadAgents(a,el){
   });
 }
 function presence(ts){
-  if(!ts) return {cls:'off',dot:'#ff6b6b',label:'Never active'};
+  if(!ts) return {cls:'off',dot:'#ff6b6b',label:'Never opened'};
   const d=(Date.now()-ts)/86400000;
-  if(d<1) return {cls:'on',dot:'#49d17a',label:'Active today'};
-  if(d<3) return {cls:'on',dot:'#49d17a',label:'Active '+Math.floor(d)+'d ago'};
+  if(d<1) return {cls:'on',dot:'#49d17a',label:'Opened today'};
+  if(d<3) return {cls:'on',dot:'#49d17a',label:'Opened '+Math.floor(d)+'d ago'};
   if(d<14) return {cls:'gold',dot:'#e7c15b',label:'Quiet '+Math.floor(d)+'d'};
   if(d<60) return {cls:'off',dot:'#ff9f45',label:'Dormant '+Math.floor(d/7)+'wk'};
   return {cls:'off',dot:'#ff6b6b',label:'Dormant '+Math.floor(d/30)+'mo'};
 }
+function fmtWhen(ts){ if(!ts) return 'never opened it'; const dt=new Date(ts),n=new Date();
+  const t=dt.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+  if(dt.toDateString()===n.toDateString()) return 'today at '+t;
+  if(new Date(n-86400000).toDateString()===dt.toDateString()) return 'yesterday at '+t;
+  return dt.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'})+' at '+t;
+}
 function agentRow(x,a){
   const admin=ORIGIN+'/a/'+x.slug+'/admin';
-  const pr=presence(x.lastActive);
+  const pr=presence(x.lastOpenedAt);
   return `<div class="agent" data-id="${x.id}">
     <div class="r1"><b>${esc(x.name)}</b><span class="chip ${x.active?'on':'off'}">${x.active?'On':'Off'}</span>
-    <span class="chip ${pr.cls}" title="Based on their most recent visit"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${pr.dot};margin-right:5px;vertical-align:middle"></span>${pr.label}</span>
+    <span class="chip ${pr.cls}" title="Last time this agent opened their own dashboard"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${pr.dot};margin-right:5px;vertical-align:middle"></span>${pr.label}</span>
     ${x.locked?'<span class="chip off">🔒 Locked</span>':''}
     ${x.denied?'<span class="chip off">🚫 Denied</span>':''}
     ${x.reinstateRequested?'<span class="chip gold">Wants back in</span>':''}
     ${x.incomplete?`<span class="chip off" title="Missing: ${esc((x.needs||[]).join(', '))}">⚠ Needs setup</span>`:''}
     ${x.newQuotes?`<span class="chip gold">${x.newQuotes} new</span>`:''}<span class="sp"></span>
     <span class="muted" style="font-size:12px">${x.views} views · ${(x.states||[]).join(', ')||'—'}</span></div>
+    <div class="credline" style="border-style:solid"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${pr.dot};margin-right:6px;vertical-align:middle"></span><b>Last opened their dashboard:</b> <span class="muted">${x.lastOpenedAt?fmtWhen(x.lastOpenedAt):'never — they haven\'t signed in yet'}</span></div>
     ${x.incomplete?`<div class="credline" style="border-color:#5e2c2c;background:#1a0c0c"><b style="color:#ffc9c9">⚠ Incomplete until they finish:</b> <span class="muted">${esc((x.needs||[]).join(' · '))}</span></div>`:''}
     <div class="credline" style="border-style:solid">🔐 <b>They sign in at</b> <code>${esc(admin)}</code> <span class="muted">— tell them to go there and sign in.</span></div>
     <div class="credline">🔑 <b>Login:</b> ${esc(x.email)} · ${x.curPass?`password <code>${esc(x.curPass)}</code> <span class="muted">(${x.issuedPass?'temporary':'their current password'})</span>`:'<span class="muted">no password on file — use “Reset pw”</span>'}</div>

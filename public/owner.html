@@ -243,13 +243,19 @@ function renderTiles(){
 }
 
 function presence(ts){
-  if(!ts) return {cls:'off',dot:'#ff6b6b',label:'Never active'};
+  if(!ts) return {cls:'off',dot:'#ff6b6b',label:'Never opened'};
   const d=(Date.now()-ts)/86400000;
-  if(d<1) return {cls:'on',dot:'#49d17a',label:'Active today'};
-  if(d<3) return {cls:'on',dot:'#49d17a',label:'Active '+Math.floor(d)+'d ago'};
+  if(d<1) return {cls:'on',dot:'#49d17a',label:'Opened today'};
+  if(d<3) return {cls:'on',dot:'#49d17a',label:'Opened '+Math.floor(d)+'d ago'};
   if(d<14) return {cls:'gold',dot:'#e7c15b',label:'Quiet '+Math.floor(d)+'d'};
   if(d<60) return {cls:'off',dot:'#ff9f45',label:'Dormant '+Math.floor(d/7)+'wk'};
   return {cls:'off',dot:'#ff6b6b',label:'Dormant '+Math.floor(d/30)+'mo'};
+}
+function fmtWhen(ts){ if(!ts) return 'never opened it'; const dt=new Date(ts),n=new Date();
+  const t=dt.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+  if(dt.toDateString()===n.toDateString()) return 'today at '+t;
+  if(new Date(n-86400000).toDateString()===dt.toDateString()) return 'yesterday at '+t;
+  return dt.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'})+' at '+t;
 }
 function renderAgents(){
   const box=$('agents');
@@ -257,12 +263,12 @@ function renderAgents(){
   box.innerHTML=DATA.agents.map(a=>{
     const card=ORIGIN+'/a/'+a.slug, adm=card+'/admin';
     const st=(a.states||[]).join(', ')||'—';
-    const pr=presence(a.lastActive);
+    const pr=presence(a.lastOpenedAt);
     return `<div class="agent" data-id="${a.id}">
       <div class="hd">
         <span class="nm">${esc(a.name)}</span>
         <span class="chip ${a.active?'on':'off'}">${a.active?'On':'Off'}</span>
-        <span class="chip ${pr.cls}" title="Based on their most recent visit"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${pr.dot};margin-right:5px;vertical-align:middle"></span>${pr.label}</span>
+        <span class="chip ${pr.cls}" title="Last time this agent opened their own dashboard"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${pr.dot};margin-right:5px;vertical-align:middle"></span>${pr.label}</span>
         ${a.subAgency?'<span class="chip">'+esc(a.subAgency)+'</span>':''}
         ${a.locked?'<span class="chip off">🔒 Locked out</span>':''}
         ${a.newQuotes?`<span class="chip gold">${a.newQuotes} new quote${a.newQuotes>1?'s':''}</span>`:''}
@@ -270,6 +276,7 @@ function renderAgents(){
         <span class="sp"></span>
         <span class="muted" style="font-size:12px">${a.views} views · ${a.clients} clients · ${st}</span>
       </div>
+      <div class="muted" style="font-size:12px;margin:2px 0 6px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${pr.dot};margin-right:6px;vertical-align:middle"></span>Last opened their dashboard: ${a.lastOpenedAt?fmtWhen(a.lastOpenedAt):'never yet'}</div>
       <div class="link-url">${esc(card)}</div>
       <div class="acts">
         ${a.locked?'<button class="btn sm gold" data-act="unlock">🔓 Unlock</button>':''}

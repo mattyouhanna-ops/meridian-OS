@@ -865,6 +865,8 @@ const server = http.createServer(async (req, res) => {
       if (rest.startsWith("/api/admin/")) {
         const authed = agentSession(req);
         if (!authed || authed.id !== agent.id) return sendJSON(res, 401, { error: "Please sign in." });
+        // Track when the agent themselves opens their dashboard (throttled to coalesce polling).
+        if (!agent.lastOpenedAt || Date.now() - agent.lastOpenedAt > 60000) { agent.lastOpenedAt = Date.now(); save(); }
         if (method !== "GET" && !sameOrigin(req)) return sendJSON(res, 403, { error: "Not allowed" });
         const sub = rest.slice("/api/admin/".length);
         const body = method === "GET" ? {} : await readBody(req);
