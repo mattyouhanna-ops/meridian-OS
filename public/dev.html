@@ -181,6 +181,11 @@ textarea{min-height:120px;resize:vertical}
         <p class="muted">Every quote and appointment across every agency.</p>
         <div id="leads"></div>
       </div>
+      <div class="card" style="margin-top:14px">
+        <div class="flexb"><h2>Card sends</h2><button class="btn sm" id="refreshSends">↻ Refresh</button></div>
+        <p class="muted">Every time an agent emails their card to a client. The agency owner is copied on each one.</p>
+        <div id="sends"></div>
+      </div>
     </section>
 
     <section id="tab-settings" class="hide">
@@ -587,9 +592,16 @@ async function loadLeads(){ const r=await(await api('/api/dev/leads')).json(); c
       ${q.phone||q.email?`<div class="muted" style="margin-top:4px">${esc([q.phone,q.email].filter(Boolean).join(' · '))}</div>`:''}</div>`;}).join('');
   box.querySelectorAll('.lead [data-del]').forEach(b=>b.onclick=async()=>{ const el=b.closest('.lead'); await api('/api/dev/leads/delete',{method:'POST',body:JSON.stringify({slug:el.dataset.slug,id:el.dataset.id})}); el.remove(); toast('Lead deleted'); });
 }
+async function loadSends(){ const box=$('sends'); if(!box)return; const r=await(await api('/api/dev/sends')).json(); const s=r.sends||[];
+  if(!s.length){box.innerHTML='<p class="muted">No cards emailed yet.</p>';return;}
+  box.innerHTML=s.map(x=>`<div class="lead"><div class="flexb"><b>✉ Card emailed${x.name?' to '+esc(x.name):''}</b>${x.ok===false?'<span class="chip off">failed</span>':'<span class="chip">sent</span>'}</div>
+    <div class="t">${esc(x.agency)} › ${esc(x.agent)} · ${new Date(x.t).toLocaleString()}</div>
+    <div class="muted" style="margin-top:4px">to ${esc(x.to||'')}</div></div>`).join('');
+}
 
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
-  const n=t.dataset.tab; ['agencies','metrics','onboarding','inbox','settings'].forEach(s=>$('tab-'+s).classList.toggle('hide',s!==n)); if(n==='inbox')loadLeads(); if(n==='onboarding')loadRequests(); if(n==='metrics')loadMetrics(); });
+  const n=t.dataset.tab; ['agencies','metrics','onboarding','inbox','settings'].forEach(s=>$('tab-'+s).classList.toggle('hide',s!==n)); if(n==='inbox'){loadLeads();loadSends();} if(n==='onboarding')loadRequests(); if(n==='metrics')loadMetrics(); });
+$('refreshSends').onclick=loadSends;
 $('refreshLeads').onclick=loadLeads;
 $('dlLeads').onclick=downloadLeads;
 $('clrLeads').onclick=async()=>{ if(!confirm('Delete ALL leads across every agency? This clears your test quotes and cannot be undone.'))return; const r=await(await api('/api/dev/leads/clear',{method:'POST'})).json(); toast('Cleared '+(r.cleared||0)+' leads'); loadLeads(); loadDash(); };

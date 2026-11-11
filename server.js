@@ -25,7 +25,7 @@ import {
   listAccountRequests, addAccountRequest, setAccountRequestStatus,
 } from "./lib/model.js";
 import { cardPNG } from "./lib/og.js";
-import { alertNewLead, sendEmail, welcomeEmailHTML, emailStatus, sendTestEmail, emailHealth } from "./lib/notify.js";
+import { alertNewLead, sendEmail, welcomeEmailHTML, emailStatus, sendTestEmail, emailHealth, sendCardShare } from "./lib/notify.js";
 import { vapidPublicKey, addSubscription, pushToAgent } from "./lib/push.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -426,6 +426,22 @@ async function handleAdmin(agent, sub, method, body, req) {
   }
   if (sub === "signout-all" && method === "POST") { agent.sessionsValidAfter = Date.now(); save(); return { status: 200, data: { ok: true } }; }
 
+  if (sub === "send-card" && method === "POST") {
+    const to = String(body.to || "").trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return { status: 400, data: { error: "Enter a valid email address." } };
+    const w = who(req);
+    const origin = originOf(req);
+    const cardUrl = `${origin}/a/${agent.slug}/`;
+    const ag = agencyOf(agent);
+    const cc = ag && ag.ownerEmail ? [ag.ownerEmail] : []; // agency owner is CC'd for oversight
+    const ok = await sendCardShare(agent, to, cardUrl, { origin, licensed: agent.licensed !== false, cc });
+    if (!agent.sends) agent.sends = [];
+    appendLog(agent.sends, { id: crypto.randomBytes(8).toString("hex"), t: Date.now(), to, name: str(body.name, 80), ok: !!ok, ...w }, 300);
+    appendLog(agent.security, { t: Date.now(), ...w, event: `Emailed card to ${to}` }, 300);
+    save();
+    return ok ? { status: 200, data: { ok: true } } : { status: 502, data: { error: "Could not send right now. Your email setup may need attention." } };
+  }
+
   return { status: 404, data: { error: "Not found" } };
 }
 
@@ -644,6 +660,12 @@ async function handleDev(sub, method, body, req) {
     for (const a of listAgents()) { const ag = getAgency(a.agencyId); for (const q of a.quotes) leads.push({ ...q, agent: a.profile.name, agency: ag ? ag.name : "—", agentSlug: a.slug }); }
     leads.sort((x, y) => y.t - x.t);
     return { status: 200, data: { leads: leads.slice(0, 800) } };
+  }
+  if (sub === "sends" && method === "GET") {
+    const sends = [];
+    for (const a of listAgents()) { const ag = getAgency(a.agencyId); for (const s of (a.sends || [])) sends.push({ ...s, agent: a.profile.name, agency: ag ? ag.name : "—", agentSlug: a.slug }); }
+    sends.sort((x, y) => y.t - x.t);
+    return { status: 200, data: { sends: sends.slice(0, 800) } };
   }
   if (sub === "passcode" && method === "POST") {
     if (!checkPass(String(body.current || ""), dev.passHash)) return { status: 401, data: { error: "Current password is incorrect." } };
