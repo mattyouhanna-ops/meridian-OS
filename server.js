@@ -38,24 +38,39 @@ const BUILD = process.env.RAILWAY_GIT_COMMIT_SHA || process.env.BUILD_ID || Stri
 
 ensureDeveloper(); // seed developer + Meridian (agency #1) on first boot
 
-// One-time migration: Final Expense and Whole Life are the same product — merge them in every saved catalog.
-(function mergeFinalExpenseWholeLife() {
-  const MERGED = { t: "Final Expense / Whole Life", d: "Permanent coverage that never expires, with guaranteed premiums and cash value you can borrow against. Covers funeral and end-of-life costs so your family isn't left with the bill — simple approval, no big medical exam." };
-  const isFE = (p) => /final expense/i.test(p.t || "") && !/whole life/i.test(p.t || "");
-  const isWL = (p) => /^\s*whole life\s*$/i.test(p.t || "");
+// One-time migrations: merge products that are the same thing in every saved catalog.
+// A pair (final expense + whole life, term + mortgage protection) collapses into one entry.
+(function mergeDuplicateProducts() {
+  const MERGES = [
+    { merged: { t: "Final Expense / Whole Life", d: "Permanent coverage that never expires, with guaranteed premiums and cash value you can borrow against. Covers funeral and end-of-life costs so your family isn't left with the bill. Simple approval, no big medical exam." },
+      hasMerged: (p) => /final expense\s*\/\s*whole life/i.test(p.t || ""),
+      isA: (p) => /final expense/i.test(p.t || "") && !/whole life/i.test(p.t || ""),
+      isB: (p) => /^\s*whole life\s*$/i.test(p.t || "") },
+    { merged: { t: "Term Life / Mortgage Protection", d: "Affordable protection for a set number of years, ideal while the kids are home or the mortgage is open, so your family keeps the house if something happens to you." },
+      hasMerged: (p) => /term\s*(life)?\s*\/\s*mortgage/i.test(p.t || "") || (/term/i.test(p.t || "") && /mortgage/i.test(p.t || "")),
+      isA: (p) => /term/i.test(p.t || "") && !/mortgage/i.test(p.t || ""),
+      isB: (p) => /mortgage/i.test(p.t || "") && !/term/i.test(p.t || "") },
+  ];
   let changed = false;
   for (const a of listAgents()) {
     const prods = a.profile && Array.isArray(a.profile.products) ? a.profile.products : null;
     if (!prods || !prods.length) continue;
-    if (prods.some((p) => /final expense\s*\/\s*whole life/i.test(p.t || ""))) continue; // already merged
-    const feIdx = prods.findIndex(isFE);
-    const wlIdx = prods.findIndex(isWL);
-    if (feIdx === -1 && wlIdx === -1) continue;
-    const at = feIdx === -1 ? wlIdx : wlIdx === -1 ? feIdx : Math.min(feIdx, wlIdx);
-    const other = feIdx === -1 || wlIdx === -1 ? -1 : Math.max(feIdx, wlIdx);
-    prods[at] = { ...MERGED };
-    if (other !== -1) prods.splice(other, 1);
-    changed = true;
+    for (const m of MERGES) {
+      const aIdx = prods.findIndex(m.isA);
+      const bIdx = prods.findIndex(m.isB);
+      if (aIdx === -1 && bIdx === -1) continue;
+      if (prods.some(m.hasMerged)) {
+        // already have the combined entry — just drop any leftover standalone halves
+        [aIdx, bIdx].filter((i) => i !== -1).sort((x, y) => y - x).forEach((i) => prods.splice(i, 1));
+        changed = true;
+        continue;
+      }
+      const at = aIdx === -1 ? bIdx : bIdx === -1 ? aIdx : Math.min(aIdx, bIdx);
+      const other = aIdx === -1 || bIdx === -1 ? -1 : Math.max(aIdx, bIdx);
+      prods[at] = { ...m.merged };
+      if (other !== -1) prods.splice(other, 1);
+      changed = true;
+    }
   }
   if (changed) save();
 })();
