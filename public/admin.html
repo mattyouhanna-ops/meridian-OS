@@ -397,6 +397,7 @@
                 <div class="link-url" id="dashLink"></div>
                 <div class="sharerow">
                   <button type="button" class="btn sm" id="dashShare">Share</button>
+                  <button type="button" class="btn sm" id="dashEmail">✉ Email my card</button>
                   <button type="button" class="btn sm ghost" id="dashCopy">Copy link</button>
                   <a class="btn sm ghost" id="dashOpen" href="#" target="_blank" rel="noopener">Open ↗</a>
                 </div>
@@ -670,6 +671,21 @@ function renderDashShare(){
 (function(){ var sh=document.getElementById('dashShare'), cp=document.getElementById('dashCopy');
   if(sh) sh.addEventListener('click',async function(){ var url=location.origin+AB+'/'; if(navigator.share){ try{ await navigator.share({title:'My Meridian card',url:url}); return; }catch(e){ if(e&&e.name==='AbortError') return; } } navigator.clipboard.writeText(url).then(function(){toast('Card link copied');}); });
   if(cp) cp.addEventListener('click',function(){ navigator.clipboard.writeText(location.origin+AB+'/').then(function(){toast('Card link copied');}); });
+  var em=document.getElementById('dashEmail');
+  if(em) em.addEventListener('click',function(){
+    var url=location.origin+AB+'/';
+    var name=(($('p_name')&&$('p_name').value)||'').trim();
+    var title=(($('p_title')&&$('p_title').value)||'Licensed Life Insurance Agent').trim();
+    var subject=(name?name+' — ':'')+(title||'My business card');
+    var body=
+      'Hi,\r\n\r\n'+
+      'It was great connecting with you. Here is my digital business card — you can verify my license, save my contact info, or reach out any time:\r\n\r\n'+
+      url+'\r\n\r\n'+
+      'Looking forward to helping you and your family find the right coverage.\r\n\r\n'+
+      'Warm regards,\r\n'+
+      (name||'')+(title?'\r\n'+title:'');
+    window.location.href='mailto:?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+  });
 })();
 $('recovCopy').addEventListener('click',()=>{navigator.clipboard.writeText($('recovCode').textContent).then(()=>toast('Recovery code copied'));});
 $('linkCardCopy').addEventListener('click',()=>navigator.clipboard.writeText(location.origin+AB+'/').then(()=>toast('Card link copied')));
