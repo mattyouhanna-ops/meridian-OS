@@ -377,12 +377,11 @@
             <button class="sn" data-sec="offer">Promises &amp; products</button>
             <button class="sn" data-sec="vis">Sharing &amp; visibility</button>
             <button class="sn" data-sec="sec">Security</button>
-            <button class="sn pvbtn" id="pvOpen">👁 Preview</button>
           </div>
 
           <section class="panel" data-sec="profile">
             <h2 class="gold-text">Card details</h2>
-            <p class="muted">Your name, contact info and licenses. Changes show in the preview first and only go live when you press Save.</p>
+            <p class="muted">Your name, contact info and licenses. Changes only go live when you press Save.</p>
             <div class="sharecard">
               <div class="qrbox" id="dashQr"></div>
               <div class="sharemeta">
@@ -431,12 +430,8 @@
             </div>
             <div style="margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel2)">
               <b>See exactly what people see</b>
-              <p class="muted" style="font-size:12.5px;margin:4px 0 10px">Preview your card as each audience before you send it.</p>
-              <div class="row" style="gap:8px;flex-wrap:wrap">
-                <button type="button" class="btn sm" id="seeProspect">👁 A new prospect</button>
-                <button type="button" class="btn sm" id="seeClient">👁 An active client</button>
-                <button type="button" class="btn sm ghost" id="seeMe">👁 Everything (my view)</button>
-              </div>
+              <p class="muted" style="font-size:12.5px;margin:4px 0 10px">Open your real card in a new tab to check it.</p>
+              <a class="btn sm" id="seeOpenCard" href="#" target="_blank" rel="noopener">👁 Open my card ↗</a>
             </div>
             <label style="margin-top:18px">Main link shows</label>
             <select id="defAud"></select>
@@ -446,7 +441,7 @@
               <button class="btn sm ghost" id="sendMsgReset" type="button">Reset</button>
               <p id="sendMsgPrev"></p>
             </div>
-            <p class="hint" style="margin-top:22px">Send buttons send just your link — so the card preview pops up in their text and a tap opens the full card. Flip a switch above and watch the preview on the right; use the Prospect, Client and My view buttons to check each audience.</p>
+            <p class="hint" style="margin-top:22px">Send buttons send just your link — so the card preview pops up in their text and a tap opens the full card.</p>
           </section>
 
           <section class="panel" data-sec="sec" hidden>
@@ -468,21 +463,11 @@
 
       <div class="savebar" id="saveBar" hidden>
         <b>Unsaved changes</b>
-        <button class="btn sm ghost pvbtn2" id="pvOpen2">Preview</button>
         <button class="btn sm ghost" id="discard">Discard</button>
         <button class="btn sm" id="p_save">Save changes</button>
       </div>
     </main>
 
-    <aside class="pv" id="pv" aria-label="Live preview">
-          <div class="pvhead">
-            <span class="live">Live preview</span>
-            <div class="seg" id="pvSeg"><button data-m="prospect" class="on">Prospect</button><button data-m="client">Client</button><button data-m="me">My view</button></div>
-            <span class="pvwho" id="pvWho" hidden></span>
-            <button class="btn sm ghost pvclose" id="pvClose">Close ✕</button>
-          </div>
-          <div class="phone"><iframe id="pvFrame" src="%%AB%%/?preview=1" title="Card preview"></iframe></div>
-        </aside>
 
     <!-- ============ TAB 2: CLIENTS ============ -->
     <main id="tab-clients" hidden>
@@ -545,7 +530,7 @@
 <script>
 const $=id=>document.getElementById(id);
 const AB=window.AB||'';
-(function(){ var vc=document.getElementById('viewCardLink'); if(vc) vc.href=location.origin+AB+'/'; })();
+(function(){ var u=location.origin+AB+'/'; var vc=document.getElementById('viewCardLink'); if(vc) vc.href=u; var oc=document.getElementById('seeOpenCard'); if(oc) oc.href=u; })();
 // Auto-update: refresh to the newest version when the app is reopened after a deploy.
 (function(){ var V=null;
   function check(){ fetch('/api/version',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ if(V&&j.v&&j.v!==V){ location.reload(); } V=j.v; }).catch(function(){}); }
@@ -877,41 +862,14 @@ function fillVisibility(){
   for(const a of Object.keys(S.settings.audiences)){const o=document.createElement('option');o.value=a;o.textContent=S.settings.audiences[a].label;nl.appendChild(o);}
 }
 
-// ---------- live preview ----------
-function pvActive(){ return pvOpen || $('pv').classList.contains('dock'); }
-function pvFields(){
-  if(pvCtx) return pvCtx.fields;
-  if(pvMode==='me'){ const f={}; for(const k of Object.keys(S.fields)) f[k]=true; return f; }
-  return AUD[pvMode].fields;
-}
-function schedulePreview(){ clearTimeout(pvTimer); pvTimer=setTimeout(sendPreview,180); }
-async function sendPreview(){
-  if(!pvActive()||!S.profile) return;
-  const seq=++pvSeq; const prof=pvCtx?S.profile:readProfile();
-  try{
-    const r=await (await api(AB+'/api/admin/preview',{method:'POST',body:JSON.stringify({profile:prof,fields:pvFields()})})).json();
-    if(seq!==pvSeq) return; pvData=r; postPv();
-  }catch(e){}
-}
-function postPv(){ const w=$('pvFrame').contentWindow; if(w&&pvData) w.postMessage({type:'preview',data:pvData},location.origin); }
-window.addEventListener('message',e=>{ if(e.origin===location.origin&&e.data&&e.data.type==='ready') postPv(); });
-$('pvFrame').addEventListener('load',postPv);
-function setPvUI(){
-  document.querySelectorAll('#pvSeg button').forEach(b=>b.classList.toggle('on',b.dataset.m===pvMode));
-  $('pvSeg').hidden=!!pvCtx; $('pvWho').hidden=!pvCtx; if(pvCtx) $('pvWho').textContent='Viewing as '+pvCtx.name;
-  const pv=$('pv'); const dock=!pvOpen && curTab==='admin' && wide();
-  pv.classList.toggle('open',pvOpen); pv.classList.toggle('dock',dock); document.body.classList.toggle('hasdock',dock);
-}
-function openPv(){ pvOpen=true; setPvUI(); schedulePreview(); }
-function closePv(){ pvOpen=false; pvCtx=null; setPvUI(); }
-document.querySelectorAll('#pvSeg button').forEach(b=>b.onclick=()=>{pvMode=b.dataset.m; setPvUI(); schedulePreview();});
-function seeAs(m){ pvCtx=null; pvMode=m; openPv(); setPvUI(); schedulePreview(); window.scrollTo({top:0}); }
-$('seeProspect').onclick=()=>seeAs('prospect');
-$('seeClient').onclick=()=>seeAs('client');
-$('seeMe').onclick=()=>seeAs('me');
-$('pvOpen').onclick=openPv; $('pvOpen2').onclick=openPv; $('pvClose').onclick=closePv;
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&pvOpen) closePv(); });
-matchMedia('(min-width:1100px)').addEventListener('change',()=>{setPvUI();schedulePreview();});
+// ---------- live preview removed ----------
+// The embedded live preview panel was removed from the dashboard.
+// These are safe no-ops so the rest of the dashboard keeps working.
+function schedulePreview(){}
+function setPvUI(){}
+function openPv(){}
+function closePv(){ pvOpen=false; pvCtx=null; }
+function seeAs(){}
 
 // ---------- clients ----------
 const ST={new:{l:'New',c:'st-new'},chat:{l:'Brief chat',c:'st-chat'},quoted:{l:'Quoted',c:'st-quoted'},sold:{l:'Sold',c:'st-sold'}};
@@ -1001,10 +959,7 @@ $('clientList').addEventListener('click',async e=>{
   if(act==='copy'){ navigator.clipboard.writeText(location.origin+AB+'/?k='+tok).then(()=>toast('Link copied')).catch(()=>toast('Press and hold the link to copy')); return; }
   if(act==='pause'){ const paused=p.paused||!p.active; if(await patchLink(tok,{paused:!paused,active:true})){ renderClients(); toast(paused?'Access given back':'Paused'); } return; }
   if(act==='del'){ if(!confirm('Delete '+p.name+'? This removes their link and everything logged for them.')) return; const r=await (await api(AB+'/api/admin/links/'+tok,{method:'DELETE'})).json(); if(r.links){ S.links=r.links; OPEN.delete(tok); renderClients(); loadActivity(); toast('Deleted'); } return; }
-  if(act==='pv'){
-    const fields=p.audience==='custom'?(p.fields||{}):(S.settings.audiences[p.audience]||S.settings.audiences.prospect).fields;
-    pvCtx={name:p.name,fields}; openPv(); return;
-  }
+  if(act==='pv'){ window.open(location.origin+AB+'/?k='+tok,'_blank'); return; }
 });
 $('clientList').addEventListener('focusout',async e=>{
   const f=e.target.dataset&&e.target.dataset.fld; if(!f) return;
