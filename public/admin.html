@@ -676,13 +676,11 @@ function renderDashShare(){
     var url=location.origin+AB+'/';
     var name=(($('p_name')&&$('p_name').value)||'').trim();
     var title=(($('p_title')&&$('p_title').value)||'Licensed Life Insurance Agent').trim();
-    var subject=(name?name+' — ':'')+(title||'My business card');
+    var subject=(name?name+', ':'')+(title||'My business card');
     var body=
       'Hi,\r\n\r\n'+
-      'It was great connecting with you. Here is my digital business card — you can verify my license, save my contact info, or reach out any time:\r\n\r\n'+
+      'Here is my business card. You can look up my license, save my contact, or reach out any time:\r\n\r\n'+
       url+'\r\n\r\n'+
-      'Looking forward to helping you and your family find the right coverage.\r\n\r\n'+
-      'Warm regards,\r\n'+
       (name||'')+(title?'\r\n'+title:'');
     window.location.href='mailto:?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
   });
