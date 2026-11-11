@@ -39,6 +39,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--dim)}
 .tile span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
 .agency{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;background:var(--panel2)}
 .agency .hd{cursor:pointer;user-select:none}
+.agency .anum{flex:none;font-weight:800;color:var(--gold2);font-size:15px;min-width:24px}
 .agency .chev{margin-left:8px;flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);color:var(--gold);display:inline-flex;align-items:center;justify-content:center;transition:transform .2s}
 .agency .chev:after{content:"";width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-1px) rotate(45deg)}
 .agency.open .chev{transform:rotate(180deg)}
@@ -112,7 +113,6 @@ textarea{min-height:120px;resize:vertical}
     </div>
 
     <section id="tab-agencies">
-      <div class="tiles" id="tiles"></div>
       <div class="card">
         <div class="flexb"><h2>Agencies</h2><div class="row"><button class="btn sm ghost" id="expandAll">Expand all</button><button class="btn sm" id="addAgencyBtn">+ New agency</button></div></div>
         <div id="addAgency" class="hide" style="margin:10px 0 4px">
@@ -249,8 +249,8 @@ document.addEventListener('click',async e=>{ if(e.target&&e.target.id==='freezeB
   await api('/api/dev/freeze',{method:'POST',body:JSON.stringify({on})});
   toast(on?'Platform frozen':'Platform back online'); loadDash();
 }});
-function renderTiles(){ const t=DATA.totals;
-  $('tiles').innerHTML=[['Agencies',t.agencies],['Agents',t.agents],['New quotes',t.newQuotes],['Views',t.views],['Policies sold',t.sold]]
+function renderTiles(){ const el=$('tiles'); if(!el) return; const t=DATA.totals;
+  el.innerHTML=[['Agencies',t.agencies],['Agents',t.agents],['New quotes',t.newQuotes],['Views',t.views],['Policies sold',t.sold]]
     .map(([l,v])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join(''); }
 
 function renderAgencies(){
@@ -260,16 +260,18 @@ function renderAgencies(){
   if(!DATA.agencies.length){box.innerHTML='<p class="muted">No agencies yet.</p>';return;}
   // Order so each child agency follows its parent, indented.
   const byId={}; DATA.agencies.forEach(a=>byId[a.id]=a);
-  const ordered=[]; DATA.agencies.filter(a=>!a.parentId).forEach(p=>{ ordered.push(p); DATA.agencies.filter(c=>c.parentId===p.id).forEach(c=>ordered.push(c)); });
-  DATA.agencies.filter(a=>a.parentId&&!byId[a.parentId]).forEach(a=>ordered.push(a)); // orphaned safety
+  const ordered=[]; const num={}; let top=0;
+  DATA.agencies.filter(a=>!a.parentId).forEach(p=>{ top++; num[p.id]=String(top); ordered.push(p); let sub=0; DATA.agencies.filter(c=>c.parentId===p.id).forEach(c=>{ sub++; num[c.id]=top+'.'+sub; ordered.push(c); }); });
+  DATA.agencies.filter(a=>a.parentId&&!byId[a.parentId]).forEach(a=>{ top++; num[a.id]=String(top); ordered.push(a); }); // orphaned safety
   box.innerHTML=ordered.map(a=>{
     const t=a.totals, accent=a.brand&&a.brand.accent||'#d4af37';
     const parent=a.parentId?byId[a.parentId]:null;
     return `<div class="agency${parent?' child':''}" data-id="${a.id}"${parent?' style="margin-left:22px;border-left:2px solid var(--gold-dim)"':''}>
-      ${parent?`<div class="muted" style="font-size:11.5px;margin-bottom:4px">↳ sub-agency of ${esc(parent.name)}</div>`:''}
       <div class="hd" data-toggle>
+        <span class="anum">${num[a.id]}.</span>
         <span class="dot" style="background:${esc(accent)}"></span>
         <span class="nm">${esc(a.name)}</span>
+        ${parent?`<span class="muted" style="font-size:11px">↳ under ${esc(parent.name)}</span>`:''}
         <span class="chip ${a.active?'on':'off'}">${a.active?'Active':'Suspended'}</span>
         ${a.hasOwner?'<span class="chip">Owner login</span>':'<span class="chip">You manage</span>'}
         ${a.ownerLocked?'<span class="chip off">🔒 Owner locked</span>':''}
@@ -280,7 +282,7 @@ function renderAgencies(){
         <span class="chev"></span>
       </div>
       <div class="agencybody"${openAgencies.has(a.id)?'':' hidden'}>
-      ${a.hasOwner?`<div class="credline">👤 <b>Owner login:</b> ${esc(a.ownerEmail||'')} · ${a.ownerCurPass?`password <code>${esc(a.ownerCurPass)}</code> <span class="muted">(${a.ownerIssuedPass?'temporary':'their current password'})</span>`:'<span class="muted">no password on file — use “Reset owner login”</span>'}</div>`:'<div class="credline muted">No owner yet — you manage this agency directly.</div>'}
+      ${a.hasOwner?`<div class="credline">👤 <b>Owner signs in at</b> <code>${esc(ORIGIN)}/owner</code> · ${esc(a.ownerEmail||'')} · ${a.ownerCurPass?`password <code>${esc(a.ownerCurPass)}</code> <span class="muted">(${a.ownerIssuedPass?'temporary':'current'})</span>`:'<span class="muted">no password on file — use “Reset owner login”</span>'}</div>`:'<div class="credline muted">No owner yet — you manage this agency directly.</div>'}
       <div class="acts">
         <button class="btn sm ghost" data-act="notify">🔔 Alert recipients${(a.alertEmails&&a.alertEmails.length||a.alertSms&&a.alertSms.length)?' ('+((a.alertEmails||[]).length+(a.alertSms||[]).length)+')':''}</button>
         <button class="btn sm ghost" data-act="owner">${a.hasOwner?'Reset owner login':'Add owner login'}</button>
@@ -375,7 +377,7 @@ async function loadAgents(a,el){
   });
 }
 function agentRow(x,a){
-  const card=ORIGIN+'/a/'+x.slug;
+  const admin=ORIGIN+'/a/'+x.slug+'/admin';
   return `<div class="agent" data-id="${x.id}">
     <div class="r1"><b>${esc(x.name)}</b><span class="chip ${x.active?'on':'off'}">${x.active?'On':'Off'}</span>
     ${x.locked?'<span class="chip off">🔒 Locked</span>':''}
@@ -383,13 +385,12 @@ function agentRow(x,a){
     ${x.reinstateRequested?'<span class="chip gold">Wants back in</span>':''}
     ${x.newQuotes?`<span class="chip gold">${x.newQuotes} new</span>`:''}<span class="sp"></span>
     <span class="muted" style="font-size:12px">${x.views} views · ${(x.states||[]).join(', ')||'—'}</span></div>
-    <div class="link-url">${esc(card)}</div>
+    <div class="credline" style="border-style:solid">🔐 <b>They sign in at</b> <code>${esc(admin)}</code> <span class="muted">— tell them to go there and sign in.</span></div>
     <div class="credline">🔑 <b>Login:</b> ${esc(x.email)} · ${x.curPass?`password <code>${esc(x.curPass)}</code> <span class="muted">(${x.issuedPass?'temporary':'their current password'})</span>`:'<span class="muted">no password on file — use “Reset pw”</span>'}</div>
     <div class="acts">
       ${x.locked?'<button class="btn sm gold" data-act="unlock">🔓 Unlock</button>':''}
       <button class="btn sm" data-act="edit">✏️ Edit info</button>
-      <button class="btn sm" data-act="open">Card</button>
-      <button class="btn sm" data-act="dash">Dashboard</button>
+      <button class="btn sm" data-act="dash">Open dashboard</button>
       <button class="btn sm ghost" data-act="welcome">Welcome msg</button>
       <button class="btn sm ghost" data-act="reset">Reset pw</button>
       ${x.denied?'<button class="btn sm gold" data-act="reinstate">Reinstate access</button>':'<button class="btn sm danger" data-act="deny">🚫 Deny (fraud)</button>'}
@@ -521,7 +522,7 @@ function health(a){ if(a.sold>0) return ['Producing','on']; if(a.views>0) return
 async function loadMetrics(){
   const r=await(await api('/api/dev/metrics')).json(); const P=r.platform||{}, ags=r.agencies||[];
   $('mPlatform').innerHTML=[
-    ['Agencies',P.agencies||0],['Agents',P.agents||0],['Producing',(P.producing||0)+'/'+(P.agents||0)],['Card views',P.views||0],['Policies sold',P.sold||0]
+    ['Agencies',P.agencies||0],['Agents',P.agents||0],['New quotes',P.newQuotes||0],['Views',P.views||0],['Policies sold',P.sold||0]
   ].map(([l,v])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join('');
   const box=$('mAgencies');
   if(!ags.length){ box.innerHTML='<div class="card"><p class="muted">No agencies yet.</p></div>'; return; }
