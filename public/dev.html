@@ -73,7 +73,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--dim)}
 .stgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;max-height:210px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:10px;background:#0e0e10}
 .stgrid label{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#141416;cursor:pointer;font-size:13px}
 .stgrid label:has(input:checked){border-color:var(--gold);background:#1a1708}
-.stgrid label input{accent-color:var(--gold);flex:none}
+.stgrid label input{accent-color:var(--gold);flex:none;width:auto;min-width:0;padding:0;margin:0;border-radius:0}
 .stgrid label b{flex:none;color:var(--gold2);width:24px}
 .stgrid label span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .stcount{font-size:12px;color:var(--gold2);margin-top:6px;min-height:14px}

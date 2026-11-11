@@ -312,6 +312,8 @@
       <label>Phone (call &amp; text) *</label><input id="s_phone" placeholder="(555) 123-4567" inputmode="tel" autocomplete="tel">
       <label>Email *</label><input id="s_email" placeholder="you@email.com" inputmode="email" autocomplete="email">
       <label>NPN (National Producer Number)</label><input id="s_npn" placeholder="e.g. 1234567" inputmode="numeric">
+      <label>Your phone carrier <span class="muted" style="font-weight:400">(so lead alerts can text you — never shown on your card)</span></label>
+      <select id="s_carrier"><option value="">— select your carrier —</option><option value="verizon">Verizon</option><option value="att">AT&amp;T</option><option value="tmobile">T-Mobile</option><option value="metro">Metro by T-Mobile</option><option value="cricket">Cricket</option><option value="boost">Boost Mobile</option><option value="uscellular">US Cellular</option><option value="googlefi">Google Fi</option><option value="xfinity">Xfinity Mobile</option><option value="visible">Visible</option><option value="mint">Mint Mobile</option><option value="straighttalk">Straight Talk</option></select>
       <label>States you're licensed in</label>
       <p class="muted">Tap every state where you hold a license. Each one gets its own official lookup link on your card.</p>
       <div class="stgrid" id="s_states"></div>
@@ -649,7 +651,7 @@ $('iv_pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('iv_go').click(
 
 // ================= SETUP =================
 $('s_go').addEventListener('click',async()=>{
-  const p={name:$('s_name').value,title:$('s_title').value,brand:$('s_brand').value,phone:$('s_phone').value,email:$('s_email').value.trim(),npn:$('s_npn').value,states:gridValue($('s_states'))};
+  const p={name:$('s_name').value,title:$('s_title').value,brand:$('s_brand').value,phone:$('s_phone').value,email:$('s_email').value.trim(),npn:$('s_npn').value,carrier:$('s_carrier').value,states:gridValue($('s_states'))};
   const pass=$('s_pass').value;
   const err=m=>{const e=$('s_err');e.textContent=m;e.style.cssText='display:block;margin-top:14px;padding:12px;border-radius:10px;background:#2a1010;border:1px solid #6b2222;color:#ffb4b4;font-size:14px';e.scrollIntoView({behavior:'smooth',block:'center'});};
   $('s_err').textContent='';$('s_err').style.cssText='';
