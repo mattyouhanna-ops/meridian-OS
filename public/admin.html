@@ -23,6 +23,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="/statesmap.js"></script>
 <style>
   :root{--black:#0b0b0c;--panel:#141416;--panel2:#1b1b1e;--line:#2a2a2e;--gold:#d4af37;--gold2:#f1d78a;--gold-dim:#8f7426;--text:#f3efe6;--muted:#a9a397;--ok:#7fc79a;--bad:#e2795f}
   *{box-sizing:border-box;margin:0;padding:0}
@@ -246,7 +247,7 @@
 
     <div id="wizPanel0">
       <h2 style="font-family:Georgia,serif;font-size:26px;margin:0 0 6px;color:#f1d78a">Welcome, <span id="wizName">there</span> 👋</h2>
-      <p style="color:#a9a397;line-height:1.6">Your digital business card is ready. Let's get you set up in under a minute — a password, a quick look at your info, and you're live.</p>
+      <p style="color:#a9a397;line-height:1.6">Your card is ready. Set a password, confirm your details, pick your licensed states, and you're live.</p>
       <button id="wizStart" class="btn" style="width:100%;margin-top:16px;background:linear-gradient(180deg,#f1d78a,#d4af37);color:#231c00;border:none;padding:13px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer">Get started</button>
     </div>
 
@@ -275,7 +276,7 @@
     </div>
 
     <div id="wizPanel3" hidden>
-      <h2 style="font-family:Georgia,serif;font-size:23px;margin:0 0 4px;color:#f1d78a">You're live 🎉</h2>
+      <h2 style="font-family:Georgia,serif;font-size:23px;margin:0 0 4px;color:#f1d78a">You're live</h2>
       <p style="color:#a9a397;font-size:14px">This is your card — text it to anyone and it unfurls as your business card.</p>
       <div id="wizCardLink2" style="font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#f1d78a;word-break:break-all;background:#0e0e10;border:1px solid #2a2a2e;border-radius:8px;padding:9px;margin:10px 0"></div>
       <button id="wizOpenCard" class="btn" style="width:100%;background:#1a1a1d;border:1px solid #2a2a2e;color:#f3efe6;padding:11px;border-radius:12px;font-weight:600;cursor:pointer">Open my card</button>
@@ -564,16 +565,8 @@ function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');cle
 function initials(n){const p=(n||'').trim().split(/\s+/);return (((p[0]||'')[0]||'')+((p.length>1?p[p.length-1][0]:'')||''))||'✦';}
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const STATES={AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",CO:"Colorado",CT:"Connecticut",DE:"Delaware",DC:"District of Columbia",FL:"Florida",GA:"Georgia",HI:"Hawaii",ID:"Idaho",IL:"Illinois",IN:"Indiana",IA:"Iowa",KS:"Kansas",KY:"Kentucky",LA:"Louisiana",ME:"Maine",MD:"Maryland",MA:"Massachusetts",MI:"Michigan",MN:"Minnesota",MS:"Mississippi",MO:"Missouri",MT:"Montana",NE:"Nebraska",NV:"Nevada",NH:"New Hampshire",NJ:"New Jersey",NM:"New Mexico",NY:"New York",NC:"North Carolina",ND:"North Dakota",OH:"Ohio",OK:"Oklahoma",OR:"Oregon",PA:"Pennsylvania",RI:"Rhode Island",SC:"South Carolina",SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VT:"Vermont",VA:"Virginia",WA:"Washington",WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming"};
-function stateGrid(el,selected){
-  el.innerHTML='';
-  for(const code of Object.keys(STATES)){
-    const id=el.id+'_'+code;
-    const w=document.createElement('label');w.className='chk';w.style.textTransform='none';w.style.letterSpacing='0';w.style.margin='0';w.style.color='var(--text)';w.style.fontSize='13px';
-    w.innerHTML='<input type="checkbox" value="'+code+'" '+(selected.includes(code)?'checked':'')+'> '+code+' · '+STATES[code];
-    el.appendChild(w);
-  }
-}
-function gridValue(el){return [...el.querySelectorAll('input:checked')].map(i=>i.value);}
+function stateGrid(el,selected){ MeridianStateMap.build(el,{selected:selected||[]}); }
+function gridValue(el){ return el.__stateMap ? el.__stateMap.get() : []; }
 
 // ---------- editable promise/product rows ----------
 function addEditRow(container,t,d,phType,phDesc){
@@ -757,7 +750,7 @@ $('w_infoGo').addEventListener('click',async()=>{
   S.profile=r.profile; fillProfile(); baseline(); wizStep=3; renderWiz();
 });
 $('wizOpenCard').addEventListener('click',()=>window.open(location.origin+AB+'/','_blank'));
-$('wizFinish').addEventListener('click',async()=>{ await api(AB+'/api/admin/onboarded',{method:'POST',body:'{}'}).catch(()=>{}); closeWizard(); toast('You’re live 🎉'); ensurePush(); });
+$('wizFinish').addEventListener('click',async()=>{ await api(AB+'/api/admin/onboarded',{method:'POST',body:'{}'}).catch(()=>{}); closeWizard(); toast('You’re live'); ensurePush(); });
 $('wizStart').addEventListener('click',()=>{ wizStep=1; renderWiz(); });
 $('wizSkipInfo').addEventListener('click',()=>{ wizStep=3; renderWiz(); });
 

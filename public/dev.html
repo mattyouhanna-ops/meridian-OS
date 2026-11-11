@@ -226,6 +226,7 @@ textarea{min-height:120px;resize:vertical}
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="/statesmap.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const api=(u,o)=>fetch(u,Object.assign({headers:{'content-type':'application/json'},cache:'no-store'},o));
@@ -234,18 +235,11 @@ const openAgencies=new Set();
 const CARRIER_OPTS=[['','— mobile carrier (enables free texts) —'],['verizon','Verizon'],['att','AT&T'],['tmobile','T-Mobile'],['metro','Metro by T-Mobile'],['cricket','Cricket'],['boost','Boost Mobile'],['uscellular','US Cellular'],['googlefi','Google Fi'],['xfinity','Xfinity Mobile'],['visible','Visible'],['mint','Mint Mobile'],['straighttalk','Straight Talk']];
 function carrierSelect(cls,sel){ return `<select class="${cls}">`+CARRIER_OPTS.map(([v,l])=>`<option value="${v}" ${v===(sel||'')?'selected':''}>${l}</option>`).join('')+`</select>`; }
 // Searchable state picker showing full state names (easier than bare codes). `gridCls` keeps the old selector for reading values.
-function statesField(gridCls,sel){ sel=sel||new Set();
-  return `<div class="stpick">
-    <input class="stsearch" type="search" placeholder="Search states — type a name or code (e.g. Michigan or MI)">
-    <div class="stgrid ${gridCls}">${Object.keys(STATE_NAMES).sort().map(c=>`<label data-s="${c.toLowerCase()} ${esc(STATE_NAMES[c]).toLowerCase()}"><input type="checkbox" value="${c}" ${sel.has&&sel.has(c)?'checked':''}><b>${c}</b><span>${esc(STATE_NAMES[c])}</span></label>`).join('')}</div>
-    <div class="stcount"></div>
-  </div>`;
+function statesField(gridCls,sel){ sel=sel||new Set(); const arr=sel.size?[...sel]:(Array.isArray(sel)?sel:[]);
+  return `<div class="statemap ${gridCls}" data-sel="${arr.join(',')}"></div>`;
 }
-function wireStates(scope){ const p=scope.querySelector('.stpick'); if(!p) return; const s=p.querySelector('.stsearch'), g=p.querySelector('.stgrid'), cnt=p.querySelector('.stcount');
-  function upd(){ const n=g.querySelectorAll('input:checked').length; cnt.textContent=n?(n+' state'+(n>1?'s':'')+' selected'):''; }
-  s.addEventListener('input',()=>{ const q=s.value.trim().toLowerCase(); g.querySelectorAll('label').forEach(l=>{ l.style.display=(!q||l.dataset.s.indexOf(q)>=0)?'':'none'; }); });
-  g.addEventListener('change',upd); upd();
-}
+function wireStates(scope){ scope.querySelectorAll('.statemap').forEach(el=>{ if(el.__stateMap) return; const sel=(el.getAttribute('data-sel')||'').split(',').filter(Boolean); MeridianStateMap.build(el,{selected:sel}); }); }
+function readStates(scope,cls){ const el=scope.querySelector('.'+cls); return el&&el.__stateMap?el.__stateMap.get():[]; }
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._);t._=setTimeout(()=>t.classList.remove('show'),2200);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 const first=n=>String(n||'').trim().split(/\s+/)[0]||'there';
@@ -436,8 +430,10 @@ function agentRow(x,a){
     ${x.locked?'<span class="chip off">🔒 Locked</span>':''}
     ${x.denied?'<span class="chip off">🚫 Denied</span>':''}
     ${x.reinstateRequested?'<span class="chip gold">Wants back in</span>':''}
+    ${x.incomplete?`<span class="chip off" title="Missing: ${esc((x.needs||[]).join(', '))}">⚠ Needs setup</span>`:''}
     ${x.newQuotes?`<span class="chip gold">${x.newQuotes} new</span>`:''}<span class="sp"></span>
     <span class="muted" style="font-size:12px">${x.views} views · ${(x.states||[]).join(', ')||'—'}</span></div>
+    ${x.incomplete?`<div class="credline" style="border-color:#5e2c2c;background:#1a0c0c"><b style="color:#ffc9c9">⚠ Incomplete until they finish:</b> <span class="muted">${esc((x.needs||[]).join(' · '))}</span></div>`:''}
     <div class="credline" style="border-style:solid">🔐 <b>They sign in at</b> <code>${esc(admin)}</code> <span class="muted">— tell them to go there and sign in.</span></div>
     <div class="credline">🔑 <b>Login:</b> ${esc(x.email)} · ${x.curPass?`password <code>${esc(x.curPass)}</code> <span class="muted">(${x.issuedPass?'temporary':'their current password'})</span>`:'<span class="muted">no password on file — use “Reset pw”</span>'}</div>
     <div class="acts">
@@ -465,7 +461,7 @@ function toggleAdd(wrap,a){
 }
 async function createAgent(w,a,wrap){
   w.querySelector('.n_err').textContent='';
-  const states=[...w.querySelectorAll('.n_states input:checked')].map(i=>i.value);
+  const states=readStates(w,'n_states');
   const body={name:w.querySelector('.n_name').value.trim(),email:w.querySelector('.n_email').value.trim(),phone:w.querySelector('.n_phone').value.trim(),npn:w.querySelector('.n_npn').value.trim(),carrier:w.querySelector('.n_carrier').value,states};
   if(!body.name||!body.email){w.querySelector('.n_err').textContent='Name and email required.';return;}
   const r=await(await api('/api/dev/agencies/'+a.id+'/agents',{method:'POST',body:JSON.stringify(body)})).json();
@@ -497,7 +493,7 @@ function showEditAgent(x,a,row){
   box.querySelector('.e_cancel').onclick=()=>{box.classList.add('hide');box.innerHTML='';};
   box.querySelector('.e_save').onclick=async()=>{
     box.querySelector('.e_err').textContent='';
-    const profile={name:box.querySelector('.e_name').value.trim(),title:box.querySelector('.e_title').value.trim(),phone:box.querySelector('.e_phone').value.trim(),email:box.querySelector('.e_email').value.trim(),npn:box.querySelector('.e_npn').value.trim(),states:[...box.querySelectorAll('.e_states input:checked')].map(i=>i.value)};
+    const profile={name:box.querySelector('.e_name').value.trim(),title:box.querySelector('.e_title').value.trim(),phone:box.querySelector('.e_phone').value.trim(),email:box.querySelector('.e_email').value.trim(),npn:box.querySelector('.e_npn').value.trim(),states:readStates(box,'e_states')};
     if(!profile.name||!profile.phone||!profile.email){box.querySelector('.e_err').textContent='Name, phone and email are required.';return;}
     const btn=box.querySelector('.e_save'); btn.disabled=true; btn.textContent='Saving…';
     const carrier=box.querySelector('.e_carrier').value;

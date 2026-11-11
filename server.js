@@ -682,6 +682,7 @@ const server = http.createServer(async (req, res) => {
     // static assets at root
     if (p === "/favicon.ico") return serveStatic(res, path.join(PUB, "favicon.ico"));
     if (["/logo.svg", "/apple-touch-icon.png", "/favicon-32.png", "/icon-192.png", "/icon-512.png"].includes(p)) return serveStatic(res, path.join(PUB, p.slice(1)));
+    if (p === "/statesmap.js") return serveStatic(res, path.join(PUB, "statesmap.js"), "no-cache");
     if (p === "/manifest.webmanifest" || p === "/admin.webmanifest") return serveStatic(res, path.join(PUB, "manifest.webmanifest"), "no-cache");
     if (p === "/sw.js") { try { const buf = fs.readFileSync(path.join(PUB, "sw.js")); return res.writeHead(200, { "content-type": "text/javascript", "cache-control": "no-cache", "service-worker-allowed": "/" }).end(buf); } catch { return res.writeHead(404).end(); } }
     if (p === "/api/push/vapid" && method === "GET") return sendJSON(res, 200, { key: await vapidPublicKey() });

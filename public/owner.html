@@ -125,7 +125,7 @@
     <section id="tab-add" class="hide">
       <div class="card">
         <h2>Add an agent</h2>
-        <p class="muted">Creates their card + dashboard instantly. You'll get a ready-to-send welcome message with their password.</p>
+        <p class="muted">Creates their card and dashboard. You'll get a ready-to-send welcome message with their password.</p>
         <div class="row">
           <div><label>Full name</label><input id="a_name" placeholder="Jane Agent"></div>
           <div><label>Email (their login)</label><input id="a_email" type="email" placeholder="jane@email.com"></div>
@@ -136,10 +136,8 @@
         </div>
         <label>Mobile carrier (for free text alerts)</label>
         <select id="a_carrier"><option value="">— carrier —</option><option value="verizon">Verizon</option><option value="att">AT&T</option><option value="tmobile">T-Mobile</option><option value="metro">Metro by T-Mobile</option><option value="cricket">Cricket</option><option value="boost">Boost Mobile</option><option value="uscellular">US Cellular</option><option value="googlefi">Google Fi</option><option value="xfinity">Xfinity Mobile</option><option value="visible">Visible</option><option value="mint">Mint Mobile</option><option value="straighttalk">Straight Talk</option></select>
-        <label>Licensed states</label>
-        <input class="stsearch" id="a_stsearch" type="search" placeholder="Search states — type a name or code (e.g. Michigan or MI)">
-        <div class="stgrid" id="a_states"></div>
-        <div class="stcount" id="a_stcount"></div>
+        <label>Licensed states — tap each one they hold a license in</label>
+        <div id="a_states"></div>
         <div class="err" id="a_err"></div>
         <button class="btn gold" id="a_go" style="margin-top:12px">Create agent</button>
         <div id="a_result" class="hide" style="margin-top:14px"></div>
@@ -186,6 +184,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="/statesmap.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const api=(u,o)=>fetch(u,Object.assign({headers:{'content-type':'application/json'},cache:'no-store'},o));
@@ -319,16 +318,12 @@ function showWelcome(box2,a,pass){
 // ----- Add agent -----
 function buildStateGrid(){
   const g=$('a_states'); if(g.dataset.built) return;
-  g.classList.add('stgrid');
-  g.innerHTML=Object.keys(STATE_NAMES).sort().map(c=>`<label data-s="${c.toLowerCase()} ${(STATE_NAMES[c]||'').toLowerCase()}"><input type="checkbox" value="${c}"><b>${c}</b><span>${STATE_NAMES[c]||''}</span></label>`).join('');
-  const cnt=$('a_stcount'); const upd=()=>{ const n=g.querySelectorAll('input:checked').length; cnt.textContent=n?(n+' state'+(n>1?'s':'')+' selected'):''; };
-  g.addEventListener('change',upd);
-  const s=$('a_stsearch'); if(s) s.addEventListener('input',()=>{ const q=s.value.trim().toLowerCase(); g.querySelectorAll('label').forEach(l=>{ l.style.display=(!q||l.dataset.s.indexOf(q)>=0)?'':'none'; }); });
+  MeridianStateMap.build(g,{selected:[]});
   g.dataset.built='1';
 }
 $('a_go').onclick=async()=>{
   $('a_err').textContent='';
-  const states=[...$('a_states').querySelectorAll('input:checked')].map(i=>i.value);
+  const states=$('a_states').__stateMap?$('a_states').__stateMap.get():[];
   const body={name:$('a_name').value.trim(),email:$('a_email').value.trim(),phone:$('a_phone').value.trim(),npn:$('a_npn').value.trim(),carrier:$('a_carrier').value,states};
   if(!body.name||!body.email){ $('a_err').textContent='Name and email are required.'; return; }
   $('a_go').disabled=true;$('a_go').textContent='Creating…';
@@ -346,7 +341,7 @@ $('a_go').onclick=async()=>{
         <button class="btn gold sm" id="wcopy" style="margin-top:8px">Copy welcome message</button>`;
       $('wcopy').onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied — send it to '+first(a.name)));
       ['a_name','a_email','a_phone','a_npn'].forEach(x=>$(x).value='');
-      $('a_states').querySelectorAll('input:checked').forEach(i=>i.checked=false);
+      if($('a_states').__stateMap) $('a_states').__stateMap.clear();
       toast('Agent created');
     }
   }catch(e){ $('a_err').textContent='Could not reach the server.'; }
