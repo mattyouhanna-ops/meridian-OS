@@ -686,9 +686,19 @@ function renderAdminPage(agent) {
 // per-agent preview image cache (busts when agent.cardVer changes)
 const ogCache = new Map();
 async function serveCardImage(agent, res) {
-  const key = agent.id + ":" + agent.cardVer;
+  const settings = normalizeSettings(agent.settings);
+  // The preview image gets forwarded unpredictably, so it always uses the new-prospect view (never leaks NPN etc.).
+  const fields = settings.audiences.prospect?.fields || settings.audiences[settings.defaultAudience]?.fields || {};
+  const key = agent.id + ":" + agent.cardVer + ":" + (fields.npn ? 1 : 0) + (fields.phone ? 1 : 0) + (fields.email ? 1 : 0);
   let buf = ogCache.get(key);
-  if (!buf) { buf = await cardPNG(normalizeProfile(agent.profile)); ogCache.set(key, buf); if (ogCache.size > 200) ogCache.delete(ogCache.keys().next().value); }
+  if (!buf) {
+    const prof = normalizeProfile(agent.profile);
+    // Only show what the prospect audience allows.
+    if (!fields.npn) prof.npn = "";
+    if (!fields.phone) prof.phone = "";
+    if (!fields.email) prof.email = "";
+    buf = await cardPNG(prof); ogCache.set(key, buf); if (ogCache.size > 200) ogCache.delete(ogCache.keys().next().value);
+  }
   res.writeHead(200, { "content-type": "image/jpeg", "cache-control": "public, max-age=86400" }).end(buf);
 }
 
