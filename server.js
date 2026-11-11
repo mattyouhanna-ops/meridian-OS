@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { db, save } from "./lib/store.js";
 import {
-  normalizeProfile, normalizeSettings, FIELDS, DEFAULT_MESSAGE, cleanFields,
+  normalizeProfile, normalizeSettings, FIELDS, DEFAULT_MESSAGE, cleanFields, displayTitle,
   hashPass, checkPass, makeSessionCookie, clearCookie, readSession, describeDevice, encField, decField,
   DEFAULT_PRODUCTS, DEFAULT_PROMISES,
 } from "./lib/core.js";
@@ -170,7 +170,7 @@ async function handleCard(agent, url, req) {
   const agc = agencyOf(agent);
   const compliance = [getDeveloper().compliance, agc && agc.compliance].filter(Boolean).join("\n\n");
   const licensed = agent.licensed !== false; // unlicensed agents can't hold out as licensed
-  const base = { name: P.name, title: P.title, brand: P.brand, licensed, photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null, compliance, ver: agent.cardVer || 0 };
+  const base = { name: P.name, title: displayTitle(P, licensed), brand: P.brand, licensed, photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null, compliance, ver: agent.cardVer || 0 };
   if (revoked) return { ...base, revoked: true, f: {} };
   if (limited) return { ...base, limited: true, f: {} };
   if (!fields) fields = settings.audiences[settings.defaultAudience]?.fields || {};
@@ -733,6 +733,7 @@ async function serveCardImage(agent, res, req) {
   let buf = ogCache.get(key2);
   if (!buf) {
     const prof = normalizeProfile(agent.profile);
+    prof.title = displayTitle(prof, licensed); // licensed keeps title; unlicensed becomes "... in Training"
     // Only show what this link's audience allows.
     if (!fields.npn) prof.npn = "";
     if (!fields.phone) prof.phone = "";

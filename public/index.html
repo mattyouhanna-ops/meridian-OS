@@ -544,8 +544,8 @@
     const l=$('loading'); if(l) l.remove();
     D=res; const f=res.f||{};
     const LICENSED=res.licensed!==false;
-    let shownTitle=res.title||'';
-    if(!LICENSED){ f.npn=false; f.states=false; f.nipr=false; f.lastResort=false; shownTitle=(shownTitle.replace(/licensed/ig,'').trim())||'Agent in training'; }
+    if(!LICENSED){ f.npn=false; f.states=false; f.nipr=false; f.lastResort=false; }
+    const shownTitle=res.title||'';
     $('brandText').textContent=res.brand||'';
     $('nameText').textContent=res.name||'';
     $('titleText').textContent=shownTitle;
