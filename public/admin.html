@@ -429,6 +429,15 @@
               <div><b>Main link is live</b><small>The plain link with no code. Turn off to lock everyone out of it. This takes effect immediately.</small></div>
               <button class="tog" id="mainTog" aria-label="Main link on or off"></button>
             </div>
+            <div style="margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel2)">
+              <b>See exactly what people see</b>
+              <p class="muted" style="font-size:12.5px;margin:4px 0 10px">Preview your card as each audience before you send it.</p>
+              <div class="row" style="gap:8px;flex-wrap:wrap">
+                <button type="button" class="btn sm" id="seeProspect">👁 A new prospect</button>
+                <button type="button" class="btn sm" id="seeClient">👁 An active client</button>
+                <button type="button" class="btn sm ghost" id="seeMe">👁 Everything (my view)</button>
+              </div>
+            </div>
             <label style="margin-top:18px">Main link shows</label>
             <select id="defAud"></select>
             <div id="audiences" style="margin-top:8px"></div>
@@ -896,6 +905,10 @@ function setPvUI(){
 function openPv(){ pvOpen=true; setPvUI(); schedulePreview(); }
 function closePv(){ pvOpen=false; pvCtx=null; setPvUI(); }
 document.querySelectorAll('#pvSeg button').forEach(b=>b.onclick=()=>{pvMode=b.dataset.m; setPvUI(); schedulePreview();});
+function seeAs(m){ pvCtx=null; pvMode=m; openPv(); setPvUI(); schedulePreview(); window.scrollTo({top:0}); }
+$('seeProspect').onclick=()=>seeAs('prospect');
+$('seeClient').onclick=()=>seeAs('client');
+$('seeMe').onclick=()=>seeAs('me');
 $('pvOpen').onclick=openPv; $('pvOpen2').onclick=openPv; $('pvClose').onclick=closePv;
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&pvOpen) closePv(); });
 matchMedia('(min-width:1100px)').addEventListener('change',()=>{setPvUI();schedulePreview();});
