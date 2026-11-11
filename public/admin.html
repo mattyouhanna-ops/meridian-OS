@@ -22,6 +22,7 @@
 <meta name="apple-mobile-web-app-title" content="Meridian">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <style>
   :root{--black:#0b0b0c;--panel:#141416;--panel2:#1b1b1e;--line:#2a2a2e;--gold:#d4af37;--gold2:#f1d78a;--gold-dim:#8f7426;--text:#f3efe6;--muted:#a9a397;--ok:#7fc79a;--bad:#e2795f}
   *{box-sizing:border-box;margin:0;padding:0}
@@ -97,6 +98,13 @@
   .catchk span{display:block}
   .catchk b{display:block;font-size:14px}
   .catchk em{font-style:normal;font-size:12.5px;color:var(--muted);line-height:1.4}
+  .sharecard{display:flex;gap:14px;align-items:center;margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel2)}
+  .sharecard .qrbox{flex:none;background:#fff;border-radius:12px;padding:8px;width:116px;height:116px;display:flex;align-items:center;justify-content:center}
+  .sharecard .qrbox svg{width:100%;height:100%;display:block}
+  .sharecard .qrbox.empty{display:none}
+  .sharemeta{flex:1;min-width:0}
+  .sharerow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  @media(max-width:560px){.sharecard{flex-direction:column;align-items:stretch}.sharecard .qrbox{align-self:center}}
   .editrow input{margin-bottom:6px}
   /* ===== dashboard v2 ===== */
   .wrap{max-width:1180px}
@@ -375,6 +383,18 @@
           <section class="panel" data-sec="profile">
             <h2 class="gold-text">Card details</h2>
             <p class="muted">Your name, contact info and licenses. Changes show in the preview first and only go live when you press Save.</p>
+            <div class="sharecard">
+              <div class="qrbox" id="dashQr"></div>
+              <div class="sharemeta">
+                <div class="muted" style="font-size:12px;margin-bottom:4px">Share your card</div>
+                <div class="link-url" id="dashLink"></div>
+                <div class="sharerow">
+                  <button type="button" class="btn sm" id="dashShare">Share</button>
+                  <button type="button" class="btn sm ghost" id="dashCopy">Copy link</button>
+                  <a class="btn sm ghost" id="dashOpen" href="#" target="_blank" rel="noopener">Open ↗</a>
+                </div>
+              </div>
+            </div>
             <div class="grid2" style="margin-top:14px">
               <div><label>Full name</label><input id="p_name"></div>
               <div><label>Title</label><input id="p_title"></div>
@@ -426,7 +446,10 @@
             <label>New passcode (min 6)</label><input id="pc_new" type="password" autocomplete="new-password">
             <div class="err" id="pc_err"></div>
             <div class="row" style="margin-top:10px"><button class="btn sm" id="pc_go">Update passcode</button><button class="btn sm danger" id="signoutAll">Sign out all devices</button></div>
-            <div class="sec">Admin sign-ins &amp; security events</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px"><div class="sec" style="margin:0">Who viewed your card</div><button type="button" class="btn sm ghost" id="clearVisitsSec">Clear</button></div>
+            <p class="muted" style="font-size:12px;margin:4px 0 0">Every open of your card — the link used, device, place and time.</p>
+            <div id="visitLogSec"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px"><div class="sec" style="margin:0">Admin sign-ins &amp; security events</div><button type="button" class="btn sm ghost" id="clearSec">Clear</button></div>
             <div id="secLog"></div>
             <p class="hint" style="margin-top:14px">Tip: on iPhone tap Share → <b>Add to Home Screen</b> to keep this dashboard one tap away.</p>
           </section>
@@ -624,7 +647,18 @@ $('s_go').addEventListener('click',async()=>{
   }catch(e){ err('Could not reach the server. Check your internet and try again.'); }
   finally{ $('s_go').textContent='Create my card';$('s_go').disabled=false; }
 });
-function fillRecovLinks(){ $('linkCard').textContent=location.origin+AB+'/'; $('linkAdmin').textContent=location.origin+AB+'/admin'; const vc=$('viewCardLink'); if(vc) vc.href=location.origin+AB+'/'; }
+function fillRecovLinks(){ $('linkCard').textContent=location.origin+AB+'/'; $('linkAdmin').textContent=location.origin+AB+'/admin'; const vc=$('viewCardLink'); if(vc) vc.href=location.origin+AB+'/'; renderDashShare(); }
+function renderDashShare(){
+  const url=location.origin+AB+'/';
+  const link=$('dashLink'); if(link) link.textContent=url;
+  const op=$('dashOpen'); if(op) op.href=url;
+  const box=$('dashQr');
+  if(box){ try{ if(typeof qrcode==='undefined') throw 0; const qr=qrcode(0,'M'); qr.addData(url); qr.make(); box.innerHTML=qr.createSvgTag({cellSize:4,margin:0,scalable:true}); box.classList.remove('empty'); }catch(e){ box.classList.add('empty'); } }
+}
+(function(){ var sh=document.getElementById('dashShare'), cp=document.getElementById('dashCopy');
+  if(sh) sh.addEventListener('click',async function(){ var url=location.origin+AB+'/'; if(navigator.share){ try{ await navigator.share({title:'My Meridian card',url:url}); return; }catch(e){ if(e&&e.name==='AbortError') return; } } navigator.clipboard.writeText(url).then(function(){toast('Card link copied');}); });
+  if(cp) cp.addEventListener('click',function(){ navigator.clipboard.writeText(location.origin+AB+'/').then(function(){toast('Card link copied');}); });
+})();
 $('recovCopy').addEventListener('click',()=>{navigator.clipboard.writeText($('recovCode').textContent).then(()=>toast('Recovery code copied'));});
 $('linkCardCopy').addEventListener('click',()=>navigator.clipboard.writeText(location.origin+AB+'/').then(()=>toast('Card link copied')));
 $('linkAdminCopy').addEventListener('click',()=>navigator.clipboard.writeText(location.origin+AB+'/admin').then(()=>toast('Dashboard link copied')));
@@ -662,7 +696,7 @@ async function loadDash(){
   $('gateMono').textContent=initials(S.profile.name); $('topMono').textContent=initials(S.profile.name);
   $('topBrand').textContent=S.profile.brand||'Admin';
   $('whoami').textContent=S.email;
-  fillProfile(); fillVisibility(); baseline();
+  fillProfile(); fillVisibility(); baseline(); renderDashShare();
   renderClients(); loadActivity(); pollRequests(); pollQuotes(); applyTab(); schedulePreview();
   if(S.mustChange) showWizard(); else ensurePush();
 }
@@ -1126,9 +1160,12 @@ async function loadActivity(){
     const tok=await makeLink({name:name.trim()||def,manual:true,audience:S.settings.defaultAudience,fromVisit:{sig:(v.ip||'')+'|'+(v.device||''),place:v.place,device:v.device,t:v.t}});
     if(tok){ OPEN.add(tok); renderClients(); loadActivity(); toast('Added to your pipeline'); }
   });
-  $('secLog').innerHTML=(r.security||[]).slice(0,60).map(s=>'<div class="log"><b>'+esc(s.event||'')+'</b><br>'+esc(s.place||'')+' · '+esc(s.ip||'')+' · '+new Date(s.t).toLocaleString()+'</div>').join('')||'<p class="muted">Nothing yet.</p>';
+  $('secLog').innerHTML=(r.security||[]).slice(0,60).map(s=>'<div class="log"><b>'+esc(s.event||'')+'</b><br>'+esc(s.device||'Device unknown')+' · '+esc(s.place||'')+' · '+esc(s.ip||'')+' · '+new Date(s.t).toLocaleString()+'</div>').join('')||'<p class="muted">Nothing yet.</p>';
+  const vs=$('visitLogSec'); if(vs) vs.innerHTML=(r.visits||[]).slice(0,120).map(v=>'<div class="log"><b>'+esc(v.linkName||'Main link')+'</b>'+(v.flag?' <span style="color:var(--gold2)">· '+esc(v.flag)+'</span>':'')+'<br>'+esc(v.device||'Device unknown')+' · '+esc(v.place||'')+' · '+esc(v.ip||'')+' · '+new Date(v.t).toLocaleString()+'</div>').join('')||'<p class="muted">No views yet.</p>';
 }
 $('clearVisits').addEventListener('click',async()=>{if(!confirm('Clear the click log?'))return;await api(AB+'/api/admin/activity/clear',{method:'POST'});loadActivity();toast('Cleared');});
+$('clearVisitsSec').addEventListener('click',async()=>{if(!confirm('Clear the visitor log?'))return;await api(AB+'/api/admin/activity/clear',{method:'POST'});loadActivity();toast('Visitor log cleared');});
+$('clearSec').addEventListener('click',async()=>{if(!confirm('Clear the sign-in & security log?'))return;await api(AB+'/api/admin/security/clear',{method:'POST'});loadActivity();toast('Security log cleared');});
 
 // ---------- account ----------
 $('pc_go').addEventListener('click',async()=>{

@@ -302,6 +302,7 @@ async function handleAdmin(agent, sub, method, body, req) {
 
   if (sub === "activity" && method === "GET") return { status: 200, data: { visits: agent.visits.slice(0, 500), security: agent.security.slice(0, 200) } };
   if (sub === "activity/clear" && method === "POST") { agent.visits = []; save(); return { status: 200, data: { ok: true } }; }
+  if (sub === "security/clear" && method === "POST") { agent.security = []; save(); return { status: 200, data: { ok: true } }; }
 
   if (sub === "settings" && method === "POST") {
     const s = S();
