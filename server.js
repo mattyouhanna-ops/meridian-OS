@@ -76,7 +76,7 @@ ensureDeveloper(); // seed developer + Meridian (agency #1) on first boot
 })();
 
 // The Brain: Mathew's private command center. Nodes grouped into regions, everyone wired to him in the middle.
-const BRAIN_REGIONS = ["core", "apps", "knowledge", "content", "money", "ideas"];
+const BRAIN_REGIONS = ["core", "apps", "knowledge", "content", "growth", "ideas"];
 function brainData() {
   const store = db();
   const now = Date.now();
@@ -89,11 +89,10 @@ function brainData() {
         mk("compliance", "Compliance", "apps", "idea", "Every app gets checked here before it ships.", "", -120, 60),
         mk("academy", "Academy", "knowledge", "idea", "My playbooks, call flow, carriers, objection handling, training.", "", 180, -110),
         mk("osc", "OnlyScreenCrusader", "content", "building", "Marvel and DC TikTok content engine.", "", 170, 130),
-        mk("robinhood", "Robinhood", "money", "live", "Self-directed investing. Taxable and Roth.", "", -170, 140),
       ],
       links: [
         { a: "core", b: "card" }, { a: "core", b: "compliance" }, { a: "core", b: "academy" },
-        { a: "core", b: "osc" }, { a: "core", b: "robinhood" }, { a: "card", b: "compliance" },
+        { a: "core", b: "osc" }, { a: "card", b: "compliance" },
       ],
     };
     save();
@@ -111,6 +110,23 @@ function brainData() {
     if (changed) save();
   }
   store.brain.links ||= [];
+  // Migrate: money region -> growth, and remove the Robinhood node.
+  {
+    let mChanged = false;
+    if (store.brain.nodes.some((n) => n.id === "robinhood")) {
+      store.brain.nodes = store.brain.nodes.filter((n) => n.id !== "robinhood");
+      store.brain.links = store.brain.links.filter((l) => l.a !== "robinhood" && l.b !== "robinhood");
+      mChanged = true;
+    }
+    for (const n of store.brain.nodes) { if (n.region === "money") { n.region = "growth"; mChanged = true; } }
+    if (mChanged) save();
+  }
+  // Ensure the PULSE content node exists (idempotent).
+  if (!store.brain.nodes.some((n) => n.id === "pulse")) {
+    store.brain.nodes.push(mk("pulse", "PULSE", "content", "live", "Content hub: type an idea, get a finished slideshow post. Drafts slides, finds images, writes captions, schedules 3 posts a day, and tracks views.", "https://pulsehq.up.railway.app/v4", 150, 170));
+    store.brain.links.push({ a: "core", b: "pulse" });
+    save();
+  }
   // The Playbook: a readable, nested reference. Sections hold entries. Seed Philosophy > Stoicism.
   if (!Array.isArray(store.brain.playbook)) {
     store.brain.playbook = [
