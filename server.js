@@ -111,6 +111,29 @@ function brainData() {
     if (changed) save();
   }
   store.brain.links ||= [];
+  // The Playbook: a readable, nested reference. Sections hold entries. Seed Philosophy > Stoicism.
+  if (!Array.isArray(store.brain.playbook)) {
+    store.brain.playbook = [
+      {
+        id: "philosophy", name: "Philosophy",
+        entries: [
+          {
+            id: "stoicism", title: "Stoicism",
+            body:
+              "The one idea: you cannot control what happens to you, you can only control what you do about it. So pour everything into your part and let the rest go.\n\n" +
+              "Two piles. Pile one is yours: your effort, your attitude, your choices, your honesty. Pile two is not yours: outcomes, other people, luck, the past. Live in pile one.\n\n" +
+              "Walk in every day holding three lines:\n" +
+              "1. I control the reps, my voice, my follow up, and the truth. Nothing else.\n" +
+              "2. A no is just information. It does not mean I am bad.\n" +
+              "3. Call fifty gets the same me that call one got.\n\n" +
+              "Want it, do not need it. The second you need the outcome, people feel it and it costs you. Want it badly, work like it, lean on none of it. The calm one wins.\n\n" +
+              "The creed: I run the reps, not the results. A no is just info. Call fifty gets the same me as call one. I want it. I do not need it.",
+          },
+        ],
+      },
+    ];
+    save();
+  }
   return store.brain;
 }
 
@@ -194,6 +217,22 @@ async function handleBrain(sub, method, body, req) {
     }
     save();
     return { status: 200, data: { ok: true } };
+  }
+  if (sub === "playbook" && method === "POST") {
+    const b = brainData();
+    const rid = () => crypto.randomBytes(4).toString("hex");
+    const secs = Array.isArray(body.sections) ? body.sections : [];
+    b.playbook = secs.slice(0, 40).map((s) => ({
+      id: str(s.id, 40) || rid(),
+      name: str(s.name, 80) || "Untitled",
+      entries: (Array.isArray(s.entries) ? s.entries : []).slice(0, 200).map((e) => ({
+        id: str(e.id, 40) || rid(),
+        title: str(e.title, 120) || "Untitled",
+        body: str(e.body, 20000),
+      })),
+    }));
+    save();
+    return { status: 200, data: { ok: true, playbook: b.playbook } };
   }
   return { status: 404, data: { error: "Not found" } };
 }

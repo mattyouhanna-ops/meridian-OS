@@ -60,6 +60,33 @@
   .gate b{font:700 24px/1.3 Georgia,serif;color:#fff}.gate p{color:var(--muted);max-width:320px;margin:0}
   .gate .gi{display:flex;gap:8px;width:280px;max-width:86vw}.gate input{text-align:center}
   .gate .err{color:#ff8a8a;font:600 12px/1 Arial,sans-serif;min-height:12px}
+  #book{position:fixed;inset:0;z-index:20;background:radial-gradient(1200px 800px at 50% 30%,#120a24,#07040d 70%);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .26s cubic-bezier(.3,.7,.3,1)}
+  #book.open{transform:none}
+  .bkhead{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line)}
+  .bkhead .bg{font-size:24px}
+  .bkhead b{font:700 20px/1 Georgia,serif;color:#fff}
+  .bkhead small{display:block;font:700 10px/1 Arial;letter-spacing:2px;text-transform:uppercase;color:#818cf8;margin-top:4px}
+  .bkbody{flex:1;overflow:auto;padding:14px 16px 60px;max-width:760px;width:100%;margin:0 auto}
+  .sec{border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden;background:#0b0816}
+  .sechd{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer}
+  .sechd .cv{color:#818cf8;font-size:13px;transition:transform .18s}
+  .sec.open .sechd .cv{transform:rotate(90deg)}
+  .sechd .nm{flex:1;font:700 16px/1.2 Georgia,serif;color:#eef0f7}
+  .sechd .ct{font:700 11px/1 Arial;color:var(--muted)}
+  .secbody{display:none;padding:0 16px 14px}
+  .sec.open .secbody{display:block}
+  .ent{border-top:1px solid var(--line);padding:12px 0}
+  .enthd{display:flex;align-items:center;gap:8px;cursor:pointer}
+  .enthd .et{flex:1;font:700 15px/1.3 Arial;color:#cfd3e6}
+  .enthd .cv{color:#6a6786;font-size:12px;transition:transform .18s}
+  .ent.open .enthd .cv{transform:rotate(90deg)}
+  .entbody{display:none;margin-top:10px}
+  .ent.open .entbody{display:block}
+  .entbody .desc{color:#cdd0e0;font:400 15px/1.7 Georgia,serif;white-space:pre-wrap}
+  .minirow{display:flex;gap:8px;margin-top:12px}
+  .addrow{margin-top:6px}
+  .ghost{background:transparent;border:1px dashed var(--line);color:var(--muted);font:600 13px/1 Arial;padding:10px 14px;border-radius:11px;cursor:pointer;width:100%}
+  .ghost:hover{border-color:var(--accent);color:var(--accent)}
   .hide{display:none!important}
 </style>
 </head>
@@ -81,6 +108,7 @@
 <div id="bar">
   <div class="brandrow"><span class="dotmk"></span><div><b>The Brain</b><br><span>your command center</span></div></div>
   <div class="sp"></div>
+  <button class="btn" id="bookBtn" title="Your playbook">📖 Playbook</button>
   <button class="btn" id="nextBtn" title="Where to go from here">🧭 What's next</button>
   <button class="btn" id="connectBtn" title="Wire two nodes together">🔗 Connect</button>
   <button class="btn neon" id="addBtn">＋ Add</button>
@@ -90,6 +118,11 @@
 <div class="hint" id="hint">Drag to move · scroll to zoom · tap a node to open it</div>
 <div id="panel"><div id="panelInner"></div></div>
 <div class="toast" id="toast"></div>
+
+<div id="book">
+  <div class="bkhead"><span class="bg">📖</span><div style="flex:1"><b>The Playbook</b><small>how I think and how I sell</small></div><span class="x" id="bookClose">✕</span></div>
+  <div class="bkbody" id="bkBody"></div>
+</div>
 
 <div class="gate hide" id="gate">
   <span class="dotmk"></span>
@@ -112,7 +145,7 @@ const REGIONS={
 };
 const ANCHOR_R=320;
 const STATUS_LABELS={live:"Live",building:"Building",idea:"Idea",paused:"Paused"};
-let N=[],L=[],byId={};
+let N=[],L=[],byId={},PB=[];
 let view={s:1,tx:0,ty:0};
 let connectMode=false,connectFirst=null;
 const sky=$("#sky"),world=$("#world"),gLobes=$("#lobes"),gLinks=$("#links"),gNodes=$("#nodes"),gPulses=$("#pulses"),gR=$("#rlabels");
@@ -128,7 +161,7 @@ async function boot(){
   let r; try{ r=await api("/api/brain"); }catch(e){ return showGate("Can't reach the server."); }
   if(r.status===401){ return showGate(); }
   const data=await r.json(); $("#gate").classList.add("hide");
-  N=data.nodes||[]; L=data.links||[];
+  N=data.nodes||[]; L=data.links||[]; PB=data.playbook||[];
   N.forEach(n=>{ n.vx=0;n.vy=0; if(!n.x&&!n.y&&n.region!=="core"){ const a=(REGIONS[n.region]||{}).angle||0, rad=a*Math.PI/180; n.x=Math.cos(rad)*220+(Math.random()-.5)*140;n.y=Math.sin(rad)*220+(Math.random()-.5)*140; } });
   index(); build(); requestAnimationFrame(tick);
 }
@@ -316,6 +349,68 @@ async function removeNode(n){ if(!confirm("Remove “"+n.title+"” from the bra
   const r=await(await api("/api/brain/node/delete",{method:"POST",body:JSON.stringify({id:n.id})})).json();
   if(!r.ok){ toast(r.error||"Could not remove"); return; }
   N=N.filter(x=>x.id!==n.id); L=L.filter(l=>l.a!==n.id&&l.b!==n.id); index(); build(); closePanel(); toast("Removed.");
+}
+/* ---------- The Playbook ---------- */
+$("#bookBtn").onclick=()=>{ renderBook(); $("#book").classList.add("open"); };
+$("#bookClose").onclick=()=>$("#book").classList.remove("open");
+function renderBook(){
+  const wrap=$("#bkBody");
+  if(!PB.length){ wrap.innerHTML=`<div class="desc" style="color:#6a6786;padding:18px 4px">Your playbook is empty. Add your first section below.</div>`; }
+  else {
+    wrap.innerHTML=PB.map((s,si)=>`
+      <div class="sec ${s._open?'open':''}" data-si="${si}">
+        <div class="sechd"><span class="cv">▶</span><span class="nm">${esc(s.name)}</span><span class="ct">${s.entries.length}</span>
+          <span class="x secren" title="Rename" style="font-size:15px">✏️</span><span class="x secdel" title="Delete section" style="font-size:15px">🗑</span></div>
+        <div class="secbody">
+          ${s.entries.map((e,ei)=>`
+            <div class="ent ${e._open?'open':''}" data-ei="${ei}">
+              <div class="enthd"><span class="cv">▶</span><span class="et">${esc(e.title)}</span></div>
+              <div class="entbody">
+                <div class="desc">${e.body?esc(e.body):'<span style="color:#6a6786">Empty.</span>'}</div>
+                <div class="minirow"><span class="chip entedit">✏️ Edit</span><span class="chip entdel">🗑 Remove</span></div>
+              </div>
+            </div>`).join("")}
+          <div class="addrow"><button class="ghost entadd">＋ Add entry</button></div>
+        </div>
+      </div>`).join("");
+  }
+  wrap.innerHTML+=`<div class="addrow" style="margin-top:4px"><button class="ghost secadd">＋ Add section</button></div>`;
+  wireBook();
+}
+function wireBook(){
+  const wrap=$("#bkBody");
+  wrap.querySelectorAll(".sec").forEach(secEl=>{
+    const si=+secEl.dataset.si, s=PB[si];
+    secEl.querySelector(".sechd").onclick=(ev)=>{ if(ev.target.closest(".secren")||ev.target.closest(".secdel"))return; s._open=!s._open; renderBook(); };
+    secEl.querySelector(".secren").onclick=()=>{ const nm=prompt("Section name",s.name); if(nm==null)return; s.name=nm.trim()||s.name; savePB(); renderBook(); };
+    secEl.querySelector(".secdel").onclick=()=>{ if(!confirm("Delete “"+s.name+"” and everything in it?"))return; PB.splice(si,1); savePB(); renderBook(); };
+    secEl.querySelector(".entadd").onclick=()=>{ const t=prompt("Entry title"); if(t==null)return; s.entries.push({id:"",title:(t.trim()||"Untitled"),body:"",_open:true}); s._open=true; savePB(); renderBook(); };
+    secEl.querySelectorAll(".ent").forEach(entEl=>{
+      const ei=+entEl.dataset.ei, e=s.entries[ei];
+      entEl.querySelector(".enthd").onclick=()=>{ e._open=!e._open; renderBook(); };
+      const edit=entEl.querySelector(".entedit"); if(edit)edit.onclick=()=>editEntry(si,ei);
+      const del=entEl.querySelector(".entdel"); if(del)del.onclick=()=>{ if(!confirm("Remove “"+e.title+"”?"))return; s.entries.splice(ei,1); savePB(); renderBook(); };
+    });
+  });
+  wrap.querySelector(".secadd").onclick=()=>{ const nm=prompt("Section name (e.g. Philosophy)"); if(nm==null)return; PB.push({id:"",name:(nm.trim()||"Untitled"),entries:[],_open:true}); savePB(); renderBook(); };
+}
+function editEntry(si,ei){
+  const s=PB[si], e=s.entries[ei];
+  const entEl=$(`#bkBody .sec[data-si="${si}"] .ent[data-ei="${ei}"]`);
+  const body=entEl.querySelector(".entbody");
+  body.innerHTML=`<label>Title</label><input class="eT" maxlength="120" value="${esc(e.title)}">
+    <label>Body</label><textarea class="eB" style="min-height:240px">${esc(e.body)}</textarea>
+    <div class="minirow"><button class="btn" data-a="cancel">Cancel</button><button class="btn neon" data-a="save" style="flex:1">Save</button></div>`;
+  body.querySelector('[data-a="cancel"]').onclick=()=>renderBook();
+  body.querySelector('[data-a="save"]').onclick=()=>{ e.title=body.querySelector(".eT").value.trim()||"Untitled"; e.body=body.querySelector(".eB").value; savePB(); renderBook(); };
+}
+async function savePB(){
+  const clean=PB.map(s=>({id:s.id||"",name:s.name,entries:s.entries.map(e=>({id:e.id||"",title:e.title,body:e.body}))}));
+  let r; try{ r=await(await api("/api/brain/playbook",{method:"POST",body:JSON.stringify({sections:clean})})).json(); }catch(_){ toast("Could not save"); return; }
+  if(r&&r.ok&&Array.isArray(r.playbook)){
+    r.playbook.forEach((ss,i)=>{ if(PB[i]){ PB[i].id=ss.id; ss.entries.forEach((ee,j)=>{ if(PB[i].entries[j])PB[i].entries[j].id=ee.id; }); } });
+    toast("Saved.");
+  } else toast((r&&r.error)||"Could not save");
 }
 boot();
 </script>
