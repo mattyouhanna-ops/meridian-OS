@@ -10,7 +10,7 @@ import { db, save } from "./lib/store.js";
 import {
   normalizeProfile, normalizeSettings, FIELDS, DEFAULT_MESSAGE, cleanFields, displayTitle,
   hashPass, checkPass, makeSessionCookie, clearCookie, readSession, describeDevice, encField, decField,
-  DEFAULT_PRODUCTS, DEFAULT_PROMISES,
+  DEFAULT_PRODUCTS, DEFAULT_PROMISES, parseCookies,
 } from "./lib/core.js";
 import { STATE_NAMES, statesFor } from "./lib/states.js";
 import {
@@ -75,29 +75,127 @@ ensureDeveloper(); // seed developer + Meridian (agency #1) on first boot
   if (changed) save();
 })();
 
-// The Brain: Mathew's private command center. Seeded once, then it's his to grow.
+// The Brain: Mathew's private command center. Nodes grouped into regions, everyone wired to him in the middle.
+const BRAIN_REGIONS = ["core", "apps", "knowledge", "content", "money", "ideas"];
 function brainData() {
   const store = db();
+  const now = Date.now();
+  const mk = (id, title, region, status, desc, url, x, y) => ({ id, title, region, status, desc, url: url || "", notes: "", x, y, pinned: false, createdAt: now, updatedAt: now });
   if (!store.brain || !Array.isArray(store.brain.nodes)) {
-    const now = Date.now();
-    const mk = (id, title, type, status, desc, url, x, y) => ({ id, title, type, status, desc, url: url || "", notes: "", x, y, pinned: false, createdAt: now, updatedAt: now });
     store.brain = {
       nodes: [
-        mk("core", "Meridian", "core", "live", "The brain. Everything I build connects here.", "", 0, 0),
-        mk("card", "Meridian OS Card", "app", "live", "Multi-tenant digital business card and license-verification platform. App #1.", "https://getmeridianos.app", -160, -90),
-        mk("quoter", "Quoting Engine", "app", "building", "AI multi-carrier quoting toolkit. Quotes every carrier at once.", "", 170, -70),
-        mk("academy", "Academy", "knowledge", "idea", "Where I pour my playbooks, call flow, carriers, and training.", "", -140, 120),
-        mk("compliance", "Compliance", "compliance", "idea", "Every app gets checked here before it ships.", "", 150, 130),
+        mk("core", "Mathew", "core", "live", "The center. Everything I build connects to me.", "", 0, 0),
+        mk("card", "Meridian OS Card", "apps", "live", "Multi-tenant digital business card and license-verification platform. App #1.", "/dev", -180, -110),
+        mk("compliance", "Compliance", "apps", "idea", "Every app gets checked here before it ships.", "", -120, 60),
+        mk("academy", "Academy", "knowledge", "idea", "My playbooks, call flow, carriers, objection handling, training.", "", 180, -110),
+        mk("osc", "OnlyScreenCrusader", "content", "building", "Marvel and DC TikTok content engine.", "", 170, 130),
+        mk("robinhood", "Robinhood", "money", "live", "Self-directed investing. Taxable and Roth.", "", -170, 140),
       ],
       links: [
-        { a: "core", b: "card" }, { a: "core", b: "quoter" }, { a: "core", b: "academy" }, { a: "core", b: "compliance" },
-        { a: "card", b: "compliance" }, { a: "quoter", b: "compliance" },
+        { a: "core", b: "card" }, { a: "core", b: "compliance" }, { a: "core", b: "academy" },
+        { a: "core", b: "osc" }, { a: "core", b: "robinhood" }, { a: "card", b: "compliance" },
       ],
     };
     save();
+  } else {
+    // migrate older gold/black brain -> region model, you in the center, drop the quoter
+    let changed = false;
+    const TYPE2REGION = { core: "core", app: "apps", compliance: "apps", design: "apps", knowledge: "knowledge", idea: "ideas" };
+    store.brain.nodes = store.brain.nodes.filter((n) => n.id !== "quoter");
+    store.brain.links = (store.brain.links || []).filter((l) => l.a !== "quoter" && l.b !== "quoter");
+    for (const n of store.brain.nodes) {
+      if (!n.region) { n.region = BRAIN_REGIONS.includes(TYPE2REGION[n.type]) ? TYPE2REGION[n.type] : "ideas"; changed = true; }
+      if (n.region === "core" && n.title === "Meridian") { n.title = "Mathew"; changed = true; }
+      if (n.id === "card" && (!n.url || /getmeridianos/.test(n.url))) { n.url = "/dev"; changed = true; }
+    }
+    if (changed) save();
   }
   store.brain.links ||= [];
   return store.brain;
+}
+
+// Separate login for the Brain, its own cookie so it is independent of the card console.
+const BRAIN_COOKIE = process.env.INSECURE_COOKIES === "1" ? "mc_brain" : "__Host-mc_brain";
+const BRAIN_SECURE = process.env.INSECURE_COOKIES !== "1";
+const BRAIN_PASSCODE = process.env.BRAIN_PASSCODE || process.env.ADMIN_PASSCODE || "EaxySplitz2";
+function brainSecret() { const d = db(); if (!d.secret) { d.secret = crypto.randomBytes(48).toString("hex"); save(); } return d.secret; }
+function makeBrainCookie() {
+  const payload = Buffer.from(JSON.stringify({ r: "brain", x: Date.now() + 72 * 3600e3 })).toString("base64url");
+  const sig = crypto.createHmac("sha256", brainSecret()).update(payload).digest("base64url");
+  return `${BRAIN_COOKIE}=${payload}.${sig}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${72 * 3600}` + (BRAIN_SECURE ? "; Secure" : "");
+}
+const clearBrainCookie = `${BRAIN_COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0` + (BRAIN_SECURE ? "; Secure" : "");
+function brainAuthed(req) {
+  const raw = parseCookies(req.headers.cookie || "")[BRAIN_COOKIE];
+  if (!raw) return false;
+  const [payload, sig] = raw.split(".");
+  if (!payload || !sig) return false;
+  const expect = crypto.createHmac("sha256", brainSecret()).update(payload).digest();
+  let got; try { got = Buffer.from(sig, "base64url"); } catch { return false; }
+  if (got.length !== expect.length || !crypto.timingSafeEqual(got, expect)) return false;
+  let d; try { d = JSON.parse(Buffer.from(payload, "base64url").toString()); } catch { return false; }
+  return Date.now() <= d.x && d.r === "brain";
+}
+function ctEqual(a, b) { const A = Buffer.from(String(a)), B = Buffer.from(String(b)); return A.length === B.length && crypto.timingSafeEqual(A, B); }
+
+// Brain API: its own login, its own data. Not tied to the card.
+async function handleBrain(sub, method, body, req) {
+  if (sub === "login" && method === "POST") {
+    if (!ctEqual(String(body.passcode || ""), BRAIN_PASSCODE)) return { status: 401, data: { error: "Wrong passcode." } };
+    return { status: 200, data: { ok: true }, cookie: makeBrainCookie() };
+  }
+  if (sub === "logout" && method === "POST") return { status: 200, data: { ok: true }, cookie: clearBrainCookie };
+  if (!brainAuthed(req)) return { status: 401, data: { error: "Locked." } };
+
+  if (sub === "" && method === "GET") return { status: 200, data: brainData() };
+  if (sub === "node" && method === "POST") {
+    const b = brainData();
+    const id = String(body.id || "").trim();
+    const clean = {
+      title: str(body.title, 80) || "Untitled",
+      region: BRAIN_REGIONS.includes(body.region) && body.region !== "core" ? body.region : "ideas",
+      status: ["live", "building", "idea", "paused"].includes(body.status) ? body.status : "idea",
+      desc: str(body.desc, 2000), url: str(body.url, 400), notes: str(body.notes, 4000),
+    };
+    let node = id && b.nodes.find((n) => n.id === id);
+    if (node) { if (node.region === "core") delete clean.region; Object.assign(node, clean, { updatedAt: Date.now() }); }
+    else {
+      node = { id: crypto.randomBytes(6).toString("hex"), ...clean, x: Number(body.x) || 0, y: Number(body.y) || 0, pinned: false, createdAt: Date.now(), updatedAt: Date.now() };
+      b.nodes.push(node);
+      b.links.push({ a: "core", b: node.id });
+      if (body.linkTo && body.linkTo !== "core" && b.nodes.some((n) => n.id === body.linkTo)) b.links.push({ a: body.linkTo, b: node.id });
+    }
+    save();
+    return { status: 200, data: { ok: true, node } };
+  }
+  if (sub === "node/delete" && method === "POST") {
+    const b = brainData();
+    const node = b.nodes.find((n) => n.id === String(body.id || ""));
+    if (node && node.region === "core") return { status: 400, data: { error: "You can't delete the center." } };
+    b.nodes = b.nodes.filter((n) => n.id !== String(body.id || ""));
+    b.links = b.links.filter((l) => l.a !== body.id && l.b !== body.id);
+    save();
+    return { status: 200, data: { ok: true } };
+  }
+  if (sub === "link" && method === "POST") {
+    const b = brainData();
+    const a = String(body.a || ""), c = String(body.b || "");
+    if (a === c || !b.nodes.some((n) => n.id === a) || !b.nodes.some((n) => n.id === c)) return { status: 400, data: { error: "Bad link." } };
+    const i = b.links.findIndex((l) => (l.a === a && l.b === c) || (l.a === c && l.b === a));
+    if (body.remove) { if (i !== -1) b.links.splice(i, 1); } else if (i === -1) b.links.push({ a, b: c });
+    save();
+    return { status: 200, data: { ok: true } };
+  }
+  if (sub === "layout" && method === "POST") {
+    const b = brainData();
+    for (const p of (Array.isArray(body.positions) ? body.positions : [])) {
+      const n = b.nodes.find((x) => x.id === p.id);
+      if (n) { n.x = Number(p.x) || 0; n.y = Number(p.y) || 0; if (typeof p.pinned === "boolean") n.pinned = p.pinned; }
+    }
+    save();
+    return { status: 200, data: { ok: true } };
+  }
+  return { status: 404, data: { error: "Not found" } };
 }
 
 // ---------- small helpers ----------
@@ -597,57 +695,6 @@ async function handleDev(sub, method, body, req) {
 
   if (!devSession(req)) return { status: 401, data: { error: "Please sign in." } };
 
-  // ---- The Brain: Mathew's private command center (nodes + synapses) ----
-  if (sub === "brain" && method === "GET") return { status: 200, data: brainData() };
-  if (sub === "brain/node" && method === "POST") {
-    const b = brainData();
-    const id = String(body.id || "").trim();
-    const clean = {
-      title: str(body.title, 80) || "Untitled",
-      type: ["core", "app", "knowledge", "design", "idea", "compliance"].includes(body.type) ? body.type : "idea",
-      status: ["live", "building", "idea", "paused"].includes(body.status) ? body.status : "idea",
-      desc: str(body.desc, 2000), url: str(body.url, 400), notes: str(body.notes, 4000),
-    };
-    let node = id && b.nodes.find((n) => n.id === id);
-    if (node) { Object.assign(node, clean, { updatedAt: Date.now() }); }
-    else {
-      node = { id: crypto.randomBytes(6).toString("hex"), ...clean, x: Number(body.x) || 0, y: Number(body.y) || 0, pinned: false, createdAt: Date.now(), updatedAt: Date.now() };
-      b.nodes.push(node);
-      if (body.linkTo && b.nodes.some((n) => n.id === body.linkTo)) b.links.push({ a: body.linkTo, b: node.id });
-    }
-    save();
-    return { status: 200, data: { ok: true, node } };
-  }
-  if (sub === "brain/node/delete" && method === "POST") {
-    const b = brainData();
-    const id = String(body.id || "");
-    const node = b.nodes.find((n) => n.id === id);
-    if (node && node.type === "core") return { status: 400, data: { error: "The core can't be deleted." } };
-    b.nodes = b.nodes.filter((n) => n.id !== id);
-    b.links = b.links.filter((l) => l.a !== id && l.b !== id);
-    save();
-    return { status: 200, data: { ok: true } };
-  }
-  if (sub === "brain/link" && method === "POST") {
-    const b = brainData();
-    const a = String(body.a || ""), c = String(body.b || "");
-    if (a === c || !b.nodes.some((n) => n.id === a) || !b.nodes.some((n) => n.id === c)) return { status: 400, data: { error: "Bad link." } };
-    const exists = b.links.findIndex((l) => (l.a === a && l.b === c) || (l.a === c && l.b === a));
-    if (body.remove) { if (exists !== -1) b.links.splice(exists, 1); }
-    else if (exists === -1) b.links.push({ a, b: c });
-    save();
-    return { status: 200, data: { ok: true } };
-  }
-  if (sub === "brain/layout" && method === "POST") {
-    const b = brainData();
-    for (const p of (Array.isArray(body.positions) ? body.positions : [])) {
-      const n = b.nodes.find((x) => x.id === p.id);
-      if (n) { n.x = Number(p.x) || 0; n.y = Number(p.y) || 0; if (typeof p.pinned === "boolean") n.pinned = p.pinned; }
-    }
-    save();
-    return { status: 200, data: { ok: true } };
-  }
-
   if (sub === "data" && method === "GET") {
     const agencies = listAgencies().map(agencySummary);
     const totals = agencies.reduce((t, a) => ({ agencies: t.agencies + 1, agents: t.agents + a.totals.agents, newQuotes: t.newQuotes + a.totals.newQuotes, views: t.views + a.totals.views, sold: t.sold + a.totals.sold }), { agencies: 0, agents: 0, newQuotes: 0, views: 0, sold: 0 });
@@ -921,6 +968,12 @@ const server = http.createServer(async (req, res) => {
       const sub = p.slice("/api/dev/".length);
       const body = (method === "GET") ? {} : await readBody(req);
       const r = await handleDev(sub, method, body, req);
+      return sendJSON(res, r.status, r.data, r.cookie ? { "set-cookie": r.cookie } : {});
+    }
+    if (p === "/api/brain" || p.startsWith("/api/brain/")) {
+      const sub = p === "/api/brain" ? "" : p.slice("/api/brain/".length);
+      const body = (method === "GET") ? {} : await readBody(req);
+      const r = await handleBrain(sub, method, body, req);
       return sendJSON(res, r.status, r.data, r.cookie ? { "set-cookie": r.cookie } : {});
     }
     if (p.startsWith("/api/owner/")) {
