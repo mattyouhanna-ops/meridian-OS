@@ -155,7 +155,7 @@ async function handleBrain(sub, method, body, req) {
       title: str(body.title, 80) || "Untitled",
       region: BRAIN_REGIONS.includes(body.region) && body.region !== "core" ? body.region : "ideas",
       status: ["live", "building", "idea", "paused"].includes(body.status) ? body.status : "idea",
-      desc: str(body.desc, 2000), url: str(body.url, 400), notes: str(body.notes, 4000),
+      desc: str(body.desc, 2000), url: str(body.url, 400), notes: str(body.notes, 4000), next: str(body.next, 300),
     };
     let node = id && b.nodes.find((n) => n.id === id);
     if (node) { if (node.region === "core") delete clean.region; Object.assign(node, clean, { updatedAt: Date.now() }); }
