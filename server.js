@@ -134,6 +134,54 @@ function brainData() {
     ];
     save();
   }
+  // Ensure the Sales section and its core entries exist (idempotent, by id).
+  {
+    const pb = store.brain.playbook;
+    const hasEntry = (eid) => pb.some((s) => s.entries.some((e) => e.id === eid));
+    const ensureSales = () => {
+      let sec = pb.find((s) => s.id === "sales");
+      if (!sec) { sec = { id: "sales", name: "Sales", entries: [] }; pb.push(sec); }
+      return sec;
+    };
+    let pbChanged = false;
+    if (!hasEntry("nepq")) {
+      ensureSales().entries.push({
+        id: "nepq", title: "NEPQ Questions",
+        body:
+          "NEPQ is Jeremy Miner's model. You do not pitch, you ask questions that let the prospect talk themselves into it. Spend most of the call asking, not telling. The question types, in order:\n\n" +
+          "1. Connection. Lower their guard and make it about them, not you. \"What made you look into coverage in the first place?\"\n" +
+          "2. Situation. Get the basic facts of where they are now. \"Who do you currently have coverage with, and how long have you had it?\"\n" +
+          "3. Problem awareness. Walk them into seeing the gap. \"How is that working for you?\" \"What would you change about it if you could?\"\n" +
+          "4. Solution awareness. Let them describe the fix in their own words. \"So what would the right coverage actually look like for your family?\"\n" +
+          "5. Consequence. Make the cost of doing nothing real, without pressure. \"If nothing changes, where does that leave your family six months from now?\"\n" +
+          "6. Qualifying. Confirm they actually want it. \"Why is getting this handled important to you now?\"\n" +
+          "7. Transition. Move from questions to showing the fit. \"Based on everything you just told me, it sounds like this is worth a look. Want me to walk you through it?\"\n" +
+          "8. Commitment. Ask with a question, not a push. \"Where do you feel like we should go from here?\"\n\n" +
+          "The rule under all of it: ask the right question at the right time, listen to what they mean and not just what they say, and let them close themselves.",
+      });
+      pbChanged = true;
+    }
+    if (!hasEntry("tonalities")) {
+      ensureSales().entries.push({
+        id: "tonalities", title: "The 10 Tonalities",
+        body:
+          "The 10 core influencing tonalities (Jordan Belfort, Straight Line). Words are a small part of a call. How you say it carries the certainty. The ten tones to drill:\n\n" +
+          "1. I care / I really want to know. Upbeat, warm, curious. Shows you actually want the answer.\n" +
+          "2. I feel your pain. Lower and softer. Shows you get what they are dealing with.\n" +
+          "3. Declarative as a question. Say a statement with a slight uptick at the end so it invites a yes.\n" +
+          "4. Mystery and intrigue. Hold a little back so they lean in and want the rest.\n" +
+          "5. Scarcity. A hushed, urgent tone that says this will not be around forever.\n" +
+          "6. Absolute certainty. Rock solid, zero doubt in your voice. Certainty transfers.\n" +
+          "7. Utter sincerity. Plain and honest, no sales shine, so they trust it.\n" +
+          "8. The reasonable man. Calm and fair, the tone of someone easy to agree with.\n" +
+          "9. Money is not an issue. Said lightly, so price shrinks and the decision is about fit.\n" +
+          "10. Obviousness. Said like it is a no-brainer, so the yes feels like the natural next step.\n\n" +
+          "Drill one tone at a time until it is automatic. The pitch is about 10 percent words. The rest is tone.",
+      });
+      pbChanged = true;
+    }
+    if (pbChanged) save();
+  }
   return store.brain;
 }
 
