@@ -75,6 +75,31 @@ ensureDeveloper(); // seed developer + Meridian (agency #1) on first boot
   if (changed) save();
 })();
 
+// The Brain: Mathew's private command center. Seeded once, then it's his to grow.
+function brainData() {
+  const store = db();
+  if (!store.brain || !Array.isArray(store.brain.nodes)) {
+    const now = Date.now();
+    const mk = (id, title, type, status, desc, url, x, y) => ({ id, title, type, status, desc, url: url || "", notes: "", x, y, pinned: false, createdAt: now, updatedAt: now });
+    store.brain = {
+      nodes: [
+        mk("core", "Meridian", "core", "live", "The brain. Everything I build connects here.", "", 0, 0),
+        mk("card", "Meridian OS Card", "app", "live", "Multi-tenant digital business card and license-verification platform. App #1.", "https://getmeridianos.app", -160, -90),
+        mk("quoter", "Quoting Engine", "app", "building", "AI multi-carrier quoting toolkit. Quotes every carrier at once.", "", 170, -70),
+        mk("academy", "Academy", "knowledge", "idea", "Where I pour my playbooks, call flow, carriers, and training.", "", -140, 120),
+        mk("compliance", "Compliance", "compliance", "idea", "Every app gets checked here before it ships.", "", 150, 130),
+      ],
+      links: [
+        { a: "core", b: "card" }, { a: "core", b: "quoter" }, { a: "core", b: "academy" }, { a: "core", b: "compliance" },
+        { a: "card", b: "compliance" }, { a: "quoter", b: "compliance" },
+      ],
+    };
+    save();
+  }
+  store.brain.links ||= [];
+  return store.brain;
+}
+
 // ---------- small helpers ----------
 const sendJSON = (res, status, data, headers = {}) =>
   res.writeHead(status, { "content-type": "application/json", "cache-control": "no-store", ...headers }).end(JSON.stringify(data));
@@ -572,6 +597,57 @@ async function handleDev(sub, method, body, req) {
 
   if (!devSession(req)) return { status: 401, data: { error: "Please sign in." } };
 
+  // ---- The Brain: Mathew's private command center (nodes + synapses) ----
+  if (sub === "brain" && method === "GET") return { status: 200, data: brainData() };
+  if (sub === "brain/node" && method === "POST") {
+    const b = brainData();
+    const id = String(body.id || "").trim();
+    const clean = {
+      title: str(body.title, 80) || "Untitled",
+      type: ["core", "app", "knowledge", "design", "idea", "compliance"].includes(body.type) ? body.type : "idea",
+      status: ["live", "building", "idea", "paused"].includes(body.status) ? body.status : "idea",
+      desc: str(body.desc, 2000), url: str(body.url, 400), notes: str(body.notes, 4000),
+    };
+    let node = id && b.nodes.find((n) => n.id === id);
+    if (node) { Object.assign(node, clean, { updatedAt: Date.now() }); }
+    else {
+      node = { id: crypto.randomBytes(6).toString("hex"), ...clean, x: Number(body.x) || 0, y: Number(body.y) || 0, pinned: false, createdAt: Date.now(), updatedAt: Date.now() };
+      b.nodes.push(node);
+      if (body.linkTo && b.nodes.some((n) => n.id === body.linkTo)) b.links.push({ a: body.linkTo, b: node.id });
+    }
+    save();
+    return { status: 200, data: { ok: true, node } };
+  }
+  if (sub === "brain/node/delete" && method === "POST") {
+    const b = brainData();
+    const id = String(body.id || "");
+    const node = b.nodes.find((n) => n.id === id);
+    if (node && node.type === "core") return { status: 400, data: { error: "The core can't be deleted." } };
+    b.nodes = b.nodes.filter((n) => n.id !== id);
+    b.links = b.links.filter((l) => l.a !== id && l.b !== id);
+    save();
+    return { status: 200, data: { ok: true } };
+  }
+  if (sub === "brain/link" && method === "POST") {
+    const b = brainData();
+    const a = String(body.a || ""), c = String(body.b || "");
+    if (a === c || !b.nodes.some((n) => n.id === a) || !b.nodes.some((n) => n.id === c)) return { status: 400, data: { error: "Bad link." } };
+    const exists = b.links.findIndex((l) => (l.a === a && l.b === c) || (l.a === c && l.b === a));
+    if (body.remove) { if (exists !== -1) b.links.splice(exists, 1); }
+    else if (exists === -1) b.links.push({ a, b: c });
+    save();
+    return { status: 200, data: { ok: true } };
+  }
+  if (sub === "brain/layout" && method === "POST") {
+    const b = brainData();
+    for (const p of (Array.isArray(body.positions) ? body.positions : [])) {
+      const n = b.nodes.find((x) => x.id === p.id);
+      if (n) { n.x = Number(p.x) || 0; n.y = Number(p.y) || 0; if (typeof p.pinned === "boolean") n.pinned = p.pinned; }
+    }
+    save();
+    return { status: 200, data: { ok: true } };
+  }
+
   if (sub === "data" && method === "GET") {
     const agencies = listAgencies().map(agencySummary);
     const totals = agencies.reduce((t, a) => ({ agencies: t.agencies + 1, agents: t.agents + a.totals.agents, newQuotes: t.newQuotes + a.totals.newQuotes, views: t.views + a.totals.views, sold: t.sold + a.totals.sold }), { agencies: 0, agents: 0, newQuotes: 0, views: 0, sold: 0 });
@@ -856,6 +932,7 @@ const server = http.createServer(async (req, res) => {
 
     // dashboards
     if (p === "/dev" || p === "/developer") return serveStatic(res, path.join(PUB, "dev.html"), "no-cache");
+    if (p === "/brain") return serveStatic(res, path.join(PUB, "brain.html"), "no-cache");
     if (p === "/" || p === "/login" || p === "/go") return serveStatic(res, path.join(PUB, "login.html"), "no-cache");
     if (p === "/owner") return serveStatic(res, path.join(PUB, "owner.html"), "no-cache");
 
