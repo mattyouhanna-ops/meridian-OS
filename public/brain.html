@@ -265,7 +265,7 @@ function pickConnect(n){ if(!connectFirst){ connectFirst=n; n._core.setAttribute
 
 /* ---------- panel ---------- */
 let selected=null;
-function openNode(n){ selected=n; const r=REGIONS[n.region]||REGIONS.ideas, isCore=n.region==="core";
+function openNode(n){ if(n.id==="academy"){ renderBook(); $("#book").classList.add("open"); return; } selected=n; const r=REGIONS[n.region]||REGIONS.ideas, isCore=n.region==="core";
   $("#panelInner").innerHTML=`
     <div class="ph"><span class="pg">${isCore?"🧠":r.glyph}</span><div class="pt"><b>${esc(n.title)}</b><small style="color:${isCore?'#fff':r.color}">${isCore?"The center":r.label+" · <span class='status-"+n.status+"'>"+(STATUS_LABELS[n.status]||n.status)+"</span>"}</small></div><span class="x" id="pClose">✕</span></div>
     <div class="pb">

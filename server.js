@@ -87,7 +87,7 @@ function brainData() {
         mk("core", "Mathew", "core", "live", "The center. Everything I build connects to me.", "", 0, 0),
         mk("card", "Meridian OS Card", "apps", "live", "Multi-tenant digital business card and license-verification platform. App #1.", "/dev", -180, -110),
         mk("compliance", "Compliance", "apps", "idea", "Every app gets checked here before it ships.", "", -120, 60),
-        mk("academy", "Academy", "knowledge", "idea", "My playbooks, call flow, carriers, objection handling, training.", "", 180, -110),
+        mk("academy", "The Playbook", "knowledge", "live", "Your playbook and knowledge base. Tap to open: philosophy, sales, call flow, carriers, objection handling, training.", "", 180, -110),
         mk("osc", "OnlyScreenCrusader", "content", "building", "Marvel and DC TikTok content engine.", "", 170, 130),
       ],
       links: [
@@ -120,6 +120,20 @@ function brainData() {
     }
     for (const n of store.brain.nodes) { if (n.region === "money") { n.region = "growth"; mChanged = true; } }
     if (mChanged) save();
+  }
+  // Merge Academy and the Playbook into one: the Academy node opens the Playbook.
+  {
+    const ac = store.brain.nodes.find((n) => n.id === "academy");
+    if (ac) {
+      let c = false;
+      if (ac.title === "Academy") { ac.title = "The Playbook"; c = true; }
+      if (ac.desc === "My playbooks, call flow, carriers, objection handling, training.") {
+        ac.desc = "Your playbook and knowledge base. Tap to open: philosophy, sales, call flow, carriers, objection handling, training.";
+        c = true;
+      }
+      if (ac.status === "idea") { ac.status = "live"; c = true; }
+      if (c) save();
+    }
   }
   // Ensure the PULSE content node exists (idempotent).
   if (!store.brain.nodes.some((n) => n.id === "pulse")) {
