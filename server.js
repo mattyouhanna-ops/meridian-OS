@@ -204,13 +204,28 @@ function brainData() {
           "6. Absolute certainty. Rock solid, zero doubt in your voice. Certainty transfers.\n" +
           "7. Utter sincerity. Plain and honest, no sales shine, so they trust it.\n" +
           "8. The reasonable man. Calm and fair, the tone of someone easy to agree with.\n" +
-          "9. Money is not an issue. Said lightly, so price shrinks and the decision is about fit.\n" +
+          "9. Money aside. Said lightly so price shrinks and the decision is about fit. Try: \"Let's put the money aside for a second. Is this the kind of protection you'd want in place for your family?\"\n" +
           "10. Obviousness. Said like it is a no-brainer, so the yes feels like the natural next step.\n\n" +
           "Drill one tone at a time until it is automatic. The pitch is about 10 percent words. The rest is tone.",
       });
       pbChanged = true;
     }
     if (pbChanged) save();
+  }
+  // Update tonalities entry #9 to "Money aside" with an example phrase (idempotent).
+  {
+    const OLD9 = "9. Money is not an issue. Said lightly, so price shrinks and the decision is about fit.";
+    const NEW9 = "9. Money aside. Said lightly so price shrinks and the decision is about fit. Try: \"Let's put the money aside for a second. Is this the kind of protection you'd want in place for your family?\"";
+    let t9 = false;
+    for (const s of store.brain.playbook) {
+      for (const e of s.entries) {
+        if (e.id === "tonalities" && typeof e.body === "string" && e.body.includes(OLD9)) {
+          e.body = e.body.replace(OLD9, NEW9);
+          t9 = true;
+        }
+      }
+    }
+    if (t9) save();
   }
   return store.brain;
 }
