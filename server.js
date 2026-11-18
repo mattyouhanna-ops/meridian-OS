@@ -77,6 +77,20 @@ ensureDeveloper(); // seed developer + Meridian (agency #1) on first boot
 
 // The Brain: Mathew's private command center. Nodes grouped into regions, everyone wired to him in the middle.
 const BRAIN_REGIONS = ["core", "apps", "knowledge", "content", "growth", "ideas"];
+
+const TONALITIES_BODY =
+  "The 10 core influencing tonalities (Jordan Belfort, Straight Line). Words are a small part of a call. How you say it carries the certainty. The ten tones to drill, each with a line to try:\n\n" +
+  "1. I care / I really want to know. Upbeat, warm, curious. Try: \"So what made you start looking into coverage in the first place?\"\n" +
+  "2. I feel your pain. Lower and softer, shows you get it. Try: \"Yeah, I hear you. That is a lot to carry on your own.\"\n" +
+  "3. Declarative as a question. A statement with a slight uptick so it invites a yes. Try: \"So you'd want this handled sooner rather than later?\"\n" +
+  "4. Mystery and intrigue. Hold a little back so they lean in. Try: \"There is one option most people never hear about, but let me ask you something first.\"\n" +
+  "5. Scarcity. Hushed and urgent, it will not be around forever. Try: \"The rate you qualify for is based on your age today, and that changes on your next birthday.\"\n" +
+  "6. Absolute certainty. Rock solid, zero doubt. Try: \"This will do exactly what you need it to do for your family.\"\n" +
+  "7. Utter sincerity. Plain and honest, no sales shine. Try: \"Honestly, I am not going to put you in something you do not need.\"\n" +
+  "8. The reasonable man. Calm and fair, easy to agree with. Try: \"It makes sense to at least see the numbers before you decide, right?\"\n" +
+  "9. Money aside. Said lightly so price shrinks and the decision is about fit. Try: \"Let's put the money aside for a second. Is this the kind of protection you'd want in place for your family?\"\n" +
+  "10. Obviousness. Said like a no-brainer, so the yes is the natural next step. Try: \"So of course you'd want your family taken care of. That part is a given.\"\n\n" +
+  "Drill one tone at a time until it is automatic. The pitch is about 10 percent words. The rest is tone.";
 function brainData() {
   const store = db();
   const now = Date.now();
@@ -194,38 +208,22 @@ function brainData() {
     if (!hasEntry("tonalities")) {
       ensureSales().entries.push({
         id: "tonalities", title: "The 10 Tonalities",
-        body:
-          "The 10 core influencing tonalities (Jordan Belfort, Straight Line). Words are a small part of a call. How you say it carries the certainty. The ten tones to drill:\n\n" +
-          "1. I care / I really want to know. Upbeat, warm, curious. Shows you actually want the answer.\n" +
-          "2. I feel your pain. Lower and softer. Shows you get what they are dealing with.\n" +
-          "3. Declarative as a question. Say a statement with a slight uptick at the end so it invites a yes.\n" +
-          "4. Mystery and intrigue. Hold a little back so they lean in and want the rest.\n" +
-          "5. Scarcity. A hushed, urgent tone that says this will not be around forever.\n" +
-          "6. Absolute certainty. Rock solid, zero doubt in your voice. Certainty transfers.\n" +
-          "7. Utter sincerity. Plain and honest, no sales shine, so they trust it.\n" +
-          "8. The reasonable man. Calm and fair, the tone of someone easy to agree with.\n" +
-          "9. Money aside. Said lightly so price shrinks and the decision is about fit. Try: \"Let's put the money aside for a second. Is this the kind of protection you'd want in place for your family?\"\n" +
-          "10. Obviousness. Said like it is a no-brainer, so the yes feels like the natural next step.\n\n" +
-          "Drill one tone at a time until it is automatic. The pitch is about 10 percent words. The rest is tone.",
+        body: TONALITIES_BODY,
       });
       pbChanged = true;
     }
     if (pbChanged) save();
   }
-  // Update tonalities entry #9 to "Money aside" with an example phrase (idempotent).
-  {
-    const OLD9 = "9. Money is not an issue. Said lightly, so price shrinks and the decision is about fit.";
-    const NEW9 = "9. Money aside. Said lightly so price shrinks and the decision is about fit. Try: \"Let's put the money aside for a second. Is this the kind of protection you'd want in place for your family?\"";
-    let t9 = false;
+  // One-time: give every tonality an example phrase. Runs once, never clobbers later edits.
+  store.brain.mig ||= {};
+  if (!store.brain.mig.tonPhrasesV1) {
     for (const s of store.brain.playbook) {
       for (const e of s.entries) {
-        if (e.id === "tonalities" && typeof e.body === "string" && e.body.includes(OLD9)) {
-          e.body = e.body.replace(OLD9, NEW9);
-          t9 = true;
-        }
+        if (e.id === "tonalities") e.body = TONALITIES_BODY;
       }
     }
-    if (t9) save();
+    store.brain.mig.tonPhrasesV1 = true;
+    save();
   }
   return store.brain;
 }
