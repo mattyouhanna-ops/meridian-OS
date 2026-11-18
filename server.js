@@ -79,17 +79,17 @@ ensureDeveloper(); // seed developer + Meridian (agency #1) on first boot
 const BRAIN_REGIONS = ["core", "apps", "knowledge", "content", "growth", "ideas"];
 
 const TONALITIES_BODY =
-  "The 10 core influencing tonalities (Jordan Belfort, Straight Line). Words are a small part of a call. How you say it carries the certainty. The ten tones to drill, each with a line to try:\n\n" +
-  "1. I care / I really want to know. Upbeat, warm, curious. Try: \"So what made you start looking into coverage in the first place?\"\n" +
-  "2. I feel your pain. Lower and softer, shows you get it. Try: \"Yeah, I hear you. That is a lot to carry on your own.\"\n" +
-  "3. Declarative as a question. A statement with a slight uptick so it invites a yes. Try: \"So you'd want this handled sooner rather than later?\"\n" +
-  "4. Mystery and intrigue. Hold a little back so they lean in. Try: \"There is one option most people never hear about, but let me ask you something first.\"\n" +
-  "5. Scarcity. Hushed and urgent, it will not be around forever. Try: \"The rate you qualify for is based on your age today, and that changes on your next birthday.\"\n" +
-  "6. Absolute certainty. Rock solid, zero doubt. Try: \"This will do exactly what you need it to do for your family.\"\n" +
-  "7. Utter sincerity. Plain and honest, no sales shine. Try: \"Honestly, I am not going to put you in something you do not need.\"\n" +
-  "8. The reasonable man. Calm and fair, easy to agree with. Try: \"It makes sense to at least see the numbers before you decide, right?\"\n" +
-  "9. Money aside. Said lightly so price shrinks and the decision is about fit. Try: \"Let's put the money aside for a second. Is this the kind of protection you'd want in place for your family?\"\n" +
-  "10. Obviousness. Said like a no-brainer, so the yes is the natural next step. Try: \"So of course you'd want your family taken care of. That part is a given.\"\n\n" +
+  "The 10 core influencing tonalities (Jordan Belfort, Straight Line). Words are a small part of a call. How you say it carries the certainty. Each one below: the tone, when to use it, and a line to try.\n\n" +
+  "1. I care / I really want to know. Upbeat, warm, curious. Use it when you ask questions, especially early, so they feel you actually want the answer and not just a sale. Try: \"So what made you start looking into coverage in the first place?\"\n" +
+  "2. I feel your pain. Lower and softer. Use it right after they share something hard, like money stress or a loss, so they stay open instead of guarding up. Try: \"Yeah, I hear you. That is a lot to carry on your own.\"\n" +
+  "3. Declarative as a question. A statement with a slight uptick at the end. Use it to land a point while still inviting a yes, so you lead without pushing. Try: \"So you'd want this handled sooner rather than later?\"\n" +
+  "4. Mystery and intrigue. Hold a little back. Use it when they are drifting or about to put you off, to make them lean in and want the rest. Try: \"There is one option most people never hear about, but let me ask you something first.\"\n" +
+  "5. Scarcity. Hushed and urgent. Use it only when a real reason to act now exists, like age-based pricing. Never fake it. Try: \"The rate you qualify for is based on your age today, and that changes on your next birthday.\"\n" +
+  "6. Absolute certainty. Rock solid, zero doubt. Use it at the close and on the main benefit, because your certainty transfers straight to them. Try: \"This will do exactly what you need it to do for your family.\"\n" +
+  "7. Utter sincerity. Plain and honest, no sales shine. Use it when trust is the real issue or they have been burned before, and just speak straight. Try: \"Honestly, I am not going to put you in something you do not need.\"\n" +
+  "8. The reasonable man. Calm and fair. Use it on objections and when they get defensive, so agreeing with you feels easy and low pressure. Try: \"It makes sense to at least see the numbers before you decide, right?\"\n" +
+  "9. Money aside. Said lightly. Use it when price is the stall. Take money off the table for a second to surface whether they actually want it. Try: \"Let's put the money aside for a second. Is this the kind of protection you'd want in place for your family?\"\n" +
+  "10. Obviousness. Said like a no-brainer. Use it on the decision itself, so the yes feels like the natural next step and not a leap. Try: \"So of course you'd want your family taken care of. That part is a given.\"\n\n" +
   "Drill one tone at a time until it is automatic. The pitch is about 10 percent words. The rest is tone.";
 function brainData() {
   const store = db();
@@ -214,15 +214,15 @@ function brainData() {
     }
     if (pbChanged) save();
   }
-  // One-time: give every tonality an example phrase. Runs once, never clobbers later edits.
+  // One-time: refresh tonalities to the version with a how-to on each. Runs once.
   store.brain.mig ||= {};
-  if (!store.brain.mig.tonPhrasesV1) {
+  if (!store.brain.mig.tonHowToV1) {
     for (const s of store.brain.playbook) {
       for (const e of s.entries) {
         if (e.id === "tonalities") e.body = TONALITIES_BODY;
       }
     }
-    store.brain.mig.tonPhrasesV1 = true;
+    store.brain.mig.tonHowToV1 = true;
     save();
   }
   return store.brain;
