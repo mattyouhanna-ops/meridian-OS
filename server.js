@@ -960,6 +960,20 @@ function hubData() {
     ];
     save();
   }
+  if (!Array.isArray(store.hub.plans)) {
+    store.hub.plans = [
+      { id: "hub", area: "Hub", title: "Control hub, first cut", status: "done" },
+      { id: "freeze", area: "Hub", title: "Per-app platform freeze", status: "done" },
+      { id: "cardfields", area: "Card", title: "Office address and website fields", status: "done" },
+      { id: "cardredesign", area: "Card", title: "Redesign: headshot, agency colors, Verify and Social buttons, Visit my office, QR", status: "building" },
+      { id: "branding", area: "Branding", title: "Agency and agent branding: colors, logo, layout", status: "planned" },
+      { id: "stats", area: "Stats", title: "ROI on card views and a team and individual performance network", status: "planned" },
+      { id: "scanner", area: "Apps", title: "Notes scanner: handwriting to Brain entries", status: "planned" },
+      { id: "crm", area: "CRM", title: "Notes after meetings, reminders, auto-tag contacts, for teams", status: "planned" },
+      { id: "domain", area: "Launch", title: "New domain and white-label rollout", status: "planned" },
+    ];
+    save();
+  }
   return store.hub;
 }
 
@@ -992,7 +1006,14 @@ async function handleHub(sub, method, body, req) {
       flagged: roster.filter((r) => r.flags.length).length,
       inactive: roster.filter((r) => !r.active).length,
     };
-    return { status: 200, data: { brand: "Ingenium One", dev: { name: dev.name, email: dev.email }, apps, roster, totals, frozen: isPlatformFrozen() } };
+    return { status: 200, data: { brand: "Ingenium One", dev: { name: dev.name, email: dev.email }, apps, roster, totals, frozen: isPlatformFrozen(), plans: hub.plans || [] } };
+  }
+
+  if (sub === "plan" && method === "POST") {
+    const pl = (hub.plans || []).find((x) => x.id === String(body.id || ""));
+    if (!pl) return { status: 404, data: { error: "Plan not found" } };
+    if (body.status && ["planned", "building", "done"].includes(body.status)) { pl.status = body.status; save(); }
+    return { status: 200, data: { ok: true, plan: pl } };
   }
 
   if (sub === "app" && method === "POST") {

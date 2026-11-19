@@ -71,6 +71,16 @@
   .act{background:transparent;border:1px solid var(--line);color:var(--muted);font:700 11px/1 Arial;letter-spacing:.5px;text-transform:uppercase;padding:7px 10px;border-radius:9px;cursor:pointer}
   .act:hover{border-color:var(--cobalt);color:var(--silver)}
   .empty{padding:30px 16px;text-align:center;color:var(--muted);font-size:13px}
+  .plans{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .plrow{display:flex;align-items:center;gap:12px;padding:13px 16px;border-top:1px solid var(--line);cursor:pointer}
+  .plrow:first-child{border-top:none}
+  .plrow:hover{background:#0f1930}
+  .plrow .area{font:700 10px/1 Arial;letter-spacing:1px;text-transform:uppercase;color:var(--cobalt-soft);width:80px;flex:none}
+  .plrow .ttl{flex:1;color:var(--silver);font-size:13.5px}
+  .plrow .ps{font:700 10px/1 Arial;letter-spacing:1px;text-transform:uppercase;padding:5px 9px;border-radius:999px;flex:none}
+  .ps.done{background:rgba(52,211,153,.14);color:var(--green)}
+  .ps.building{background:rgba(251,191,36,.14);color:var(--amber)}
+  .ps.planned{background:rgba(135,147,173,.14);color:var(--muted)}
   .freezebar{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-bottom:22px}
   .freezebar .t{flex:1}.freezebar .t b{color:var(--white)}.freezebar .t span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
   /* login */
@@ -118,6 +128,10 @@
 
   <h2>People &amp; compliance</h2>
   <div class="people" id="people"></div>
+
+  <h2>Plans</h2>
+  <p class="hint">Everything being built, by area. Tap a row to move it planned, building, done.</p>
+  <div class="plans" id="plans"></div>
 </div>
 
 <div id="gate">
@@ -256,6 +270,22 @@ function render(){
       const j=await r.json();
       if(j.ok){ p.active=!j.denied; p.denied=j.denied; render(); toast(j.denied?"Locked":"Unlocked"); }
       else toast(j.error||"Could not update");
+    };
+  });
+
+  // plans / roadmap
+  $("#plans").innerHTML = (DATA.plans||[]).map(p=>`
+    <div class="plrow" data-plan="${p.id}">
+      <div class="area">${esc(p.area)}</div>
+      <div class="ttl">${esc(p.title)}</div>
+      <div class="ps ${p.status}">${esc(p.status)}</div>
+    </div>`).join("");
+  document.querySelectorAll("[data-plan]").forEach(row=>{
+    row.onclick = async ()=>{
+      const id=row.dataset.plan, p=DATA.plans.find(x=>x.id===id);
+      const next = p.status==="planned"?"building":p.status==="building"?"done":"planned";
+      const r=await api("/api/hub/plan",{method:"POST",body:JSON.stringify({id,status:next})});
+      const j=await r.json(); if(j.ok){ p.status=j.plan.status; render(); }
     };
   });
 }
