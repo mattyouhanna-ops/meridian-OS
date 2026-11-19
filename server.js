@@ -945,6 +945,77 @@ async function handleDev(sub, method, body, req) {
 }
 
 // ====================================================================
+// INGENIUM ONE — control hub (single operator, sits above every app)
+// ====================================================================
+function hubData() {
+  const store = db();
+  if (!store.hub || typeof store.hub !== "object") store.hub = {};
+  if (!Array.isArray(store.hub.apps)) {
+    store.hub.apps = [
+      { id: "card", name: "Meridian OS", kind: "Digital business card", status: "live", approved: true, url: "/dev" },
+      { id: "pulse", name: "Pulse", kind: "Content hub", status: "building", approved: false, url: "https://pulsehq.up.railway.app/v4" },
+      { id: "scanner", name: "Notes Scanner", kind: "Handwriting to Brain", status: "planned", approved: false, url: "" },
+    ];
+    save();
+  }
+  return store.hub;
+}
+
+async function handleHub(sub, method, body, req) {
+  if (!devSession(req)) return { status: 401, data: { error: "Please sign in." } };
+  if (method !== "GET" && !sameOrigin(req)) return { status: 403, data: { error: "Not allowed" } };
+  const hub = hubData();
+  const dev = getDeveloper();
+
+  if (sub === "" && method === "GET") {
+    const apps = hub.apps.map((a) => ({ ...a }));
+    const roster = [];
+    for (const ag of listAgencies()) {
+      const licensedAgency = agencyLicensed(ag);
+      for (const a of listAgents(ag.id)) {
+        const s = agentSummary(a);
+        const flags = [];
+        if (s.incomplete) flags.push("Compliance lapse");
+        if (!s.licensed || !licensedAgency) flags.push("License expired or missing");
+        roster.push({
+          id: s.id, name: s.name, title: s.title, agency: ag.name, agencyId: ag.id,
+          active: s.active && !s.denied, denied: s.denied, deniedReason: s.deniedReason,
+          lastActive: s.lastActive, lastOpenedAt: s.lastOpenedAt, licensed: s.licensed, flags,
+        });
+      }
+    }
+    roster.sort((x, y) => (y.lastActive || 0) - (x.lastActive || 0));
+    const totals = {
+      agencies: listAgencies().length, agents: roster.length,
+      flagged: roster.filter((r) => r.flags.length).length,
+      inactive: roster.filter((r) => !r.active).length,
+    };
+    return { status: 200, data: { brand: "Ingenium One", dev: { name: dev.name, email: dev.email }, apps, roster, totals, frozen: isPlatformFrozen() } };
+  }
+
+  if (sub === "app" && method === "POST") {
+    const a = hub.apps.find((x) => x.id === String(body.id || ""));
+    if (!a) return { status: 404, data: { error: "App not found" } };
+    if (typeof body.approved === "boolean") a.approved = body.approved;
+    if (body.status && ["planned", "building", "live", "paused"].includes(body.status)) a.status = body.status;
+    save();
+    return { status: 200, data: { ok: true, app: a } };
+  }
+
+  if (sub === "agent-action" && method === "POST") {
+    const id = String(body.id || "");
+    if (!getAgent(id)) return { status: 404, data: { error: "Person not found" } };
+    if (body.action === "lock") { const a = denyAgent(id, String(body.reason || "").slice(0, 200) || "Locked from Ingenium One"); return { status: 200, data: { ok: true, id, denied: !!a.denied } }; }
+    if (body.action === "unlock") { const a = reinstateAgent(id); return { status: 200, data: { ok: true, id, denied: !!a.denied } }; }
+    return { status: 400, data: { error: "Unknown action" } };
+  }
+
+  if (sub === "freeze" && method === "POST") { const on = setPlatformFrozen(!!body.on); return { status: 200, data: { ok: true, frozen: on } }; }
+
+  return { status: 404, data: { error: "Not found" } };
+}
+
+// ====================================================================
 // PAGE RENDERING
 // ====================================================================
 const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -1112,10 +1183,17 @@ const server = http.createServer(async (req, res) => {
       const r = await handleOwner(sub, method, body, req);
       return sendJSON(res, r.status, r.data, r.cookie ? { "set-cookie": r.cookie } : {});
     }
+    if (p === "/api/hub" || p.startsWith("/api/hub/")) {
+      const sub = p === "/api/hub" ? "" : p.slice("/api/hub/".length);
+      const body = (method === "GET") ? {} : await readBody(req);
+      const r = await handleHub(sub, method, body, req);
+      return sendJSON(res, r.status, r.data, r.cookie ? { "set-cookie": r.cookie } : {});
+    }
 
     // dashboards
     if (p === "/dev" || p === "/developer") return serveStatic(res, path.join(PUB, "dev.html"), "no-cache");
     if (p === "/brain") return serveStatic(res, path.join(PUB, "brain.html"), "no-cache");
+    if (p === "/hub") return serveStatic(res, path.join(PUB, "hub.html"), "no-cache");
     if (p === "/" || p === "/login" || p === "/go") return serveStatic(res, path.join(PUB, "login.html"), "no-cache");
     if (p === "/owner") return serveStatic(res, path.join(PUB, "owner.html"), "no-cache");
 

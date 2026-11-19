@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ingenium One</title>
+<link rel="icon" href="/brand/ingenium/icon-32.png">
+<link rel="apple-touch-icon" href="/brand/ingenium/icon-180.png">
+<style>
+  :root{
+    --bg:#0a1024; --panel:#101a33; --panel2:#0d1530; --line:#223052;
+    --cobalt:#3b63ff; --cobalt-soft:#5b7cff; --silver:#cfd7e1; --muted:#8793ad;
+    --white:#f4f7fb; --green:#34d399; --amber:#fbbf24; --red:#f87171;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:var(--bg);color:var(--silver);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+  a{color:inherit}
+  .wrap{max-width:1040px;margin:0 auto;padding:18px 16px 60px}
+  /* header */
+  header{display:flex;align-items:center;gap:12px;padding:6px 2px 18px;border-bottom:1px solid var(--line);margin-bottom:20px}
+  header svg{width:40px;height:40px;flex:none}
+  .brand b{font-weight:800;letter-spacing:1px;color:var(--white);font-size:17px}
+  .brand b .one{color:var(--cobalt-soft)}
+  .brand small{display:block;font:700 10px/1 Arial;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:3px}
+  header .who{margin-left:auto;text-align:right;font-size:12px;color:var(--muted)}
+  header .who b{display:block;color:var(--silver);font-size:13px}
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .stat .n{font:800 26px/1 system-ui;color:var(--white)}
+  .stat .l{font:700 10px/1 Arial;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:7px}
+  .stat.warn .n{color:var(--amber)}
+  /* sections */
+  h2{font:800 12px/1 Arial;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:26px 2px 12px}
+  .apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .app{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .app .top{display:flex;align-items:flex-start;gap:10px}
+  .app .nm{font-weight:700;color:var(--white);font-size:16px}
+  .app .kind{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .pill{font:700 10px/1 Arial;letter-spacing:1px;text-transform:uppercase;padding:5px 9px;border-radius:999px;margin-left:auto;flex:none}
+  .pill.live{background:rgba(52,211,153,.14);color:var(--green)}
+  .pill.building{background:rgba(251,191,36,.14);color:var(--amber)}
+  .pill.planned{background:rgba(135,147,173,.14);color:var(--muted)}
+  .pill.paused{background:rgba(248,113,113,.14);color:var(--red)}
+  .app .row{display:flex;align-items:center;gap:10px;margin-top:14px}
+  .gate{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+  .sw{width:40px;height:23px;border-radius:999px;background:#2a3a5e;position:relative;cursor:pointer;transition:background .15s;flex:none}
+  .sw.on{background:var(--cobalt)}
+  .sw b{position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#fff;transition:left .15s}
+  .sw.on b{left:19px}
+  .btn{background:#182544;border:1px solid var(--line);color:var(--silver);font:600 13px/1 system-ui;padding:9px 14px;border-radius:10px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{border-color:var(--cobalt)}
+  .btn.open{margin-left:auto}
+  select.st{background:#182544;border:1px solid var(--line);color:var(--silver);font:600 12px/1 system-ui;padding:7px 8px;border-radius:9px}
+  /* people */
+  .people{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .prow{display:flex;align-items:center;gap:12px;padding:13px 16px;border-top:1px solid var(--line)}
+  .prow:first-child{border-top:none}
+  .prow .av{width:34px;height:34px;border-radius:50%;background:#152040;flex:none;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--cobalt-soft);border:1px solid var(--line);font-size:13px}
+  .prow .id{min-width:0;flex:1}
+  .prow .id b{color:var(--white);font-weight:600;font-size:14px}
+  .prow .id span{display:block;color:var(--muted);font-size:12px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .flags{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:300px}
+  .flag{font:700 10px/1 Arial;letter-spacing:.5px;padding:5px 8px;border-radius:7px;background:rgba(251,191,36,.13);color:var(--amber);white-space:nowrap}
+  .flag.lic{background:rgba(248,113,113,.13);color:var(--red)}
+  .state{font:700 10px/1 Arial;letter-spacing:1px;text-transform:uppercase;padding:5px 9px;border-radius:999px;flex:none}
+  .state.active{background:rgba(52,211,153,.13);color:var(--green)}
+  .state.off{background:rgba(248,113,113,.13);color:var(--red)}
+  .act{background:transparent;border:1px solid var(--line);color:var(--muted);font:700 11px/1 Arial;letter-spacing:.5px;text-transform:uppercase;padding:7px 10px;border-radius:9px;cursor:pointer}
+  .act:hover{border-color:var(--cobalt);color:var(--silver)}
+  .empty{padding:30px 16px;text-align:center;color:var(--muted);font-size:13px}
+  .freezebar{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 16px;margin-bottom:22px}
+  .freezebar .t{flex:1}.freezebar .t b{color:var(--white)}.freezebar .t span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+  /* login */
+  #gate{position:fixed;inset:0;background:var(--bg);display:none;align-items:center;justify-content:center;padding:20px}
+  #gate .box{width:100%;max-width:340px;text-align:center}
+  #gate svg{width:58px;height:58px;margin:0 auto 16px;display:block}
+  #gate h1{color:var(--white);font-size:20px;font-weight:800;letter-spacing:.5px}
+  #gate p{color:var(--muted);font-size:13px;margin:6px 0 20px}
+  #gate input{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--white);font-size:15px;padding:13px 14px;border-radius:11px;margin-bottom:10px}
+  #gate button{width:100%;background:var(--cobalt);border:none;color:#fff;font:700 15px/1 system-ui;padding:13px;border-radius:11px;cursor:pointer}
+  #gate .err{color:var(--red);font-size:13px;min-height:18px;margin-top:8px}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(140%);background:#182544;border:1px solid var(--line);color:var(--white);padding:11px 18px;border-radius:12px;font-size:13.5px;transition:transform .25s;z-index:50}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .hide{display:none!important}
+  @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}.flags{max-width:140px}.prow .id span{max-width:120px}}
+</style>
+</head>
+<body>
+
+<!-- the Ingenium One mark, defined once as a symbol, reused in header + gate -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true"><defs>
+  <linearGradient id="orbD" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b63ff"/><stop offset="1" stop-color="#8fb0ff"/></linearGradient>
+  <linearGradient id="sil" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#f6f8fb"/><stop offset=".5" stop-color="#cfd7e1"/><stop offset="1" stop-color="#9aa7b8"/></linearGradient>
+  <symbol id="mark" viewBox="0 0 150 150">
+    <g fill="none" stroke="url(#orbD)" stroke-width="3.2"><ellipse cx="75" cy="74" rx="53" ry="21" transform="rotate(34 75 74)"/><ellipse cx="75" cy="74" rx="53" ry="21" transform="rotate(-34 75 74)"/></g>
+    <g fill="#6f8dff"><circle cx="119" cy="99" r="4.6"/><circle cx="31" cy="49" r="4.6"/><circle cx="119" cy="49" r="4.6"/><circle cx="31" cy="99" r="4.6"/></g>
+    <path d="M75 48 C66 44 55 46 53 55 C45 52 38 59 44 66 C37 70 39 79 48 79 C44 86 50 93 60 89 C63 94 70 94 75 90 C80 94 87 94 90 89 C100 93 106 86 102 79 C111 79 113 70 106 66 C112 59 105 52 97 55 C95 46 84 44 75 48 Z" fill="url(#sil)" stroke="#2a46c0" stroke-width="2.4" stroke-linejoin="round"/>
+    <g fill="none" stroke="#2a46c0" stroke-width="1.9" stroke-linecap="round"><line x1="75" y1="51" x2="75" y2="89"/><path d="M60 56 C64 59 63 64 58 65"/><path d="M62 75 C66 77 65 82 60 82"/><path d="M90 56 C86 59 87 64 92 65"/><path d="M88 75 C84 77 85 82 90 82"/></g>
+    <circle cx="75" cy="74" r="3" fill="#1f3fe0"/>
+  </symbol>
+</defs></svg>
+
+<div class="wrap" id="app" style="display:none">
+  <header>
+    <svg viewBox="0 0 150 150"><use href="#mark"/></svg>
+    <div class="brand"><b>INGENIUM <span class="one">ONE</span></b><small>Control hub</small></div>
+    <div class="who" id="who"></div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="freezebar">
+    <div class="t"><b>Platform freeze</b><span>Pause every card across every agency at once. Emergency stop.</span></div>
+    <div class="sw" id="freezeSw"><b></b></div>
+  </div>
+
+  <h2>Apps</h2>
+  <div class="apps" id="apps"></div>
+
+  <h2>People &amp; compliance</h2>
+  <div class="people" id="people"></div>
+</div>
+
+<div id="gate">
+  <div class="box">
+    <svg viewBox="0 0 150 150"><use href="#mark"/></svg>
+    <h1>Ingenium One</h1>
+    <p>Your control hub. Sign in to continue.</p>
+    <input id="gEmail" type="email" placeholder="Email" autocomplete="username">
+    <input id="gPass" type="password" placeholder="Password" autocomplete="current-password">
+    <button id="gBtn">Enter</button>
+    <div class="err" id="gErr"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+let DATA = null;
+
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function when(ms){
+  if(!ms) return "never";
+  const d=Date.now()-ms, m=60e3, h=3600e3, day=864e5;
+  if(d<2*m) return "just now";
+  if(d<h) return Math.round(d/m)+"m ago";
+  if(d<day) return Math.round(d/h)+"h ago";
+  if(d<30*day) return Math.round(d/day)+"d ago";
+  return new Date(ms).toLocaleDateString();
+}
+
+async function api(path, opts){ return fetch(path, Object.assign({ headers:{'content-type':'application/json'} }, opts||{})); }
+
+async function boot(){
+  let r;
+  try{ r = await api("/api/hub"); }catch{ return showGate(); }
+  if(r.status===401) return showGate();
+  if(!r.ok){ toast("Could not load"); return; }
+  DATA = await r.json();
+  $("#gate").style.display="none";
+  $("#app").style.display="block";
+  render();
+}
+
+function showGate(){ $("#app").style.display="none"; $("#gate").style.display="flex"; $("#gEmail").focus(); }
+
+$("#gBtn").onclick = async ()=>{
+  const email=$("#gEmail").value.trim(), passcode=$("#gPass").value;
+  $("#gErr").textContent="";
+  try{
+    const r = await api("/api/dev/login",{method:"POST",body:JSON.stringify({email,passcode})});
+    const j = await r.json();
+    if(j.ok){ boot(); } else { $("#gErr").textContent = j.error || "Incorrect."; }
+  }catch{ $("#gErr").textContent="Could not reach the server."; }
+};
+$("#gPass").addEventListener("keydown",e=>{ if(e.key==="Enter") $("#gBtn").click(); });
+
+function render(){
+  $("#who").innerHTML = `<b>${esc(DATA.dev.name||"You")}</b>${esc(DATA.dev.email||"")}`;
+  const t = DATA.totals;
+  $("#stats").innerHTML = [
+    ["Agencies", t.agencies, ""],
+    ["People", t.agents, ""],
+    ["Flagged", t.flagged, t.flagged?"warn":""],
+    ["Inactive", t.inactive, t.inactive?"warn":""],
+  ].map(([l,n,c])=>`<div class="stat ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
+
+  const fs=$("#freezeSw"); fs.classList.toggle("on",!!DATA.frozen);
+  fs.onclick = async ()=>{
+    const on=!DATA.frozen;
+    if(on && !confirm("Freeze every card across every agency right now?")) return;
+    const r=await api("/api/hub/freeze",{method:"POST",body:JSON.stringify({on})});
+    const j=await r.json(); if(j.ok){ DATA.frozen=j.frozen; fs.classList.toggle("on",j.frozen); toast(j.frozen?"Platform frozen":"Platform live"); }
+  };
+
+  // apps
+  $("#apps").innerHTML = DATA.apps.map(a=>`
+    <div class="app" data-id="${a.id}">
+      <div class="top"><div><div class="nm">${esc(a.name)}</div><div class="kind">${esc(a.kind)}</div></div><div class="pill ${a.status}">${esc(a.status)}</div></div>
+      <div class="row">
+        <div class="gate"><span>Ship gate</span><div class="sw ${a.approved?'on':''}" data-gate="${a.id}"><b></b></div></div>
+        <select class="st" data-st="${a.id}">
+          ${["planned","building","live","paused"].map(s=>`<option value="${s}" ${s===a.status?'selected':''}>${s}</option>`).join("")}
+        </select>
+        ${a.url?`<a class="btn open" href="${esc(a.url)}" ${a.url.startsWith('http')?'target="_blank" rel="noopener"':''}>Open</a>`:`<span class="btn open" style="opacity:.4;cursor:default">Not built</span>`}
+      </div>
+    </div>`).join("");
+
+  document.querySelectorAll("[data-gate]").forEach(sw=>{
+    sw.onclick = async ()=>{
+      const id=sw.dataset.gate, app=DATA.apps.find(x=>x.id===id); const approved=!app.approved;
+      const r=await api("/api/hub/app",{method:"POST",body:JSON.stringify({id,approved})});
+      const j=await r.json(); if(j.ok){ app.approved=j.app.approved; sw.classList.toggle("on",app.approved); toast(app.approved?`${app.name} approved to ship`:`${app.name} held`); }
+    };
+  });
+  document.querySelectorAll("[data-st]").forEach(sel=>{
+    sel.onchange = async ()=>{
+      const id=sel.dataset.st, status=sel.value, app=DATA.apps.find(x=>x.id===id);
+      const r=await api("/api/hub/app",{method:"POST",body:JSON.stringify({id,status})});
+      const j=await r.json(); if(j.ok){ app.status=j.app.status; render(); }
+    };
+  });
+
+  // people
+  const pr = DATA.roster;
+  $("#people").innerHTML = pr.length ? pr.map(p=>{
+    const initials=(p.name||"?").split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+    const flags = p.flags.map(f=>`<span class="flag ${/license/i.test(f)?'lic':''}">${esc(f)}</span>`).join("");
+    return `<div class="prow" data-id="${p.id}">
+      <div class="av">${esc(initials)}</div>
+      <div class="id"><b>${esc(p.name||"Unnamed")}</b><span>${esc(p.agency)} · seen ${when(p.lastActive)}</span></div>
+      <div class="flags">${flags}</div>
+      <div class="state ${p.active?'active':'off'}">${p.active?'Active':'Off'}</div>
+      <button class="act" data-act="${p.id}">${p.active?'Lock':'Unlock'}</button>
+    </div>`;
+  }).join("") : `<div class="empty">No people yet. Agents show here as agencies add them.</div>`;
+
+  document.querySelectorAll("[data-act]").forEach(b=>{
+    b.onclick = async ()=>{
+      const id=b.dataset.act, p=DATA.roster.find(x=>x.id===id);
+      let payload;
+      if(p.active){
+        const reason = prompt("Lock "+(p.name||"this person")+"? Add a reason for the record (optional):", "");
+        if(reason===null) return;
+        payload={id,action:"lock",reason};
+      } else {
+        if(!confirm("Unlock "+(p.name||"this person")+" and restore access?")) return;
+        payload={id,action:"unlock"};
+      }
+      const r=await api("/api/hub/agent-action",{method:"POST",body:JSON.stringify(payload)});
+      const j=await r.json();
+      if(j.ok){ p.active=!j.denied; p.denied=j.denied; render(); toast(j.denied?"Locked":"Unlocked"); }
+      else toast(j.error||"Could not update");
+    };
+  });
+}
+
+boot();
+</script>
+</body>
+</html>
