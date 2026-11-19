@@ -278,6 +278,9 @@
 </style>
 </head>
 <body class="pending">
+<a id="ownerEdit" href="#" style="display:none;position:fixed;top:14px;right:14px;z-index:60;align-items:center;gap:7px;background:rgba(20,20,22,.9);backdrop-filter:blur(8px);border:1px solid var(--gold-dim);color:var(--gold2);font:600 13px Inter,sans-serif;padding:9px 14px;border-radius:999px;text-decoration:none;box-shadow:0 6px 20px rgba(0,0,0,.4)">
+  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>Edit my card
+</a>
 <main class="card">
 
   <div class="brand">
@@ -794,6 +797,8 @@
     setInterval(()=>{ if(!document.hidden) fetchCard(false); }, 30000);
     document.addEventListener('visibilitychange',()=>{ if(!document.hidden) fetchCard(false); });
     window.addEventListener('pageshow',()=>fetchCard(false));
+    // Show an "Edit my card" shortcut only when the agent themselves is signed in and viewing their own card.
+    (function(){ const base=window.AB||''; fetch(base+'/api/auth/me',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{ if(d&&d.ok){ const b=document.getElementById('ownerEdit'); if(b){ b.href=base+'/admin'; b.style.display='inline-flex'; } } }).catch(()=>{}); })();
   }
 </script>
 <script>

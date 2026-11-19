@@ -387,9 +387,12 @@
     <header class="top">
       <div class="brandrow"><div class="mono sm" id="topMono">✦</div><div style="min-width:0"><div class="tt gold-text" id="topBrand">Admin</div><div class="muted" id="whoami" style="font-size:12px;overflow:hidden;text-overflow:ellipsis"></div></div></div>
       <nav class="tabs" role="tablist" aria-label="Dashboard sections">
-        <button class="tab on" data-tab="admin" role="tab">My Admin</button>
-        <button class="tab" data-tab="clients" role="tab">Clients<span class="nb" id="reqBadge" hidden>0</span></button>
+        <button class="tab on" data-tab="card" role="tab">Card</button>
+        <button class="tab" data-tab="customize" role="tab">Customize</button>
+        <button class="tab" data-tab="resources" role="tab">Resources</button>
+        <button class="tab" data-tab="leads" role="tab">Leads<span class="nb" id="reqBadge" hidden>0</span></button>
         <button class="tab" data-tab="stats" role="tab">Stats</button>
+        <button class="tab" data-tab="settings" role="tab">Settings</button>
       </nav>
       <div class="topr"><a id="viewCardLink" href="#" target="_blank" rel="noopener" class="btn sm ghost">View card ↗</a><button class="btn sm ghost" id="signout">Sign out</button></div>
     </header>
@@ -408,7 +411,7 @@
       </div>
       <div class="split">
         <div id="adminCol" style="min-width:0">
-          <div class="subnav" id="adminNav">
+          <div class="subnav" id="adminNav" hidden>
             <button class="sn on" data-sec="profile">Card details</button>
             <button class="sn" data-sec="appear">Appearance</button>
             <button class="sn" data-sec="offer">Promises &amp; products</button>
@@ -930,7 +933,7 @@ $('f_go').addEventListener('click',async()=>{
 });
 
 // ================= DASHBOARD =================
-let S={}, AUD={}, BASE='', curTab='admin', pvMode='prospect', pvCtx=null, pvOpen=false, pvData=null, pvTimer=null, pvSeq=0;
+let S={}, AUD={}, BASE='', curTab='card', pvMode='prospect', pvCtx=null, pvOpen=false, pvData=null, pvTimer=null, pvSeq=0;
 const wide=()=>matchMedia('(min-width:1100px)').matches;
 const OPEN=new Set(), DEALFORM={}; let CL={filter:'all',q:'',view:'pipeline'}; let VISITS=[];
 
@@ -1135,15 +1138,23 @@ async function ensurePush(){
 }
 
 // ---------- tabs ----------
+// Each top tab maps to the dashboard content it shows. Card/Customize/Resources/Settings
+// live inside #tab-admin as data-sec panels; Leads and Stats are their own <main>.
+const ADMIN_SEC={card:['profile'],customize:['appear'],resources:['offer'],settings:['vis','sec']};
+const ADMIN_TABS=Object.keys(ADMIN_SEC);
 function applyTab(){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===curTab));
-  $('tab-admin').hidden=curTab!=='admin'; $('tab-clients').hidden=curTab!=='clients'; $('tab-stats').hidden=curTab!=='stats';
+  const inAdmin=ADMIN_TABS.includes(curTab);
+  $('tab-admin').hidden=!inAdmin; $('tab-clients').hidden=curTab!=='leads'; $('tab-stats').hidden=curTab!=='stats';
+  if(inAdmin){
+    const secs=ADMIN_SEC[curTab];
+    document.querySelectorAll('#tab-admin .panel[data-sec]').forEach(p=>p.hidden=!secs.includes(p.dataset.sec));
+    if(curTab==='customize') renderAppearance();
+  }
   if(curTab==='stats') renderStats();
-  if(curTab!=='admin' && !pvCtx) closePv();
-  if(curTab==='admin' && pvCtx){ closePv(); }
-  setPvUI(); updateSaveBar(); schedulePreview();
+  updateSaveBar();
 }
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{curTab=b.dataset.tab; if(curTab==='admin'){pvCtx=null; setPvUI();} applyTab(); window.scrollTo({top:0});});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{curTab=b.dataset.tab; applyTab(); window.scrollTo({top:0});});
 document.querySelectorAll('#adminNav .sn[data-sec]').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#adminNav .sn[data-sec]').forEach(x=>x.classList.toggle('on',x===b));
   document.querySelectorAll('#tab-admin .panel[data-sec]').forEach(p=>p.hidden=p.dataset.sec!==b.dataset.sec);
@@ -1193,7 +1204,7 @@ $('addSocial').addEventListener('click',()=>{ $('p_socials').appendChild(socialR
 function readDraft(){return {profile:readProfile(),audiences:AUD,defaultAudience:$('defAud').value,sendMessage:$('sendMsg').value};}
 function baseline(){BASE=JSON.stringify(readDraft()); updateSaveBar();}
 function isDirty(){return JSON.stringify(readDraft())!==BASE;}
-function updateSaveBar(){ $('saveBar').hidden=!(curTab==='admin' && isDirty()); }
+function updateSaveBar(){ $('saveBar').hidden=!(['card','resources','settings'].includes(curTab) && isDirty()); }
 function onDraft(){ updateSaveBar(); schedulePreview(); }
 $('tab-admin').addEventListener('input',onDraft);
 $('tab-admin').addEventListener('change',onDraft);
@@ -1204,7 +1215,7 @@ $('p_save').addEventListener('click',async()=>{
   $('p_save').disabled=true; $('p_save').textContent='Saving…';
   try{
     const r=await (await api(AB+'/api/admin/profile',{method:'POST',body:JSON.stringify({profile:d.profile})})).json();
-    if(r.error){ $('p_err').textContent=r.error; toast(r.error); document.querySelector('#adminNav .sn[data-sec="profile"]').click(); return; }
+    if(r.error){ $('p_err').textContent=r.error; toast(r.error); curTab='card'; applyTab(); return; }
     S.profile=r.profile;
     const r2=await (await api(AB+'/api/admin/settings',{method:'POST',body:JSON.stringify({audiences:d.audiences,defaultAudience:d.defaultAudience,sendMessage:d.sendMessage})})).json();
     if(r2.settings){ S.settings=r2.settings; AUD=JSON.parse(JSON.stringify(S.settings.audiences)); $('sendMsg').value=S.settings.sendMessage; }
@@ -1545,7 +1556,7 @@ async function addQuoteToClients(q){
     await patchLink(tok,{status:'chat',notes:note});
   }
   await api(AB+'/api/admin/quotes/resolve',{method:'POST',body:JSON.stringify({id:q.id})});
-  OPEN.add(tok); curTab='clients'; applyTab(); renderClients(); pollQuotes();
+  OPEN.add(tok); curTab='leads'; applyTab(); renderClients(); pollQuotes();
   toast('Added to your clients');
 }
 
