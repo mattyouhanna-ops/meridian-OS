@@ -1024,13 +1024,27 @@ function hubData() {
       { id: "hub", area: "Hub", title: "Control hub, first cut", status: "done" },
       { id: "freeze", area: "Hub", title: "Per-app platform freeze", status: "done" },
       { id: "cardfields", area: "Card", title: "Office address and website fields", status: "done" },
-      { id: "cardredesign", area: "Card", title: "Redesign: headshot, agency colors, Verify and Social buttons, Visit my office, QR", status: "building" },
-      { id: "branding", area: "Branding", title: "Agency and agent branding: colors, logo, layout", status: "planned" },
-      { id: "stats", area: "Stats", title: "ROI on card views and a team and individual performance network", status: "planned" },
-      { id: "scanner", area: "Apps", title: "Notes scanner: handwriting to Brain entries", status: "planned" },
-      { id: "crm", area: "CRM", title: "Notes after meetings, reminders, auto-tag contacts, for teams", status: "planned" },
+      { id: "cardredesign", area: "Card", title: "Redesign: headshot, agency colors, Verify and Social buttons, Visit my office, QR", status: "done" },
+      { id: "optin", area: "Card", title: "Opt-in rollout: agents switch to the new card themselves", status: "done" },
+      { id: "dashtabs", area: "Card", title: "Dashboard tabs: Card, Customize, Resources, Leads, Stats, Settings", status: "done" },
+      { id: "branding", area: "Branding", title: "Agency and agent branding: colors, shade, layout", status: "done" },
+      { id: "stats", area: "Stats", title: "ROI on card views and a team and individual performance network", status: "done" },
+      { id: "crm", area: "CRM", title: "Notes after meetings, reminders, auto-tag contacts, for teams", status: "done" },
+      { id: "scanner", area: "Apps", title: "Notes scanner: handwriting to Brain entries (built separately)", status: "planned" },
       { id: "domain", area: "Launch", title: "New domain and white-label rollout", status: "planned" },
     ];
+    save();
+  }
+  // One-time sync: mark the pieces shipped in Nov 2026 as done and record the new plan items.
+  store.hub.mig = store.hub.mig || {};
+  if (!store.hub.mig.plansNov2026) {
+    const setDone = (id) => { const p = store.hub.plans.find((x) => x.id === id); if (p) p.status = "done"; };
+    ["cardredesign", "branding", "stats", "crm"].forEach(setDone);
+    const add = (plan) => { if (!store.hub.plans.some((x) => x.id === plan.id)) store.hub.plans.push(plan); };
+    add({ id: "optin", area: "Card", title: "Opt-in rollout: agents switch to the new card themselves", status: "done" });
+    add({ id: "dashtabs", area: "Card", title: "Dashboard tabs: Card, Customize, Resources, Leads, Stats, Settings", status: "done" });
+    const scanner = store.hub.plans.find((x) => x.id === "scanner"); if (scanner) scanner.title = "Notes scanner: handwriting to Brain entries (built separately)";
+    store.hub.mig.plansNov2026 = true;
     save();
   }
   return store.hub;
