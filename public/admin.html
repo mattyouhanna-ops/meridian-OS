@@ -429,6 +429,8 @@
               <div><label>NPN</label><input id="p_npn" inputmode="numeric"></div>
               <div><label>Phone (call &amp; text)</label><input id="p_phone" inputmode="tel"></div>
               <div><label>Email</label><input id="p_email" inputmode="email"></div>
+              <div><label>Website (optional)</label><input id="p_website" inputmode="url" placeholder="https://"></div>
+              <div><label>Office address (optional)</label><input id="p_address" placeholder="Street, City, State"></div>
             </div>
             <label>States you're licensed in</label>
             <div class="stgrid" id="p_states"></div>
@@ -837,6 +839,7 @@ function fillProfile(){
   const p=S.profile;
   $('p_name').value=p.name||''; $('p_title').value=p.title||''; $('p_brand').value=p.brand||'';
   $('p_phone').value=p.phone||''; $('p_email').value=p.email||''; $('p_npn').value=p.npn||'';
+  $('p_website').value=p.website||''; $('p_address').value=p.address||'';
   stateGrid($('p_states'),p.states||[]);
   renderPromises(p);
   renderProducts(p);
@@ -869,7 +872,7 @@ function renderPhoto(){ const av=$('peAv'); if(!av) return; if(S.photo){ av.inne
 })();
 $('addPromise').addEventListener('click',()=>{ $('p_promises').appendChild(promRow('','',true)); });
 $('addProduct').addEventListener('click',()=>addEditRow($('p_products'),'','','Product name','Short description'));
-function readProfile(){return {name:$('p_name').value,title:$('p_title').value,brand:$('p_brand').value,phone:$('p_phone').value,email:$('p_email').value,npn:$('p_npn').value,states:gridValue($('p_states')),promises:readPromises(),products:readProducts(),socials:readSocials()};}
+function readProfile(){return {name:$('p_name').value,title:$('p_title').value,brand:$('p_brand').value,phone:$('p_phone').value,email:$('p_email').value,website:$('p_website').value,address:$('p_address').value,npn:$('p_npn').value,states:gridValue($('p_states')),promises:readPromises(),products:readProducts(),socials:readSocials()};}
 $('addSocial').addEventListener('click',()=>{ $('p_socials').appendChild(socialRow('instagram','')); });
 function readDraft(){return {profile:readProfile(),audiences:AUD,defaultAudience:$('defAud').value,sendMessage:$('sendMsg').value};}
 function baseline(){BASE=JSON.stringify(readDraft()); updateSaveBar();}

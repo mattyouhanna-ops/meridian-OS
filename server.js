@@ -453,6 +453,8 @@ async function handleCard(agent, url, req) {
   if (fields.promise) out.promises = P.promises;
   if (fields.products) out.products = P.products;
   if (P.socials && P.socials.length) out.socials = P.socials;
+  if (P.website) out.website = P.website;
+  if (P.address) out.address = P.address;
   return out;
 }
 

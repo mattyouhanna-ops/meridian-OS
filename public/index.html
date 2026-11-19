@@ -245,6 +245,8 @@
     <div class="contact-lines">
       <div data-f="phone"><b id="phoneText"></b></div>
       <div data-f="email"><b id="emailText"></b></div>
+      <div id="websiteLine" hidden><a id="websiteLink" target="_blank" rel="noopener" style="color:var(--gold2);text-decoration:none;font-weight:600"></a></div>
+      <div id="officeLine" hidden><a id="officeLink" target="_blank" rel="noopener" style="color:var(--gold2);text-decoration:none;font-weight:600">📍 <span id="officeText"></span></a></div>
     </div>
     <div class="qrwrap" data-f="contact" id="qrWrap">
       <div class="qrbox" id="qrBox"></div>
@@ -565,6 +567,8 @@
     for(const key of Object.keys(f)) if(f[key]) show(key);
     if(res.phone){ $('phoneText').textContent=res.phone; $('barCall').href='tel:'+res.phoneTel; $('barText').href='sms:'+res.phoneTel; }
     if(res.email){ $('emailText').textContent=res.email; $('barEmail').href='mailto:'+res.email; }
+    if(res.website){ var _w=$('websiteLink'); _w.textContent=res.website.replace(/^https?:\/\//,'').replace(/\/$/,''); _w.href=res.website; $('websiteLine').hidden=false; }
+    if(res.address){ $('officeText').textContent=res.address; $('officeLink').href='https://maps.google.com/?q='+encodeURIComponent(res.address); $('officeLine').hidden=false; }
     if(res.npn){ $('npn').textContent=res.npn; document.querySelectorAll('.v-npn').forEach(e=>e.textContent=res.npn); }
     if(res.states) buildStates(res.states);
     if(Array.isArray(res.products)){
