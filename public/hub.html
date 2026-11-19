@@ -46,6 +46,8 @@
   .gate{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
   .sw{width:40px;height:23px;border-radius:999px;background:#2a3a5e;position:relative;cursor:pointer;transition:background .15s;flex:none}
   .sw.on{background:var(--cobalt)}
+  .sw.red.on{background:var(--red)}
+  .hint{color:var(--muted);font-size:12.5px;margin:-4px 2px 14px;max-width:760px}
   .sw b{position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#fff;transition:left .15s}
   .sw.on b{left:19px}
   .btn{background:#182544;border:1px solid var(--line);color:var(--silver);font:600 13px/1 system-ui;padding:9px 14px;border-radius:10px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
@@ -110,12 +112,8 @@
 
   <div class="stats" id="stats"></div>
 
-  <div class="freezebar">
-    <div class="t"><b>Platform freeze</b><span>Pause every card across every agency at once. Emergency stop.</span></div>
-    <div class="sw" id="freezeSw"><b></b></div>
-  </div>
-
   <h2>Apps</h2>
+  <p class="hint">Ship gate is your release approval. Freeze is the emergency stop for that one platform. You pick which platform, since each one is its own system.</p>
   <div class="apps" id="apps"></div>
 
   <h2>People &amp; compliance</h2>
@@ -188,26 +186,30 @@ function render(){
     ["Inactive", t.inactive, t.inactive?"warn":""],
   ].map(([l,n,c])=>`<div class="stat ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
 
-  const fs=$("#freezeSw"); fs.classList.toggle("on",!!DATA.frozen);
-  fs.onclick = async ()=>{
-    const on=!DATA.frozen;
-    if(on && !confirm("Freeze every card across every agency right now?")) return;
-    const r=await api("/api/hub/freeze",{method:"POST",body:JSON.stringify({on})});
-    const j=await r.json(); if(j.ok){ DATA.frozen=j.frozen; fs.classList.toggle("on",j.frozen); toast(j.frozen?"Platform frozen":"Platform live"); }
-  };
-
   // apps
   $("#apps").innerHTML = DATA.apps.map(a=>`
     <div class="app" data-id="${a.id}">
-      <div class="top"><div><div class="nm">${esc(a.name)}</div><div class="kind">${esc(a.kind)}</div></div><div class="pill ${a.status}">${esc(a.status)}</div></div>
+      <div class="top"><div><div class="nm">${esc(a.name)}</div><div class="kind">${esc(a.kind)}</div></div><div class="pill ${a.frozen?'paused':a.status}">${a.frozen?'frozen':esc(a.status)}</div></div>
       <div class="row">
         <div class="gate"><span>Ship gate</span><div class="sw ${a.approved?'on':''}" data-gate="${a.id}"><b></b></div></div>
+        <div class="gate"><span>Freeze</span><div class="sw red ${a.frozen?'on':''}" data-freeze="${a.id}"><b></b></div></div>
+      </div>
+      <div class="row">
         <select class="st" data-st="${a.id}">
           ${["planned","building","live","paused"].map(s=>`<option value="${s}" ${s===a.status?'selected':''}>${s}</option>`).join("")}
         </select>
         ${a.url?`<a class="btn open" href="${esc(a.url)}" ${a.url.startsWith('http')?'target="_blank" rel="noopener"':''}>Open</a>`:`<span class="btn open" style="opacity:.4;cursor:default">Not built</span>`}
       </div>
     </div>`).join("");
+
+  document.querySelectorAll("[data-freeze]").forEach(sw=>{
+    sw.onclick = async ()=>{
+      const id=sw.dataset.freeze, app=DATA.apps.find(x=>x.id===id); const on=!app.frozen;
+      if(on && !confirm("Freeze "+app.name+" now? This pauses that platform.")) return;
+      const r=await api("/api/hub/app-freeze",{method:"POST",body:JSON.stringify({id,on})});
+      const j=await r.json(); if(j.ok){ app.frozen=j.frozen; render(); toast(app.frozen?app.name+" frozen":app.name+" live"); }
+    };
+  });
 
   document.querySelectorAll("[data-gate]").forEach(sw=>{
     sw.onclick = async ()=>{

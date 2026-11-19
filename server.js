@@ -968,7 +968,7 @@ async function handleHub(sub, method, body, req) {
   const dev = getDeveloper();
 
   if (sub === "" && method === "GET") {
-    const apps = hub.apps.map((a) => ({ ...a }));
+    const apps = hub.apps.map((a) => ({ ...a, frozen: a.id === "card" ? isPlatformFrozen() : !!a.frozen }));
     const roster = [];
     for (const ag of listAgencies()) {
       const licensedAgency = agencyLicensed(ag);
@@ -1010,6 +1010,15 @@ async function handleHub(sub, method, body, req) {
     return { status: 400, data: { error: "Unknown action" } };
   }
 
+  // per-app freeze: the card maps to the real platform freeze; other apps store their own flag
+  if (sub === "app-freeze" && method === "POST") {
+    const a = hub.apps.find((x) => x.id === String(body.id || ""));
+    if (!a) return { status: 404, data: { error: "App not found" } };
+    const on = !!body.on;
+    if (a.id === "card") { setPlatformFrozen(on); }
+    else { a.frozen = on; save(); }
+    return { status: 200, data: { ok: true, id: a.id, frozen: a.id === "card" ? isPlatformFrozen() : !!a.frozen } };
+  }
   if (sub === "freeze" && method === "POST") { const on = setPlatformFrozen(!!body.on); return { status: 200, data: { ok: true, frozen: on } }; }
 
   return { status: 404, data: { error: "Not found" } };
