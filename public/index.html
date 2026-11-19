@@ -27,7 +27,7 @@
 <script>window.AB="%%AB%%";</script>
 <meta name="description" content="Licensed life insurance and annuity agent. Verify my license on official state records.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <style>
   :root{
@@ -255,6 +255,26 @@
   .v2row.gold .tx .sub2{color:#3a2f10}
   .card.v2 .socials{display:none!important}
   .card.v2 .socials.show{display:flex!important}
+  /* appearance: button shape */
+  .card.v2 .v2row{border-radius:var(--v2rad,13px)}
+  .card.v2 .hero-actions a,.card.v2 .hero-actions button{border-radius:var(--v2rad,13px)}
+  /* appearance: outlined style — color as text/border, dark fills */
+  .card.v2.outlined .v2row.gold{background:transparent;border:1px solid var(--gold)}
+  .card.v2.outlined .v2row.gold .i{color:var(--gold2)}
+  .card.v2.outlined .v2row.gold .ch{color:var(--muted)}
+  .card.v2.outlined .v2row.gold .tx b{color:var(--text)}
+  .card.v2.outlined .v2row.gold .tx .sub2{color:var(--muted)}
+  .card.v2.outlined .hero-actions .hbtn.pri{background:transparent!important;border:1px solid var(--gold)!important;color:var(--gold2)!important}
+  /* appearance: fonts */
+  .card.v2.font-warm h1,.card.v2.font-warm .brand span,.card.v2.font-warm .avatar div{font-family:"Fraunces","Cormorant Garamond",serif}
+  .card.v2.font-modern h1,.card.v2.font-modern .avatar div{font-family:Inter,system-ui,sans-serif;letter-spacing:0}
+  .card.v2.font-modern h1{font-size:28px}
+  /* appearance: layout presets */
+  .card.v2.layout-compact .hero{text-align:left}
+  .card.v2.layout-compact .avatar{margin:0 0 10px}
+  .card.v2.layout-compact h1,.card.v2.layout-compact .title,.card.v2.layout-compact #companyText{text-align:left}
+  .card.v2.layout-spot .avatar{width:120px;height:120px}
+  .card.v2.layout-spot h1{font-size:30px}
 </style>
 </head>
 <body class="pending">
@@ -640,16 +660,40 @@
     if(!res.designV2 && !forceV2){ card.classList.remove('v2'); return; }
     const firstV2=!card.classList.contains('v2');
     card.classList.add('v2');
+    applyAppearance(card, res.appearance);
     const co=$('companyText'); if(co) co.textContent=res.brand||'';
     if(res.phone){ const cs=$('callSub'); if(cs) cs.textContent=res.phone; }
     if(res.phoneTel){ const rc=$('rowCall'); if(rc) rc.setAttribute('href','tel:'+res.phoneTel); }
-    { const rs=$('rowSocial'); if(rs) rs.style.display=(res.socials&&res.socials.length)?'':'none'; }
+    { const rs=$('rowSocial'); if(rs) rs.style.display=(res.socials&&res.socials.length&&rs.dataset.apOff!=='1')?'':'none'; }
     if(firstV2){
       ['verify','accProducts','accPromise'].forEach(id=>{ const s=$(id); if(s) s.classList.remove('open'); });
       const rv=$('rowVerify'); if(rv) rv.addEventListener('click',e=>{ e.preventDefault(); const s=$('verify'); if(s){ s.classList.add('open'); s.scrollIntoView({behavior:'smooth'}); } });
       const rs=$('rowSocial'); if(rs) rs.addEventListener('click',e=>{ e.preventDefault(); const sc=$('socials'); if(sc){ sc.classList.toggle('show'); if(sc.classList.contains('show')) sc.scrollIntoView({behavior:'smooth'}); } });
       const rq=$('rowQuote'); if(rq) rq.addEventListener('click',()=>openQuote(''));
       const rb=$('rowBook'); if(rb) rb.addEventListener('click',openAppt);
+    }
+  }
+  // Apply the agent's saved appearance (colors, style, shape, font, layout, element order/visibility) to the V2 card.
+  function applyAppearance(card, ap){
+    if(!ap) return;
+    const root=document.documentElement;
+    if(ap.colors){ root.style.setProperty('--gold',ap.colors.main); root.style.setProperty('--gold2',ap.colors.light); root.style.setProperty('--gold-dim',ap.colors.dim); }
+    card.classList.toggle('outlined', ap.style==='outlined');
+    card.style.setProperty('--v2rad', ap.shape||'13px');
+    card.classList.remove('font-warm','font-modern'); if(ap.font==='warm') card.classList.add('font-warm'); if(ap.font==='modern') card.classList.add('font-modern');
+    card.classList.remove('layout-compact','layout-spot'); if(ap.layout==='compact') card.classList.add('layout-compact'); if(ap.layout==='spot') card.classList.add('layout-spot');
+    // element visibility + order
+    if(Array.isArray(ap.elements)){
+      const rowMap={verify:'rowVerify',call:'rowCall',social:'rowSocial',quote:'rowQuote',book:'rowBook'};
+      const secMap={products:'accProducts',promise:'accPromise',qr:'qrWrap'};
+      const rowsBox=$('v2rows');
+      ap.elements.forEach(e=>{
+        const rid=rowMap[e.k];
+        if(rid){ const n=$(rid); if(n){ n.style.display=e.on?'':'none'; if(e.k==='social') n.dataset.apOff=e.on?'':'1'; if(e.on&&rowsBox) rowsBox.appendChild(n); } }
+        const sid=secMap[e.k];
+        if(sid){ const n=$(sid); if(n) n.style.display=e.on?'':'none'; }
+      });
+      // 'social' row also depends on there being socials; honored again later in applyDesign
     }
   }
   async function fetchCard(first){

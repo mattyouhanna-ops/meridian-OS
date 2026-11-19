@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { db, save } from "./lib/store.js";
 import {
-  normalizeProfile, normalizeSettings, FIELDS, DEFAULT_MESSAGE, cleanFields, displayTitle,
+  normalizeProfile, normalizeSettings, normalizeAppearance, resolveCardColors, DEFAULT_APPEARANCE, FIELDS, DEFAULT_MESSAGE, cleanFields, displayTitle,
   hashPass, checkPass, makeSessionCookie, clearCookie, readSession, describeDevice, encField, decField,
   DEFAULT_PRODUCTS, DEFAULT_PROMISES, parseCookies,
 } from "./lib/core.js";
@@ -456,6 +456,16 @@ async function handleCard(agent, url, req) {
   if (P.website) out.website = P.website;
   if (P.address) out.address = P.address;
   out.designV2 = agent.cardV2 === true;
+  if (out.designV2) {
+    const ap = normalizeAppearance(agent.appearance);
+    const agencyAccent = (agc && agc.brand && agc.brand.accent) || "#d4af37";
+    const individual = agent.individual === true;
+    out.appearance = {
+      colors: resolveCardColors(agencyAccent, ap, individual),
+      style: ap.style, shape: ap.shape, font: ap.font, layout: ap.layout,
+      elements: ap.elements,
+    };
+  }
   return out;
 }
 
@@ -557,8 +567,12 @@ async function handleAdmin(agent, sub, method, body, req) {
   const w = who(req);
   const S = () => normalizeSettings(agent.settings);
 
-  if (sub === "state" && method === "GET")
-    return { status: 200, data: { email: agent.profile.email, fields: FIELDS, stateNames: STATE_NAMES, profile: normalizeProfile(agent.profile), settings: S(), links: agent.links, mustChange: !!agent.mustChange, cardV2: agent.cardV2 === true, photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null, catalog: { products: DEFAULT_PRODUCTS, promises: DEFAULT_PROMISES } } };
+  if (sub === "state" && method === "GET") {
+    const agc0 = agencyOf(agent);
+    const agencyColor = (agc0 && agc0.brand && agc0.brand.accent) || "#d4af37";
+    const ap = normalizeAppearance(agent.appearance);
+    return { status: 200, data: { email: agent.profile.email, fields: FIELDS, stateNames: STATE_NAMES, profile: normalizeProfile(agent.profile), settings: S(), links: agent.links, mustChange: !!agent.mustChange, cardV2: agent.cardV2 === true, appearance: ap, individual: agent.individual === true, agencyColor, resolvedColors: resolveCardColors(agencyColor, ap, agent.individual === true), photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null, catalog: { products: DEFAULT_PRODUCTS, promises: DEFAULT_PROMISES } } };
+  }
 
   if (sub === "profile" && method === "POST") {
     const next = normalizeProfile({ ...agent.profile, ...(body.profile || {}) });
@@ -577,6 +591,19 @@ async function handleAdmin(agent, sub, method, body, req) {
       save();
     }
     return { status: 200, data: { ok: true, cardV2: agent.cardV2 === true } };
+  }
+
+  // Save the agent's own card appearance (color-shade, style, shape, font, layout, element order/visibility).
+  if (sub === "appearance" && method === "POST") {
+    const incoming = body.appearance || {};
+    // Agency agents cannot set a full-color override; keep whatever is stored (normally "").
+    if (agent.individual !== true) delete incoming.color;
+    agent.appearance = normalizeAppearance({ ...normalizeAppearance(agent.appearance), ...incoming });
+    agent.cardVer = Date.now();
+    appendLog(agent.security, { t: Date.now(), ...w, event: "Updated card appearance" }, 300); save();
+    const agc0 = agencyOf(agent);
+    const agencyColor = (agc0 && agc0.brand && agc0.brand.accent) || "#d4af37";
+    return { status: 200, data: { ok: true, appearance: agent.appearance, resolvedColors: resolveCardColors(agencyColor, agent.appearance, agent.individual === true) } };
   }
 
   if (sub === "preview" && method === "POST") {
@@ -735,6 +762,8 @@ function agentPatch(body) {
   if (typeof body.licensed === "boolean") patch.licensed = body.licensed;
   if (typeof body.active === "boolean") patch.active = body.active;
   if (typeof body.cardV2 === "boolean") patch.cardV2 = body.cardV2;
+  if (typeof body.individual === "boolean") patch.individual = body.individual;
+  if (body.appearance && typeof body.appearance === "object") patch.appearance = body.appearance;
   if (body.password) patch.password = String(body.password);
   if (body.unlock) patch.unlock = true;
   return patch;

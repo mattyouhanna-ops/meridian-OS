@@ -397,6 +397,7 @@
         <div id="adminCol" style="min-width:0">
           <div class="subnav" id="adminNav">
             <button class="sn on" data-sec="profile">Card details</button>
+            <button class="sn" data-sec="appear">Appearance</button>
             <button class="sn" data-sec="offer">Promises &amp; products</button>
             <button class="sn" data-sec="vis">Sharing &amp; visibility</button>
             <button class="sn" data-sec="sec">Security</button>
@@ -454,6 +455,133 @@
             <div id="p_socials"></div>
             <button type="button" class="btn sm ghost" id="addSocial" style="margin-top:8px">+ Add a link</button>
             <div class="err" id="p_err"></div>
+          </section>
+
+          <section class="panel" data-sec="appear" hidden>
+            <style>
+              .ap-wrap{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+              @media(max-width:820px){.ap-wrap{grid-template-columns:1fr}.ap-prev{order:-1}}
+              .ap-blk{border-bottom:1px solid var(--line);padding:15px 0}
+              .ap-blk:first-child{padding-top:4px}.ap-blk:last-child{border-bottom:none}
+              .ap-blk .lbl{font-weight:600;font-size:14px;margin-bottom:3px}
+              .ap-blk .sub{font-size:12.5px;color:var(--muted);margin-bottom:11px;line-height:1.45}
+              .ap-sw{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+              .ap-dot{width:30px;height:30px;border-radius:50%;cursor:pointer;box-shadow:0 0 0 1px var(--line);border:2px solid transparent;position:relative}
+              .ap-dot.on{border-color:var(--text)}
+              .ap-dot.custom{display:flex;align-items:center;justify-content:center;background:var(--panel2);color:var(--muted);font-size:16px}
+              .ap-dot input{position:absolute;inset:0;opacity:0;cursor:pointer}
+              .ap-seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:3px;gap:2px;flex-wrap:wrap}
+              .ap-seg button{font:600 13px Inter;color:var(--muted);background:none;border:none;padding:8px 13px;border-radius:8px;cursor:pointer}
+              .ap-seg button.on{background:var(--gold);color:#231c00}
+              .ap-shade{display:flex;align-items:center;gap:12px}
+              .ap-shade input[type=range]{flex:1;accent-color:var(--gold)}
+              .ap-note{font-size:12px;color:var(--muted);margin-top:9px;display:flex;align-items:center;gap:7px}
+              .ap-changed{display:none;margin-top:10px;font-size:12px;color:#e0b24a;background:rgba(224,178,74,.1);border:1px solid rgba(224,178,74,.3);border-radius:9px;padding:8px 10px;line-height:1.4}
+              .ap-changed.show{display:block}
+              .ap-rows{display:flex;flex-direction:column;gap:2px}
+              .ap-row{display:flex;align-items:center;gap:10px;padding:9px 6px;border-radius:9px}
+              .ap-row:hover{background:var(--panel2)}
+              .ap-row .nm{flex:1;font-size:13.5px}
+              .ap-row .ord{display:flex;gap:4px}
+              .ap-row .ord button{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);cursor:pointer}
+              .ap-row .ord button:disabled{opacity:.3;cursor:default}
+              .ap-tg{position:relative;width:40px;height:23px;border-radius:12px;background:var(--line);cursor:pointer;flex:none;transition:.15s}
+              .ap-tg::after{content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#fff;transition:.15s}
+              .ap-tg.on{background:var(--gold)}.ap-tg.on::after{left:19px}
+              .ap-prev{position:sticky;top:14px}
+              .ap-phone{background:var(--black);border:1px solid var(--line);border-radius:20px;padding:15px 13px 18px}
+              .mc{--c:#d4af37;--c2:#e2ca7a;--r:13px}
+              .mc .b1{text-align:center;font-family:"Cormorant Garamond",serif;letter-spacing:.28em;text-transform:uppercase;font-size:11px;color:var(--c2);margin-bottom:10px}
+              .mc .av{width:60px;height:60px;border-radius:50%;border:2px solid var(--c);margin:0 auto 9px;display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;color:var(--c2);font-size:24px}
+              .mc .nm2{text-align:center;font-family:"Cormorant Garamond",serif;font-weight:700;font-size:21px;line-height:1.1}
+              .mc.f-modern .nm2,.mc.f-modern .av{font-family:Inter,sans-serif}
+              .mc.f-warm .nm2,.mc.f-warm .av{font-family:"Fraunces","Cormorant Garamond",serif}
+              .mc .tt{text-align:center;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--c);margin-top:3px}
+              .mc.lay-compact .av{margin:0 0 8px}.mc.lay-compact .nm2,.mc.lay-compact .tt,.mc.lay-compact .b1{text-align:left}
+              .mc.lay-spot .av{width:74px;height:74px}
+              .mc .top{display:flex;gap:7px;margin:12px 0 9px}
+              .mc .top .bb{flex:1;text-align:center;font:600 11px Inter;padding:9px;border-radius:var(--r)}
+              .mc .top .g{border:1px solid var(--line2,#35353b);color:var(--text)}
+              .mc .top .p{background:linear-gradient(180deg,var(--c2),var(--c));color:#231c00}
+              .mc.outlined .top .p{background:transparent;border:1px solid var(--c);color:var(--c2)}
+              .mc .rw{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--r);border:1px solid var(--line);margin-bottom:6px;background:var(--panel)}
+              .mc .rw .i{width:18px;text-align:center;color:var(--c2);font-size:13px}
+              .mc .rw .t{flex:1;font-size:12px;font-weight:600}
+              .mc .rw .c{color:var(--muted);font-size:14px}
+              .mc .rw.g{background:linear-gradient(180deg,var(--c2),var(--c));border-color:transparent}
+              .mc .rw.g .i,.mc .rw.g .t,.mc .rw.g .c{color:#231c00}
+              .mc.outlined .rw.g{background:transparent;border:1px solid var(--c)}
+              .mc.outlined .rw.g .i{color:var(--c2)}.mc.outlined .rw.g .t{color:var(--text)}.mc.outlined .rw.g .c{color:var(--muted)}
+              .mc .acc{padding:10px;border-radius:var(--r);border:1px solid var(--line);margin-bottom:6px;text-align:center;background:var(--panel)}
+              .mc .acc .h{font-family:"Cormorant Garamond",serif;font-weight:700;color:var(--c2);font-size:14px}
+            </style>
+            <h2 class="gold-text">Appearance</h2>
+            <p class="muted">How your card looks. Changes only go live after you press Save. This applies to the new card design.</p>
+            <div class="ap-wrap">
+              <div>
+                <div class="ap-blk">
+                  <div class="lbl">Color</div>
+                  <div class="sub" id="apColorSub"></div>
+                  <div id="apIndiv" hidden>
+                    <div class="ap-sw" id="apSwatches">
+                      <span class="ap-dot" data-c="#d4af37" style="background:#d4af37"></span>
+                      <span class="ap-dot" data-c="#0a84ff" style="background:#0a84ff"></span>
+                      <span class="ap-dot" data-c="#30b36b" style="background:#30b36b"></span>
+                      <span class="ap-dot" data-c="#b4472e" style="background:#b4472e"></span>
+                      <span class="ap-dot" data-c="#7c5cff" style="background:#7c5cff"></span>
+                      <label class="ap-dot custom">+<input type="color" id="apCustom"></label>
+                    </div>
+                  </div>
+                  <div id="apAgency" hidden>
+                    <div class="ap-shade">
+                      <span style="font-size:12px;color:var(--muted)">Darker</span>
+                      <input type="range" id="apShade" min="-4" max="4" step="1" value="0">
+                      <span style="font-size:12px;color:var(--muted)">Lighter</span>
+                    </div>
+                    <div class="ap-note"><span class="dot" style="width:9px;height:9px;border-radius:50%;background:var(--gold);display:inline-block"></span> Your agency sets the color. You can adjust the shade.</div>
+                  </div>
+                </div>
+                <div class="ap-blk">
+                  <div class="lbl">Color style</div>
+                  <div class="sub">Filled uses your color as solid buttons. Outlined keeps the card dark and uses the color for text and borders.</div>
+                  <div class="ap-seg" id="apStyle"><button data-v="filled">Filled</button><button data-v="outlined">Outlined</button></div>
+                </div>
+                <div class="ap-blk">
+                  <div class="lbl">Button shape</div>
+                  <div class="ap-seg" id="apShape" style="margin-top:4px"><button data-v="14px">Rounded</button><button data-v="999px">Pill</button><button data-v="6px">Square</button></div>
+                </div>
+                <div class="ap-blk">
+                  <div class="lbl">Font</div>
+                  <div class="ap-seg" id="apFont" style="margin-top:4px"><button data-v="">Classic serif</button><button data-v="warm">Warm serif</button><button data-v="modern">Modern</button></div>
+                </div>
+                <div class="ap-blk">
+                  <div class="lbl">Layout</div>
+                  <div class="ap-seg" id="apLayout" style="margin-top:4px"><button data-v="stack">Stack</button><button data-v="compact">Compact</button><button data-v="spot">Spotlight</button></div>
+                </div>
+                <div class="ap-blk">
+                  <div class="lbl">Buttons &amp; sections</div>
+                  <div class="sub">Turn options on or off and set their order. Off means it won't show on your card.</div>
+                  <div class="ap-rows" id="apRows"></div>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:16px">
+                  <button class="btn" id="apSave" style="flex:1;background:linear-gradient(180deg,#f1d78a,#d4af37);color:#231c00;border:none;font-weight:700">Save appearance</button>
+                  <button class="btn ghost" id="apReset">Reset</button>
+                </div>
+              </div>
+              <div class="ap-prev">
+                <div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px">Live preview</div>
+                <div class="ap-phone">
+                  <div class="mc" id="apMc">
+                    <div class="b1" id="mcBrand">Meridian Life Group</div>
+                    <div class="av" id="mcAv">MY</div>
+                    <div class="nm2">Mathew Youhanna</div>
+                    <div class="tt">Licensed Life Insurance Agent</div>
+                    <div class="top"><div class="bb g">Share</div><div class="bb p">Save contact</div></div>
+                    <div id="mcRows"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </section>
 
           <section class="panel" data-sec="offer" hidden>
@@ -749,7 +877,7 @@ async function loadDash(){
   $('gateMono').textContent=initials(S.profile.name); $('topMono').textContent=initials(S.profile.name);
   $('topBrand').textContent=S.profile.brand||'Admin';
   $('whoami').textContent=S.email;
-  fillProfile(); fillVisibility(); baseline(); renderDashShare(); renderV2Banner();
+  fillProfile(); fillVisibility(); baseline(); renderDashShare(); renderV2Banner(); renderAppearance();
   renderClients(); loadActivity(); pollRequests(); pollQuotes(); applyTab(); schedulePreview();
   if(S.mustChange) showWizard(); else ensurePush();
 }
@@ -770,6 +898,93 @@ function renderV2Banner(){
       else { up.disabled=false; up.textContent=old; alert('Could not update right now. Try again.'); }
     }catch(e){ up.disabled=false; up.textContent=old; alert('Could not update right now. Try again.'); }
   };
+})();
+
+// ================= APPEARANCE PANEL =================
+const AP_LABELS={verify:'Verify my license',call:'Call or text',social:'Social',quote:'Get a quote',book:'Book a time',office:'Visit my office',products:'How I can help',promise:'My promise to you',qr:'QR code'};
+const AP_ICON={verify:'🛡️',call:'📞',social:'🔗',quote:'📝',book:'📅'};
+let AP=null;
+// client mirror of core.js color math (keep agency hue, shift shade)
+function _h2r(h){const n=parseInt(h.slice(1),16);return[n>>16&255,n>>8&255,n&255];}
+function _r2h(r,g,b){return'#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');}
+function _r2hsl(r,g,b){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h=0,s=0;const l=(mx+mn)/2;if(mx!==mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h/=6;}return[h,s,l];}
+function _hsl2h(h,s,l){let r,g,b;if(s===0){r=g=b=l;}else{const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q,t=x=>{if(x<0)x+=1;if(x>1)x-=1;if(x<1/6)return p+(q-p)*6*x;if(x<1/2)return q;if(x<2/3)return p+(q-p)*(2/3-x)*6;return p;};r=t(h+1/3);g=t(h);b=t(h-1/3);}return _r2h(r*255,g*255,b*255);}
+function _lift(hex,dl){const[h,s,l]=_r2hsl(..._h2r(hex));return _hsl2h(h,s,Math.max(.12,Math.min(.92,l+dl)));}
+function apColors(){
+  let base=S.agencyColor||'#d4af37';
+  if(S.individual&&AP.color&&/^#[0-9a-fA-F]{6}$/.test(AP.color)) base=AP.color;
+  if(AP.shade) base=_lift(base,AP.shade*0.05);
+  return{main:base,light:_lift(base,.16)};
+}
+function renderAppearance(){
+  if(!S.appearance) return;
+  AP=JSON.parse(JSON.stringify(S.appearance));
+  // color control: individual vs agency
+  $('apIndiv').hidden=!S.individual; $('apAgency').hidden=!!S.individual;
+  $('apColorSub').textContent=S.individual?'Pick the single accent color for your whole card.':'Your card follows your agency color. You can make it a lighter or darker shade.';
+  if(S.individual){
+    const cur=(AP.color||S.agencyColor||'#d4af37').toLowerCase();
+    [...document.querySelectorAll('#apSwatches .ap-dot[data-c]')].forEach(d=>d.classList.toggle('on',d.dataset.c.toLowerCase()===cur));
+    if($('apCustom')) $('apCustom').value=/^#[0-9a-fA-F]{6}$/.test(cur)?cur:'#d4af37';
+  } else { $('apShade').value=AP.shade||0; }
+  apSetSeg('apStyle',AP.style); apSetSeg('apShape',AP.shape); apSetSeg('apFont',AP.font||''); apSetSeg('apLayout',AP.layout);
+  apRenderRows(); apRenderPreview();
+}
+function apSetSeg(id,v){[...document.querySelectorAll('#'+id+' button')].forEach(b=>b.classList.toggle('on',b.dataset.v===v));}
+function apRenderRows(){
+  const box=$('apRows'); if(!box) return; box.innerHTML='';
+  AP.elements.forEach((e,i)=>{
+    const r=document.createElement('div'); r.className='ap-row';
+    r.innerHTML='<span class="nm">'+(AP_LABELS[e.k]||e.k)+'</span>'+
+      '<span class="ord"><button '+(i===0?'disabled':'')+' data-up="'+i+'">↑</button><button '+(i===AP.elements.length-1?'disabled':'')+' data-dn="'+i+'">↓</button></span>'+
+      '<span class="ap-tg'+(e.on?' on':'')+'" data-tog="'+i+'"></span>';
+    box.appendChild(r);
+  });
+}
+function apRenderPreview(){
+  const mc=$('apMc'); if(!mc) return;
+  const c=apColors();
+  mc.style.setProperty('--c',c.main); mc.style.setProperty('--c2',c.light); mc.style.setProperty('--r',AP.shape||'13px');
+  mc.className='mc'+(AP.style==='outlined'?' outlined':'')+(AP.font?(' f-'+AP.font):'')+(AP.layout&&AP.layout!=='stack'?(' lay-'+AP.layout):'');
+  $('mcBrand').textContent=(S.profile&&S.profile.brand)||'Meridian Life Group';
+  $('mcAv').textContent=initials((S.profile&&S.profile.name))||'MY';
+  const box=$('mcRows'); box.innerHTML='';
+  AP.elements.filter(e=>e.on).forEach(e=>{
+    if(AP_ICON[e.k]){ const d=document.createElement('div'); d.className='rw'+(e.k==='verify'?' g':''); d.innerHTML='<span class="i">'+AP_ICON[e.k]+'</span><span class="t">'+AP_LABELS[e.k]+'</span><span class="c">›</span>'; box.appendChild(d); }
+    else if(e.k==='products'||e.k==='promise'){ const d=document.createElement('div'); d.className='acc'; d.innerHTML='<div class="h">'+AP_LABELS[e.k]+'</div>'; box.appendChild(d); }
+  });
+}
+(function wireAppearance(){
+  const swatches=$('apSwatches');
+  if(swatches) swatches.addEventListener('click',e=>{const d=e.target.closest('.ap-dot[data-c]');if(!d)return;AP.color=d.dataset.c;renderAppearance.__keep=1;[...swatches.querySelectorAll('.ap-dot')].forEach(x=>x.classList.remove('on'));d.classList.add('on');apRenderPreview();});
+  const cust=$('apCustom'); if(cust) cust.addEventListener('input',e=>{AP.color=e.target.value;[...document.querySelectorAll('#apSwatches .ap-dot[data-c]')].forEach(x=>x.classList.remove('on'));apRenderPreview();});
+  const sh=$('apShade'); if(sh) sh.addEventListener('input',e=>{AP.shade=+e.target.value;apRenderPreview();});
+  [['apStyle','style'],['apShape','shape'],['apFont','font'],['apLayout','layout']].forEach(([id,key])=>{
+    const el=$(id); if(el) el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;AP[key]=b.dataset.v;apSetSeg(id,b.dataset.v);apRenderPreview();});
+  });
+  const rows=$('apRows');
+  if(rows) rows.addEventListener('click',e=>{
+    const tg=e.target.closest('[data-tog]'),up=e.target.closest('[data-up]'),dn=e.target.closest('[data-dn]');
+    if(tg){const i=+tg.dataset.tog;AP.elements[i].on=!AP.elements[i].on;}
+    if(up){const i=+up.dataset.up;[AP.elements[i-1],AP.elements[i]]=[AP.elements[i],AP.elements[i-1]];}
+    if(dn){const i=+dn.dataset.dn;[AP.elements[i+1],AP.elements[i]]=[AP.elements[i],AP.elements[i+1]];}
+    apRenderRows(); apRenderPreview();
+  });
+  const save=$('apSave');
+  if(save) save.addEventListener('click',async()=>{
+    save.disabled=true; const t=save.textContent; save.textContent='Saving…';
+    try{ const r=await (await api(AB+'/api/admin/appearance',{method:'POST',body:JSON.stringify({appearance:AP})})).json();
+      if(r.ok){ S.appearance=r.appearance; toast('Appearance saved'); } else toast('Could not save'); }
+    catch(e){ toast('Could not save'); }
+    save.disabled=false; save.textContent=t;
+  });
+  const reset=$('apReset');
+  if(reset) reset.addEventListener('click',()=>{
+    AP={color:'',shade:0,style:'filled',shape:'999px',font:'',layout:'stack',
+      elements:['verify','call','social','quote','book','office','products','promise','qr'].map(k=>({k,on:k!=='office'}))};
+    if(!S.individual) AP.shade=0;
+    S.appearance=JSON.parse(JSON.stringify(AP)); renderAppearance();
+  });
 })();
 
 // ================= FIRST-LOGIN ONBOARDING WIZARD =================
