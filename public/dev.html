@@ -14,11 +14,14 @@
 *{box-sizing:border-box}
 body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#17160f,#0b0b0c 60%);color:var(--text);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:var(--gold2)}
-.wrap{max-width:1120px;margin:0 auto;padding:20px 16px 90px}
-.top{display:flex;align-items:center;gap:12px;padding:10px 0 18px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px 90px}
+.top{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 -16px 18px;padding:12px 16px;background:rgba(11,11,12,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.brandrow{display:flex;align-items:center;gap:12px;min-width:0}
+.mono{width:40px;height:40px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--panel2);border:1px solid var(--dim);overflow:hidden}
+.mono img{width:28px;height:28px}
+.brand{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;line-height:1.05}
+.brand small{display:block;font-family:Inter;font-size:9.5px;letter-spacing:2.5px;color:var(--gold);text-transform:uppercase;font-weight:600;margin-top:1px}
 .crest{width:40px;height:40px}
-.brand{font-family:'Cormorant Garamond',serif;font-size:25px;font-weight:700}
-.brand small{display:block;font-family:Inter;font-size:10px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;font-weight:600}
 .sp{flex:1}
 .btn{appearance:none;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:10px 14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;transition:.15s}
 .btn:hover{border-color:var(--dim)}
@@ -28,15 +31,17 @@ a{color:var(--gold2)}
 .btn.danger{color:#ffd0d0;border-color:#5e2222}.btn.warn{color:#ffe6b8;border-color:#5e4a22}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:16px}
 h2{font-family:'Cormorant Garamond',serif;font-size:22px;margin:0 0 4px}
+.secttl{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;margin:0 0 3px}
+.sectsub{color:var(--muted);font-size:13.5px;margin:0 0 16px}
 .muted{color:var(--muted);font-size:14px}
 label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
 input,select,textarea{width:100%;background:#0e0e10;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:12px;font-size:16px;font-family:inherit}
 input:focus,textarea:focus{outline:none;border-color:var(--dim)}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
-.tile{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
-.tile b{display:block;font-size:26px;font-family:'Cormorant Garamond',serif;color:var(--gold2)}
-.tile span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 16px}
+.tile b{display:block;font-size:30px;font-weight:700;font-family:'Cormorant Garamond',serif;color:var(--gold2);line-height:1}
+.tile span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:6px}
 .agency{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;background:var(--panel2)}
 .agency .hd{cursor:pointer;user-select:none}
 .agency .anum{flex:none;font-weight:800;color:var(--gold2);font-size:15px;min-width:24px}
@@ -85,9 +90,10 @@ input:focus,textarea:focus{outline:none;border-color:var(--dim)}
 .hide{display:none!important}
 .flexb{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .banner{background:linear-gradient(180deg,#2a2410,#1a1708);border:1px solid var(--dim);border-radius:12px;padding:12px 14px;margin:10px 0;font-size:14px}
-.tabrow{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.tab{padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:600;font-size:14px}
-.tab.active{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#231c00;border:none}
+.tabrow{display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap;padding:4px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.tab{position:relative;padding:10px 16px;border-radius:10px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-weight:600;font-size:14px;transition:.15s}
+.tab:hover{color:var(--text)}
+.tab.active{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#231c00}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#111;border:1px solid var(--dim);color:var(--text);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;z-index:50}
 .toast.show{opacity:1}
 textarea{min-height:120px;resize:vertical}
@@ -97,8 +103,10 @@ textarea{min-height:120px;resize:vertical}
 <body>
 <div class="wrap">
   <div class="top">
-    <img class="crest" src="/logo.svg" alt="">
-    <div class="brand">Meridian OS<small>Developer Console</small></div>
+    <div class="brandrow">
+      <div class="mono"><img src="/logo.svg" alt=""></div>
+      <div class="brand">Meridian OS<small>Developer Console</small></div>
+    </div>
     <div class="sp"></div>
     <button class="btn ghost sm hide" id="signout">Sign out</button>
   </div>
@@ -463,6 +471,7 @@ function agentRow(x,a){
     <div class="acts">
       ${x.locked?'<button class="btn sm gold" data-act="unlock">🔓 Unlock</button>':''}
       <button class="btn sm" data-act="edit">✏️ Edit info</button>
+      <button class="btn sm ${x.individual?'gold':'ghost'}" data-act="individual" title="Individuals can pick their own card color; others are locked to the agency color shade">${x.individual?'🎨 Individual color: on':'🎨 Lock to agency color'}</button>
       <button class="btn sm" data-act="dash">Open dashboard</button>
       <button class="btn sm ghost" data-act="welcome">📧 Resend welcome</button>
       <button class="btn sm ghost" data-act="reset">Reset pw</button>
@@ -547,6 +556,7 @@ async function agentAction(act,x,a,row){
   else if(act==='unlock'){ await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({unlock:true})}); const el=row.closest('.agency'); loadAgents(a,el); toast(x.name+' unlocked'); }
   else if(act==='deny'){ if(!confirm('Deny access for '+x.name+'?\n\nTheir login is blocked immediately and their card goes dark. They can request reinstatement, which only you approve.'))return; await api('/api/dev/agents/'+x.id+'/deny',{method:'POST',body:JSON.stringify({reason:''})}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); toast(x.name+' denied, access revoked'); }
   else if(act==='reinstate'){ await api('/api/dev/agents/'+x.id+'/reinstate',{method:'POST'}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); toast(x.name+' reinstated'); }
+  else if(act==='individual'){ await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({individual:!x.individual})}); const el=row.closest('.agency'); loadAgents(a,el); toast(x.individual?x.name+' locked to the agency color':x.name+' can now pick their own color'); }
   else if(act==='toggle'){ await api('/api/dev/agents/'+x.id,{method:'PATCH',body:JSON.stringify({active:!x.active})}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); }
   else if(act==='del'){ if(confirm('Delete '+x.name+'?')){ await api('/api/dev/agents/'+x.id,{method:'DELETE'}); const el=row.closest('.agency'); loadAgents(a,el); loadDash(); toast('Agent deleted'); } }
 }
