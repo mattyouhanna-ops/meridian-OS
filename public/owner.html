@@ -106,6 +106,7 @@
 
     <div class="tabrow">
       <div class="tab active" data-tab="team">Team</div>
+      <div class="tab" data-tab="perf">Performance</div>
       <div class="tab" data-tab="add">Add agent</div>
       <div class="tab" data-tab="leads">Team inbox</div>
       <div class="tab" data-tab="community">Community</div>
@@ -118,6 +119,47 @@
       <div class="card">
         <div class="flexb"><h2>Agents</h2><button class="btn sm" id="refresh">↻ Refresh</button></div>
         <div id="agents"></div>
+      </div>
+    </section>
+
+    <!-- PERFORMANCE -->
+    <section id="tab-perf" class="hide">
+      <style>
+        .perf-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+        @media(max-width:700px){.perf-kpi{grid-template-columns:repeat(2,1fr)}}
+        .perf-kpi .tile b{font-size:26px}
+        .lead-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+        .sortbar{display:flex;gap:6px;flex-wrap:wrap}
+        .sortbar button{font:600 12px Inter;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer}
+        .sortbar button.on{background:var(--gold);color:#231c00;border-color:transparent}
+        .lb{width:100%;border-collapse:collapse;font-size:13px}
+        .lb th{text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+        .lb th:first-child,.lb td:first-child{text-align:left}
+        .lb td{text-align:right;padding:11px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+        .lb tr:last-child td{border-bottom:none}
+        .lb .rank{color:var(--gold2);font-weight:700;width:26px}
+        .lb .who b{font-weight:600}.lb .who small{display:block;color:var(--muted);font-size:11px}
+        .lb .big{color:var(--gold2);font-weight:700}
+        .lb .conv{color:var(--ok)}
+        .lb .z{color:var(--muted)}
+        .bar-cell{min-width:90px}
+        .mini-bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:4px}
+        .mini-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold-dim))}
+      </style>
+      <div class="perf-kpi" id="perfKpi"></div>
+      <div class="card">
+        <div class="lead-h">
+          <h2 style="margin:0">Leaderboard</h2>
+          <div class="sortbar" id="perfSort">
+            <button data-s="soldAP" class="on">Premium</button>
+            <button data-s="sold">Sold</button>
+            <button data-s="views">Views</button>
+            <button data-s="clients">Clients</button>
+            <button data-s="conv">Close rate</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto"><table class="lb"><thead id="perfHead"></thead><tbody id="perfBody"></tbody></table></div>
+        <p class="muted" style="font-size:12px;margin-top:12px">Close rate is policies sold divided by people tracked. Premium is annual.</p>
       </div>
     </section>
 
@@ -241,6 +283,45 @@ function renderTiles(){
     ['Agents',t.agents],['New quotes',t.newQuotes],['Access requests',t.newRequests],['Policies sold',t.sold]
   ].map(([l,v])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join('');
 }
+
+// ---- Performance leaderboard ----
+let PERF_SORT='soldAP';
+const _money=n=>'$'+(Number(n)||0).toLocaleString(undefined,{maximumFractionDigits:0});
+const convOf=a=>a.clients?a.sold/a.clients:0;
+function renderPerf(){
+  const ags=DATA.agents||[], t=DATA.totals||{};
+  const activeAgents=ags.filter(a=>a.active).length;
+  $('perfKpi').innerHTML=[
+    ['Annual premium',_money(t.soldAP||0)],
+    ['Policies sold',t.sold||0],
+    ['Card views',t.views||0],
+    ['Active agents',activeAgents+' / '+(t.agents||0)],
+  ].map(([l,v])=>`<div class="tile"><b>${esc(String(v))}</b><span>${l}</span></div>`).join('');
+  $('perfHead').innerHTML='<tr><th class="rank">#</th><th>Agent</th><th>Views</th><th>Clients</th><th>Quoted</th><th>Sold</th><th>Close</th><th>Premium</th></tr>';
+  const key=PERF_SORT;
+  const val=a=>key==='conv'?convOf(a):(a[key]||0);
+  const rows=[...ags].sort((x,y)=>val(y)-val(x));
+  const mx=Math.max(1,...rows.map(a=>a.soldAP||0));
+  $('perfBody').innerHTML=rows.map((a,i)=>{
+    const conv=convOf(a);
+    return `<tr>
+      <td class="rank">${i+1}</td>
+      <td class="who"><b>${esc(a.name)}</b><small>${a.active?'':'inactive · '}${esc((a.states||[]).slice(0,3).join(', ')||'no states')}</small></td>
+      <td class="${a.views?'':'z'}">${a.views||0}</td>
+      <td class="${a.clients?'':'z'}">${a.clients||0}</td>
+      <td class="${a.quotedAP?'':'z'}">${a.quotedAP?_money(a.quotedAP):'—'}</td>
+      <td class="${a.sold?'':'z'}">${a.sold||0}</td>
+      <td class="${conv?'conv':'z'}">${conv?Math.round(conv*100)+'%':'—'}</td>
+      <td class="bar-cell"><span class="${a.soldAP?'big':'z'}">${a.soldAP?_money(a.soldAP):'—'}</span><div class="mini-bar"><i style="width:${Math.round((a.soldAP||0)/mx*100)}%"></i></div></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="8" class="muted" style="text-align:center;padding:20px">No agents yet.</td></tr>';
+}
+document.getElementById('perfSort').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  PERF_SORT=b.dataset.s;
+  document.querySelectorAll('#perfSort button').forEach(x=>x.classList.toggle('on',x===b));
+  renderPerf();
+});
 
 function presence(ts){
   if(!ts) return {cls:'off',dot:'#ff6b6b',label:'Never opened'};
@@ -387,8 +468,9 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');
   const name=t.dataset.tab;
-  ['team','add','leads','community','settings'].forEach(s=>$('tab-'+s).classList.toggle('hide',s!==name));
+  ['team','perf','add','leads','community','settings'].forEach(s=>$('tab-'+s).classList.toggle('hide',s!==name));
   if(name==='leads') loadLeads();
+  if(name==='perf') renderPerf();
 });
 
 $('refresh').onclick=loadDash;

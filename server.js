@@ -836,7 +836,7 @@ async function handleOwner(sub, method, body, req) {
   if (sub === "data" && method === "GET") {
     const children = childAgencies(ag.id);
     const agents = scope.flatMap((id) => listAgents(id)).map((a) => { const s = agentSummary(a); if (a.agencyId !== ag.id) { const c = getAgency(a.agencyId); s.subAgency = c ? c.name : ""; } return s; });
-    const totals = agents.reduce((t, a) => ({ agents: t.agents + 1, newQuotes: t.newQuotes + a.newQuotes, newRequests: t.newRequests + a.newRequests, views: t.views + a.views, sold: t.sold + a.sold }), { agents: 0, newQuotes: 0, newRequests: 0, views: 0, sold: 0 });
+    const totals = agents.reduce((t, a) => ({ agents: t.agents + 1, newQuotes: t.newQuotes + a.newQuotes, newRequests: t.newRequests + a.newRequests, views: t.views + a.views, sold: t.sold + a.sold, soldAP: t.soldAP + (a.soldAP || 0), unique: t.unique + (a.unique || 0) }), { agents: 0, newQuotes: 0, newRequests: 0, views: 0, sold: 0, soldAP: 0, unique: 0 });
     return { status: 200, data: { owner: { email: ag.ownerEmail, agency: ag.name, brand: ag.brand, mustChange: !!ag.ownerMustChange }, agents, totals, subAgencies: children.map((c) => ({ id: c.id, name: c.name })), stateNames: STATE_NAMES, platformBrand: platformBrand(), license } };
   }
   if (sub === "agents" && method === "POST") {
