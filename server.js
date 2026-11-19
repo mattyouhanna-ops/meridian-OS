@@ -477,6 +477,7 @@ async function handleQuote(agent, body, req) {
     product: str(body.product, 80), name: str(body.name, 80),
     phone: str(body.phone || body.contact, 40), email: str(body.email, 120),
     coverage: str(body.coverage, 60), budget: str(body.budget, 60),
+    purpose: str(body.purpose, 60), protect: str(body.protect, 120),
     when: str(body.when, 40), slot: str(body.slot, 30), method: str(body.method, 30),
     note: str(body.note, 400),
   };

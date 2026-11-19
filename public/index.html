@@ -182,6 +182,9 @@
   .q-box input:focus,.q-box textarea:focus,.q-box select:focus{outline:none;border-color:var(--gold)}
   .qlabel{display:block;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 6px}
   .q-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .q-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .q-chip{padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--black);color:var(--text);font:600 13px Inter,system-ui,sans-serif;cursor:pointer;transition:.12s}
+  .q-chip.on{background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--black);border-color:transparent}
   .q-send{width:100%;justify-content:center}
   .q-alt{display:flex;gap:10px;margin-top:10px}
   .q-alt a{flex:1;text-align:center;padding:12px;border-radius:12px;border:1px solid var(--gold-dim);color:var(--text);text-decoration:none;font-weight:600;font-size:14px}
@@ -339,10 +342,8 @@
     </div>
     <div class="v2rows v2only" id="v2rows">
       <a class="v2row gold" id="rowVerify" href="#verify" data-f="any"><span class="i">🛡️</span><span class="tx"><b>Verify my license</b><span class="sub2">Every state I'm licensed in</span></span><span class="ch">›</span></a>
-      <a class="v2row" id="rowCall" href="#" data-f="phone"><span class="i">📞</span><span class="tx"><b>Call or text</b><span class="sub2" id="callSub"></span></span><span class="ch">›</span></a>
       <a class="v2row" id="rowSocial" href="#"><span class="i">🔗</span><span class="tx"><b>Social</b><span class="sub2">All my profiles</span></span><span class="ch">›</span></a>
-      <button class="v2row" id="rowQuote" type="button" data-f="contact"><span class="i">📝</span><span class="tx"><b>Get a quote</b><span class="sub2">Tell me a little, I'll run numbers</span></span><span class="ch">›</span></button>
-      <button class="v2row" id="rowBook" type="button" data-f="contact"><span class="i">📅</span><span class="tx"><b>Book a time</b><span class="sub2">Grab a slot that works</span></span><span class="ch">›</span></button>
+      <button class="v2row" id="rowQuote" type="button" data-f="contact"><span class="i">📝</span><span class="tx"><b>Get a quote</b><span class="sub2">A few quick questions, I'll run numbers</span></span><span class="ch">›</span></button>
       <button class="v2row" id="rowQr" type="button" data-f="contact"><span class="i">▦</span><span class="tx"><b>My QR code</b><span class="sub2">Scan to save my card</span></span><span class="ch">›</span></button>
     </div>
     <div class="socials" id="socials" data-f="contact" hidden></div>
@@ -400,7 +401,7 @@
       </div>
 
       <div class="vblock" data-f="lastResort">
-        <div class="lr-title">Still not sure? Last resort options</div>
+        <div class="lr-title">Want to be 100% sure?</div>
         <ol class="steps">
           <li>Call your state's <b>Department of Insurance</b> consumer line yourself and ask them to confirm my license by name and number.</li>
           <li>Or we get on a <b>three-way call with the state</b> together, so you hear it straight from them.</li>
@@ -477,19 +478,55 @@
       </div>
       <h3 id="qTitle" class="q-center">Request a quote</h3>
       <p class="psub q-center" id="qSub">Send <span id="qWho">me</span> a quick request. No obligation. Your information stays between us.</p>
-      <input id="qName" type="text" placeholder="Your name" maxlength="80" autocomplete="name">
+      <div class="q-two">
+        <input id="qFirst" type="text" placeholder="First name" maxlength="40" autocomplete="given-name">
+        <input id="qLast" type="text" placeholder="Last name" maxlength="40" autocomplete="family-name">
+      </div>
       <input id="qPhone" type="tel" placeholder="Phone number" maxlength="40" autocomplete="tel" inputmode="tel">
       <input id="qEmail" type="email" placeholder="Email" maxlength="120" autocomplete="email" inputmode="email">
       <div id="qQuoteFields">
-        <input id="qCoverage" type="text" placeholder="Coverage amount you want (e.g. $250,000)" maxlength="60">
-        <input id="qBudget" type="text" placeholder="Monthly budget (e.g. $50/mo)" maxlength="60">
-      </div>
-      <div id="qApptFields" hidden>
-        <label class="qlabel">Preferred day</label>
-        <input id="qDate" type="date">
+        <label class="qlabel">Coverage amount</label>
+        <select id="qCoverage">
+          <option value="">Pick a ballpark — not sure is fine</option>
+          <option>$10,000</option>
+          <option>$25,000</option>
+          <option>$50,000</option>
+          <option>$100,000</option>
+          <option>$250,000</option>
+          <option>$500,000</option>
+          <option>$1,000,000</option>
+          <option>$2,000,000</option>
+        </select>
+        <label class="qlabel">Monthly budget</label>
+        <select id="qBudget">
+          <option value="">Pick a range</option>
+          <option>Under $50/mo</option>
+          <option>$50–$100/mo</option>
+          <option>$100–$200/mo</option>
+          <option>$200+/mo</option>
+        </select>
+        <label class="qlabel">What matters most to cover</label>
+        <select id="qPurpose">
+          <option value="">Choose one</option>
+          <option>Final expenses</option>
+          <option>Mortgage protection</option>
+          <option>Income replacement</option>
+          <option>Debt payoff</option>
+          <option>Family legacy</option>
+          <option>Children's future</option>
+        </select>
+        <label class="qlabel">Who you want to protect</label>
+        <div class="q-chips" id="qProtect">
+          <button type="button" class="q-chip" data-v="Spouse">Spouse</button>
+          <button type="button" class="q-chip" data-v="Son">Son</button>
+          <button type="button" class="q-chip" data-v="Daughter">Daughter</button>
+          <button type="button" class="q-chip" data-v="Parents">Parents</button>
+          <button type="button" class="q-chip" data-v="Other family">Other family</button>
+        </div>
+        <label class="qlabel">Best time for me to call you back</label>
         <div class="q-two">
-          <select id="qSlot"><option value="">Any time</option><option>Morning</option><option>Afternoon</option><option>Evening</option></select>
-          <select id="qMethod"><option>Phone call</option><option>Video call</option><option>In person</option></select>
+          <select id="qSlot"><option value="">Any time of day</option><option>Morning</option><option>Afternoon</option><option>Evening</option></select>
+          <input id="qDate" type="date" aria-label="Preferred day">
         </div>
       </div>
       <textarea id="qNote" placeholder="Anything I should know? (optional)" maxlength="300"></textarea>
@@ -708,8 +745,6 @@
     card.classList.add('v2');
     applyAppearance(card, res.appearance);
     const co=$('companyText'); if(co) co.textContent=res.brand||'';
-    if(res.phone){ const cs=$('callSub'); if(cs) cs.textContent=res.phone; }
-    if(res.phoneTel){ const rc=$('rowCall'); if(rc) rc.setAttribute('href','tel:'+res.phoneTel); }
     { const rs=$('rowSocial'); if(rs) rs.style.display=(res.socials&&res.socials.length&&rs.dataset.apOff!=='1')?'':'none'; }
     if(firstV2){
       ['accProducts','accPromise'].forEach(id=>{ const s=$(id); if(s) s.classList.remove('open'); });
@@ -719,7 +754,6 @@
       const vb=$('verifyBack'); if(vb) vb.addEventListener('click',()=>{ const s=$('verify'); closeSheet(s); });
       const rs=$('rowSocial'); if(rs) rs.addEventListener('click',e=>{ e.preventDefault(); const sc=$('socials'); if(sc){ sc.classList.toggle('show'); if(sc.classList.contains('show')) sc.scrollIntoView({behavior:'smooth'}); } });
       const rq=$('rowQuote'); if(rq) rq.addEventListener('click',()=>openQuote(''));
-      const rb=$('rowBook'); if(rb) rb.addEventListener('click',openAppt);
       // QR opens as a full-screen sheet built for scanning
       const rqr=$('rowQr'); if(rqr) rqr.addEventListener('click',()=>{ renderQR(); const n=$('qrName'); if(n) n.textContent=res.name||''; const bl=$('qrBrandLine'); if(bl) bl.textContent=res.brand||''; openSheet($('qrSheet')); });
       const qb=$('qrBack'); if(qb) qb.addEventListener('click',()=>closeSheet($('qrSheet')));
@@ -738,7 +772,7 @@
     card.classList.remove('layout-compact','layout-spot'); if(ap.layout==='compact') card.classList.add('layout-compact'); if(ap.layout==='spot') card.classList.add('layout-spot');
     // element visibility + order
     if(Array.isArray(ap.elements)){
-      const rowMap={verify:'rowVerify',call:'rowCall',social:'rowSocial',quote:'rowQuote',book:'rowBook',qr:'rowQr'};
+      const rowMap={verify:'rowVerify',social:'rowSocial',quote:'rowQuote',qr:'rowQr'};
       const secMap={products:'accProducts',promise:'accPromise'};
       const rowsBox=$('v2rows');
       ap.elements.forEach(e=>{
@@ -789,43 +823,41 @@
     if(D.phoneTel){ alt.innerHTML='<a href="tel:'+D.phoneTel+'">Call now</a><a href="sms:'+D.phoneTel+'">Text now</a>'; }
     else if(D.email){ alt.innerHTML='<a href="mailto:'+D.email+'">Email now</a>'; }
   }
+  // One unified request form: quote details + preferred callback time together.
   function openQuote(product){
     qKind='quote'; qProduct=product;
     $('qTitle').textContent = product ? ((REFER?'Request a quote: ':'Free quote: ')+product) : (REFER?'Request a quote':'Get a free quote'); setQSub();
-    $('qQuoteFields').hidden=false; $('qApptFields').hidden=true;
+    const qf=$('qQuoteFields'); if(qf) qf.hidden=false;
     $('qSend').querySelector('span').textContent='Send my request';
     qAltFill(); $('qForm').hidden=false; $('qDone').hidden=true; $('quote').hidden=false;
-    setTimeout(()=>$('qName').focus(),50);
+    setTimeout(()=>{ const f=$('qFirst'); if(f) f.focus(); },50);
   }
-  function openAppt(){
-    qKind='appointment'; qProduct='';
-    $('qTitle').textContent='Book a time with '+firstName(); setQSub();
-    $('qQuoteFields').hidden=true; $('qApptFields').hidden=false;
-    $('qSend').querySelector('span').textContent='Request this time';
-    qAltFill(); $('qForm').hidden=false; $('qDone').hidden=true; $('quote').hidden=false;
-    setTimeout(()=>$('qName').focus(),50);
+  const openAppt=openQuote; // "Book a time" now lives inside the quote form
+  // multi-select chips for "who you want to protect"
+  (function(){ const box=$('qProtect'); if(box) box.addEventListener('click',e=>{ const c=e.target.closest('.q-chip'); if(c) c.classList.toggle('on'); }); })();
+  function protectValue(){ return [...document.querySelectorAll('#qProtect .q-chip.on')].map(c=>c.dataset.v).join(', '); }
+  function closeQuote(){ $('quote').hidden=true;
+    ['qFirst','qLast','qPhone','qEmail','qCoverage','qBudget','qPurpose','qSlot','qDate','qNote'].forEach(i=>{if($(i))$(i).value='';});
+    document.querySelectorAll('#qProtect .q-chip.on').forEach(c=>c.classList.remove('on'));
   }
-  function closeQuote(){ $('quote').hidden=true; ['qName','qPhone','qEmail','qCoverage','qBudget','qDate','qNote'].forEach(i=>{if($(i))$(i).value='';}); }
-  (function(){ const bb=$('bookBtn'); if(bb) bb.addEventListener('click',openAppt); })();
+  (function(){ const bb=$('bookBtn'); if(bb) bb.addEventListener('click',()=>openQuote('')); })();
   $('qCancel').addEventListener('click',closeQuote);
   $('qClose').addEventListener('click',closeQuote);
   $('quote').addEventListener('click',e=>{ if(e.target===$('quote')) closeQuote(); });
   $('qSend').addEventListener('click',async()=>{
     const span=$('qSend').querySelector('span'); const label=span.textContent; span.textContent='Sending…';
-    const payload={kind:qKind,product:qProduct,name:$('qName').value.trim(),phone:$('qPhone').value.trim(),email:$('qEmail').value.trim(),note:$('qNote').value.trim(),k:getK()};
-    if(qKind==='quote'){ payload.coverage=$('qCoverage').value.trim(); payload.budget=$('qBudget').value.trim(); }
-    else { payload.when=$('qDate').value; payload.slot=$('qSlot').value; payload.method=$('qMethod').value; }
+    const first=$('qFirst').value.trim(), last=$('qLast').value.trim();
+    const payload={kind:'quote',product:qProduct,name:(first+' '+last).trim(),phone:$('qPhone').value.trim(),email:$('qEmail').value.trim(),
+      coverage:$('qCoverage').value.trim(),budget:$('qBudget').value.trim(),purpose:$('qPurpose').value.trim(),protect:protectValue(),
+      slot:$('qSlot').value,when:$('qDate').value,note:$('qNote').value.trim(),k:getK()};
     try{ await fetch(AB+'/api/quote',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}); }catch(_){}
     span.textContent=label;
     $('qDoneMsg').textContent = REFER
       ? (firstName()+" will connect you with the most trusted licensed agent on the team to take care of you.")
-      : (qKind==='appointment'
-        ? (firstName()+" will confirm your time and reach out.")
-        : (firstName()+" is already shopping the best carriers for you. Want to lock in a quick time to go over your options together?"));
-    $('qBook').hidden = qKind!=='quote';
+      : (firstName()+" is already shopping the best carriers for you and will reach out"+($('qSlot').value?(" in the "+$('qSlot').value.toLowerCase()):"")+" to go over your options.");
+    const qb=$('qBook'); if(qb) qb.hidden=true;
     $('qForm').hidden=true; $('qDone').hidden=false;
   });
-  $('qBook').addEventListener('click',()=>{ openAppt(); }); // keeps the name/phone/email they just entered
 
   (function(){
     const f=$('llForm'); if(!f) return;

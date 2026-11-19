@@ -1532,7 +1532,13 @@ async function pollQuotes(){
         const digits=(q.phone||'').replace(/[^\d+]/g,''); const hasPhone=digits.length>=7;
         const rows=[];
         if(appt){ const when=[q.when,q.slot].filter(Boolean).join(' · '); if(when) rows.push(['When',when]); if(q.method) rows.push(['How',q.method]); }
-        else { if(q.coverage) rows.push(['Coverage',q.coverage]); if(q.budget) rows.push(['Budget',q.budget]); }
+        else {
+          if(q.coverage) rows.push(['Coverage',q.coverage]);
+          if(q.budget) rows.push(['Budget',q.budget]);
+          if(q.purpose) rows.push(['Wants to cover',q.purpose]);
+          if(q.protect) rows.push(['Protecting',q.protect]);
+          const cb=[q.slot,q.when].filter(Boolean).join(' · '); if(cb) rows.push(['Call back',cb]);
+        }
         if(q.phone) rows.push(['Phone',q.phone]); if(q.email) rows.push(['Email',q.email]);
         const aging=(Date.now()-q.t)>864e5;
         const d=document.createElement('div');d.className='quote-item'+(aging?' aging':'');
@@ -1563,8 +1569,10 @@ async function addQuoteToClients(q){
   if(!tok) return;
   if(q.kind!=='appointment' && (q.coverage||q.budget||q.product)){
     const face=String(q.coverage||'').replace(/[^\d.]/g,''); const prem=String(q.budget||'').replace(/[^\d.]/g,'');
-    const deal={id:Math.random().toString(16).slice(2,14),type:'quoted',product:q.product||'',carrier:'',face,premium:prem,freq:'month',note:(q.note||'')+(q.email?(q.note?' · ':'')+q.email:''),date:Date.now()};
-    await patchLink(tok,{deals:[deal],status:'quoted'});
+    const extra=[q.purpose&&('Cover: '+q.purpose),q.protect&&('Protect: '+q.protect),(q.slot||q.when)&&('Call back: '+[q.slot,q.when].filter(Boolean).join(' ')),q.email].filter(Boolean).join(' · ');
+    const deal={id:Math.random().toString(16).slice(2,14),type:'quoted',product:q.product||q.purpose||'',carrier:'',face,premium:prem,freq:'month',note:[q.note,extra].filter(Boolean).join(' · '),date:Date.now()};
+    const tags=[q.purpose].filter(Boolean);
+    await patchLink(tok,{deals:[deal],status:'quoted',tags});
   } else {
     const note=[q.when&&('Wants '+q.when+(q.slot?' '+q.slot:'')),q.method,q.email,q.note].filter(Boolean).join(' · ');
     await patchLink(tok,{status:'chat',notes:note});
