@@ -185,6 +185,13 @@
   .q-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
   .q-chip{padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--black);color:var(--text);font:600 13px Inter,system-ui,sans-serif;cursor:pointer;transition:.12s}
   .q-chip.on{background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--black);border-color:transparent}
+  .q-pills{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+  .q-pills.days{grid-template-columns:1fr 1fr;gap:8px}
+  .q-pill{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 8px;border-radius:14px;border:1px solid var(--line);background:var(--black);color:var(--text);cursor:pointer;transition:.12s;font:inherit}
+  .q-pill b{font-size:14px;font-weight:700}
+  .q-pill small{font-size:11px;color:var(--muted)}
+  .q-pill.on{background:linear-gradient(135deg,var(--gold2),var(--gold));border-color:transparent}
+  .q-pill.on b,.q-pill.on small{color:var(--black)}
   .q-send{width:100%;justify-content:center}
   .q-alt{display:flex;gap:10px;margin-top:10px}
   .q-alt a{flex:1;text-align:center;padding:12px;border-radius:12px;border:1px solid var(--gold-dim);color:var(--text);text-decoration:none;font-weight:600;font-size:14px}
@@ -517,16 +524,27 @@
           <button type="button" class="q-chip" data-v="Parents">Parents</button>
           <button type="button" class="q-chip" data-v="Other family">Other family</button>
         </div>
-        <label class="qlabel">Best time for me to call you back</label>
-        <div class="q-two">
-          <select id="qSlot"><option value="">Any time of day</option><option>Morning</option><option>Afternoon</option><option>Evening</option></select>
-          <input id="qDate" type="date" aria-label="Preferred day">
-        </div>
       </div>
       <textarea id="qNote" placeholder="Anything I should know? (optional)" maxlength="300"></textarea>
       <button class="verify-btn q-send" id="qSend"><span>Send my request</span></button>
       <div class="q-alt" id="qAlt"></div>
       <button class="q-cancel" id="qCancel">Cancel</button>
+      <div class="q-foot">Powered by Meridian OS</div>
+    </div>
+    <div id="qTime" hidden>
+      <div class="q-brandhead"><img src="/apple-touch-icon.png" alt="" class="q-crest"><div class="q-kicker">Meridian</div></div>
+      <h3 class="q-center">When works for you?</h3>
+      <p class="psub q-center">Your request is in. Pick a time for <span id="qTimeWho">me</span> to call — I'll lock it in.</p>
+      <label class="qlabel">Pick a day</label>
+      <div class="q-pills" id="qDayPills"></div>
+      <label class="qlabel">Time of day</label>
+      <div class="q-pills" id="qTimePills">
+        <button type="button" class="q-pill" data-v="Morning"><b>Morning</b><small>8am – 12pm</small></button>
+        <button type="button" class="q-pill" data-v="Afternoon"><b>Afternoon</b><small>12 – 5pm</small></button>
+        <button type="button" class="q-pill" data-v="Evening"><b>Evening</b><small>5 – 8pm</small></button>
+      </div>
+      <button class="verify-btn q-send" id="qConfirmTime"><span>Confirm this time</span></button>
+      <button class="q-cancel" id="qAnyTime">Any time is fine</button>
       <div class="q-foot">Powered by Meridian OS</div>
     </div>
     <div id="qDone" class="q-done" hidden>
@@ -816,40 +834,77 @@
     if(D.phoneTel){ alt.innerHTML='<a href="tel:'+D.phoneTel+'">Call now</a><a href="sms:'+D.phoneTel+'">Text now</a>'; }
     else if(D.email){ alt.innerHTML='<a href="mailto:'+D.email+'">Email now</a>'; }
   }
-  // One unified request form: quote details + preferred callback time together.
+  // Quote → booking two-step flow.
+  let QREF='', qDay='', qSlot='';
   function openQuote(product){
-    qKind='quote'; qProduct=product;
+    qKind='quote'; qProduct=product; QREF='q'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
     $('qTitle').textContent = product ? ((REFER?'Request a quote: ':'Free quote: ')+product) : (REFER?'Request a quote':'Get a free quote'); setQSub();
     const qf=$('qQuoteFields'); if(qf) qf.hidden=false;
     $('qSend').querySelector('span').textContent='Send my request';
-    qAltFill(); $('qForm').hidden=false; $('qDone').hidden=true; $('quote').hidden=false;
+    const tw=$('qTimeWho'); if(tw) tw.textContent=firstName();
+    qAltFill(); $('qForm').hidden=false; $('qTime').hidden=true; $('qDone').hidden=true; $('quote').hidden=false;
     setTimeout(()=>{ const f=$('qFirst'); if(f) f.focus(); },50);
   }
-  const openAppt=openQuote; // "Book a time" now lives inside the quote form
-  // multi-select chips for "who you want to protect"
+  const openAppt=openQuote;
   (function(){ const box=$('qProtect'); if(box) box.addEventListener('click',e=>{ const c=e.target.closest('.q-chip'); if(c) c.classList.toggle('on'); }); })();
   function protectValue(){ return [...document.querySelectorAll('#qProtect .q-chip.on')].map(c=>c.dataset.v).join(', '); }
+  // booking step: day + time-of-day pills
+  function buildDayPills(){
+    const box=$('qDayPills'); if(!box) return; box.className='q-pills days'; box.innerHTML=''; qDay='';
+    const names=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    for(let i=0;i<6;i++){ const d=new Date(); d.setDate(d.getDate()+i);
+      const label=i===0?'Today':i===1?'Tomorrow':names[d.getDay()];
+      const b=document.createElement('button'); b.type='button'; b.className='q-pill'; b.dataset.v=d.toISOString().slice(0,10);
+      b.innerHTML='<b>'+label+'</b><small>'+(d.getMonth()+1)+'/'+d.getDate()+'</small>'; box.appendChild(b);
+    }
+  }
+  (function(){
+    const dp=$('qDayPills'); if(dp) dp.addEventListener('click',e=>{ const p=e.target.closest('.q-pill'); if(!p)return; [...dp.children].forEach(x=>x.classList.remove('on')); p.classList.add('on'); qDay=p.dataset.v; });
+    const tp=$('qTimePills'); if(tp) tp.addEventListener('click',e=>{ const p=e.target.closest('.q-pill'); if(!p)return; [...tp.children].forEach(x=>x.classList.remove('on')); p.classList.add('on'); qSlot=p.dataset.v; });
+  })();
   function closeQuote(){ $('quote').hidden=true;
-    ['qFirst','qLast','qPhone','qEmail','qCoverage','qBudget','qPurpose','qSlot','qDate','qNote'].forEach(i=>{if($(i))$(i).value='';});
-    document.querySelectorAll('#qProtect .q-chip.on').forEach(c=>c.classList.remove('on'));
+    ['qFirst','qLast','qPhone','qEmail','qCoverage','qBudget','qPurpose','qNote'].forEach(i=>{if($(i))$(i).value='';});
+    document.querySelectorAll('#qProtect .q-chip.on,#qDayPills .q-pill.on,#qTimePills .q-pill.on').forEach(c=>c.classList.remove('on'));
+    qDay=''; qSlot='';
   }
   $('qCancel').addEventListener('click',closeQuote);
   $('qClose').addEventListener('click',closeQuote);
   $('quote').addEventListener('click',e=>{ if(e.target===$('quote')) closeQuote(); });
+  async function submitQuote(extra){
+    const first=$('qFirst').value.trim(), last=$('qLast').value.trim();
+    const payload=Object.assign({kind:'quote',ref:QREF,product:qProduct,name:(first+' '+last).trim(),phone:$('qPhone').value.trim(),email:$('qEmail').value.trim(),
+      coverage:$('qCoverage').value.trim(),budget:$('qBudget').value.trim(),purpose:$('qPurpose').value.trim(),protect:protectValue(),
+      note:$('qNote').value.trim(),k:getK()},extra||{});
+    try{ await fetch(AB+'/api/quote',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}); }catch(_){}
+  }
   $('qSend').addEventListener('click',async()=>{
     const span=$('qSend').querySelector('span'); const label=span.textContent; span.textContent='Sending…';
-    const first=$('qFirst').value.trim(), last=$('qLast').value.trim();
-    const payload={kind:'quote',product:qProduct,name:(first+' '+last).trim(),phone:$('qPhone').value.trim(),email:$('qEmail').value.trim(),
-      coverage:$('qCoverage').value.trim(),budget:$('qBudget').value.trim(),purpose:$('qPurpose').value.trim(),protect:protectValue(),
-      slot:$('qSlot').value,when:$('qDate').value,note:$('qNote').value.trim(),k:getK()};
-    try{ await fetch(AB+'/api/quote',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}); }catch(_){}
-    span.textContent=label;
+    await submitQuote();
+    span.textContent=label; buildDayPills();
+    $('qForm').hidden=true; $('qTime').hidden=false; $('qDone').hidden=true;
+    $('qTime').scrollTop=0;
+  });
+  function humanWhen(){
+    const parts=[];
+    if(qDay){ const dt=new Date(qDay+'T12:00:00'); const today=new Date(); today.setHours(12,0,0,0);
+      const diff=Math.round((dt-today)/86400000);
+      parts.push(diff===0?'today':diff===1?'tomorrow':('on '+dt.toLocaleDateString(undefined,{weekday:'long'}))); }
+    if(qSlot) parts.push('in the '+qSlot.toLowerCase());
+    return parts.join(' ')||'soon';
+  }
+  function finishBooking(){
     $('qDoneMsg').textContent = REFER
       ? (firstName()+" will connect you with the most trusted licensed agent on the team to take care of you.")
-      : (firstName()+" is already shopping the best carriers for you and will reach out"+($('qSlot').value?(" in the "+$('qSlot').value.toLowerCase()):"")+" to go over your options.");
+      : ((qDay||qSlot) ? (firstName()+" will call you "+humanWhen()+". Talk soon.") : (firstName()+" is already shopping the best carriers and will reach out soon."));
     const qb=$('qBook'); if(qb) qb.hidden=true;
-    $('qForm').hidden=true; $('qDone').hidden=false;
+    $('qForm').hidden=true; $('qTime').hidden=true; $('qDone').hidden=false;
+  }
+  $('qConfirmTime').addEventListener('click',async()=>{
+    const span=$('qConfirmTime').querySelector('span'); const label=span.textContent; span.textContent='Booking…';
+    await submitQuote({when:qDay,slot:qSlot});
+    span.textContent=label; finishBooking();
   });
+  $('qAnyTime').addEventListener('click',()=>{ qDay=''; qSlot=''; finishBooking(); });
 
   (function(){
     const f=$('llForm'); if(!f) return;

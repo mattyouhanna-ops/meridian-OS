@@ -472,8 +472,19 @@ async function handleCard(agent, url, req) {
 async function handleQuote(agent, body, req) {
   const w = who(req);
   const kind = body.kind === "appointment" ? "appointment" : "quote";
+  // Two-step quote→booking: the booking step re-posts with the same ref to add the time.
+  const ref = str(body.ref, 40);
+  if (ref) {
+    const existing = (agent.quotes || []).find((q) => q.ref === ref);
+    if (existing) {
+      if (body.when) existing.when = str(body.when, 40);
+      if (body.slot) existing.slot = str(body.slot, 30);
+      save();
+      return { ok: true, updated: true };
+    }
+  }
   const entry = {
-    id: crypto.randomBytes(8).toString("hex"), t: Date.now(), kind, status: "new",
+    id: crypto.randomBytes(8).toString("hex"), t: Date.now(), kind, status: "new", ref,
     product: str(body.product, 80), name: str(body.name, 80),
     phone: str(body.phone || body.contact, 40), email: str(body.email, 120),
     coverage: str(body.coverage, 60), budget: str(body.budget, 60),
