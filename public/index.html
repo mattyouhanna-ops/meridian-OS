@@ -275,6 +275,31 @@
   .card.v2.layout-compact h1,.card.v2.layout-compact .title,.card.v2.layout-compact #companyText{text-align:left}
   .card.v2.layout-spot .avatar{width:120px;height:120px}
   .card.v2.layout-spot h1{font-size:30px}
+  /* ===== full-screen sheets (Verify, QR) ===== */
+  .sheet{position:fixed;inset:0;z-index:200;background:var(--black);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);visibility:hidden}
+  .sheet.open{transform:none!important;visibility:visible!important}
+  .sheet-head{position:sticky;top:0;display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--black);z-index:2}
+  .sheet-back{flex:none;width:40px;height:40px;border-radius:50%;border:1px solid var(--gold-dim);background:transparent;color:var(--gold2);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .sheet-title{font-family:"Cormorant Garamond",serif;font-size:21px;font-weight:700;color:var(--gold2)}
+  .sheet-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 18px 44px;max-width:620px;margin:0 auto;width:100%}
+  /* Verify as a sheet in V2: moved to <body> and made full screen */
+  #verify.verify-sheet{position:fixed;inset:0;z-index:200;margin:0;border:none;border-radius:0;background:var(--black);max-width:none;padding:0;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);visibility:hidden;overflow-y:auto}
+  #verify.verify-sheet.sheet-open{transform:none!important;visibility:visible!important}
+  #verify.verify-sheet .acc-head{position:sticky;top:0;background:var(--black);border-bottom:1px solid var(--line);padding:16px 18px 16px 62px;z-index:2;cursor:default;pointer-events:none}
+  #verify.verify-sheet .acc-head .chev{display:none}
+  #verify.verify-sheet .acc-head .peek{display:none}
+  #verify.verify-sheet .acc-body{max-height:none!important;opacity:1!important;padding:18px 18px 44px;max-width:620px;margin:0 auto;display:block!important}
+  #verify.verify-sheet #verifyBack{display:flex;position:fixed;top:14px;left:16px;z-index:210}
+  #verifyBack{display:none}
+  /* QR sheet */
+  #qrSheet .sheet-body{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px}
+  #qrSheet .qrcard{background:#fff;border-radius:22px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  #qrSheet .qrcard svg,#qrSheet .qrcard img{width:min(72vw,300px);height:auto;display:block}
+  #qrSheet .qrname{font-family:"Cormorant Garamond",serif;font-size:27px;font-weight:700;color:var(--text);line-height:1.1}
+  #qrSheet .qrbrand{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold2);margin-top:4px}
+  #qrSheet .qrhint{font-size:15px;color:var(--muted);max-width:280px;line-height:1.5}
+  #qrSheet .qrglow{position:absolute;inset:0;background:radial-gradient(500px 500px at 50% 35%,rgba(212,175,55,.14),transparent 70%);pointer-events:none}
+  .card.v2 .qrwrap{display:none!important}
 </style>
 </head>
 <body class="pending">
@@ -318,6 +343,7 @@
       <a class="v2row" id="rowSocial" href="#"><span class="i">🔗</span><span class="tx"><b>Social</b><span class="sub2">All my profiles</span></span><span class="ch">›</span></a>
       <button class="v2row" id="rowQuote" type="button" data-f="contact"><span class="i">📝</span><span class="tx"><b>Get a quote</b><span class="sub2">Tell me a little, I'll run numbers</span></span><span class="ch">›</span></button>
       <button class="v2row" id="rowBook" type="button" data-f="contact"><span class="i">📅</span><span class="tx"><b>Book a time</b><span class="sub2">Grab a slot that works</span></span><span class="ch">›</span></button>
+      <button class="v2row" id="rowQr" type="button" data-f="contact"><span class="i">▦</span><span class="tx"><b>My QR code</b><span class="sub2">Scan to save my card</span></span><span class="ch">›</span></button>
     </div>
     <div class="socials" id="socials" data-f="contact" hidden></div>
     <div class="loading" id="loading">Loading…</div>
@@ -336,6 +362,7 @@
   </div>
 
   <section class="acc open" id="verify" data-f="any">
+    <button type="button" class="sheet-back" id="verifyBack" aria-label="Back">←</button>
     <button type="button" class="acc-head" data-acc><div><h2 class="gold-text">Verify my license</h2><div class="peek">Look me up on official state records, one minute</div></div><span class="chev"></span></button>
     <div class="acc-body">
       <p class="sub">Anyone can build a website. A state license can't be faked. <b class="hl">Look me up on the official government records below.</b></p>
@@ -415,6 +442,19 @@
     Coverage subject to underwriting and carrier approval.<br>For security, visits to this page are logged.
   </footer>
 </main>
+
+<div class="sheet" id="qrSheet" aria-hidden="true">
+  <div class="qrglow"></div>
+  <div class="sheet-head"><button type="button" class="sheet-back" id="qrBack" aria-label="Back">←</button><span class="sheet-title">My QR code</span></div>
+  <div class="sheet-body">
+    <div class="qrcard" id="qrBig"></div>
+    <div>
+      <div class="qrname" id="qrName"></div>
+      <div class="qrbrand" id="qrBrandLine"></div>
+    </div>
+    <div class="qrhint">Point any phone camera at this code to open and save my card. No app needed.</div>
+  </div>
+</div>
 
 <div class="setup-note" id="setupNote" hidden>
   <div class="ll-mono" style="margin:0 auto 14px;width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#f1d78a,#8f7426);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-weight:700;font-size:30px;color:#0b0b0c">✦</div>
@@ -544,14 +584,17 @@
   }
   const CARDURL=location.origin+(window.AB||'')+'/';
   function renderQR(){
-    const box=$('qrBox'); if(!box) return;
+    const box=$('qrBox');
     try{
       if(typeof qrcode==='undefined') throw new Error('qr lib not loaded');
       const qr=qrcode(0,'M'); qr.addData(CARDURL); qr.make();
-      box.innerHTML=qr.createSvgTag({cellSize:4,margin:0,scalable:true});
-      box.classList.remove('empty');
-    }catch(e){ box.classList.add('empty'); const w=$('qrWrap'); if(w) w.querySelector('.qrcap').style.display='none'; }
+      const svg=qr.createSvgTag({cellSize:4,margin:0,scalable:true});
+      if(box){ box.innerHTML=svg; box.classList.remove('empty'); }
+      const big=$('qrBig'); if(big) big.innerHTML=svg;
+    }catch(e){ if(box){ box.classList.add('empty'); const w=$('qrWrap'); if(w) w.querySelector('.qrcap').style.display='none'; } }
   }
+  function openSheet(el){ if(!el) return; el.classList.add('open'); document.body.style.overflow='hidden'; }
+  function closeSheet(el){ if(!el) return; el.classList.remove('open'); el.classList.remove('sheet-open'); document.body.style.overflow=''; }
   function vcard(){
     const parts=(D.name||'').trim().split(/\s+/); const last=parts.length>1?parts.pop():''; const first=parts.join(' ');
     const L=['BEGIN:VCARD','VERSION:3.0','N:'+last+';'+first+';;;','FN:'+(D.name||'')];
@@ -623,7 +666,7 @@
     renderSocials(res.socials);
     document.title=(res.name||'Agent')+(shownTitle?' · '+shownTitle:'');
     document.querySelectorAll('.v-name').forEach(e=>e.textContent=res.name||'');
-    $('footName').textContent=(res.name||'')+(res.brand?' · '+res.brand:'');
+    $('footName').textContent=(res.name||'')+(res.brand?' · '+res.brand:'')+' · Ingenium One';
     if(res.compliance){ $('complianceBox').textContent=res.compliance; $('complianceBox').hidden=false; } else { $('complianceBox').hidden=true; }
     if(!PREVIEW && res.revoked){ openLock('revoked'); return; }
     if(!PREVIEW && res.limited){ openLock('limited'); return; }
@@ -669,11 +712,19 @@
     if(res.phoneTel){ const rc=$('rowCall'); if(rc) rc.setAttribute('href','tel:'+res.phoneTel); }
     { const rs=$('rowSocial'); if(rs) rs.style.display=(res.socials&&res.socials.length&&rs.dataset.apOff!=='1')?'':'none'; }
     if(firstV2){
-      ['verify','accProducts','accPromise'].forEach(id=>{ const s=$(id); if(s) s.classList.remove('open'); });
-      const rv=$('rowVerify'); if(rv) rv.addEventListener('click',e=>{ e.preventDefault(); const s=$('verify'); if(s){ s.classList.add('open'); s.scrollIntoView({behavior:'smooth'}); } });
+      ['accProducts','accPromise'].forEach(id=>{ const s=$(id); if(s) s.classList.remove('open'); });
+      // Verify becomes a full-screen sheet: move it out of the card so position:fixed covers the viewport
+      { const v=$('verify'); if(v){ v.classList.add('verify-sheet'); document.body.appendChild(v); } }
+      const rv=$('rowVerify'); if(rv) rv.addEventListener('click',e=>{ e.preventDefault(); const s=$('verify'); if(s){ s.classList.add('sheet-open'); document.body.style.overflow='hidden'; s.scrollTop=0; } });
+      const vb=$('verifyBack'); if(vb) vb.addEventListener('click',()=>{ const s=$('verify'); closeSheet(s); });
       const rs=$('rowSocial'); if(rs) rs.addEventListener('click',e=>{ e.preventDefault(); const sc=$('socials'); if(sc){ sc.classList.toggle('show'); if(sc.classList.contains('show')) sc.scrollIntoView({behavior:'smooth'}); } });
       const rq=$('rowQuote'); if(rq) rq.addEventListener('click',()=>openQuote(''));
       const rb=$('rowBook'); if(rb) rb.addEventListener('click',openAppt);
+      // QR opens as a full-screen sheet built for scanning
+      const rqr=$('rowQr'); if(rqr) rqr.addEventListener('click',()=>{ renderQR(); const n=$('qrName'); if(n) n.textContent=res.name||''; const bl=$('qrBrandLine'); if(bl) bl.textContent=res.brand||''; openSheet($('qrSheet')); });
+      const qb=$('qrBack'); if(qb) qb.addEventListener('click',()=>closeSheet($('qrSheet')));
+      // close sheets on Escape
+      document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeSheet($('qrSheet')); closeSheet($('verify')); } });
     }
   }
   // Apply the agent's saved appearance (colors, style, shape, font, layout, element order/visibility) to the V2 card.
@@ -687,8 +738,8 @@
     card.classList.remove('layout-compact','layout-spot'); if(ap.layout==='compact') card.classList.add('layout-compact'); if(ap.layout==='spot') card.classList.add('layout-spot');
     // element visibility + order
     if(Array.isArray(ap.elements)){
-      const rowMap={verify:'rowVerify',call:'rowCall',social:'rowSocial',quote:'rowQuote',book:'rowBook'};
-      const secMap={products:'accProducts',promise:'accPromise',qr:'qrWrap'};
+      const rowMap={verify:'rowVerify',call:'rowCall',social:'rowSocial',quote:'rowQuote',book:'rowBook',qr:'rowQr'};
+      const secMap={products:'accProducts',promise:'accPromise'};
       const rowsBox=$('v2rows');
       ap.elements.forEach(e=>{
         const rid=rowMap[e.k];
