@@ -201,6 +201,18 @@
   .dealform label{margin-top:10px}
   .sec{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px;font-weight:600}
   .acts{display:flex;gap:8px;flex-wrap:wrap}
+  .tagwrap{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .tagchip{display:inline-flex;align-items:center;gap:5px;background:#1a170c;border:1px solid var(--gold-dim);color:var(--gold2);border-radius:999px;padding:4px 6px 4px 11px;font-size:12px;font-weight:600}
+  .tagchip button{border:none;background:none;color:var(--gold-dim);cursor:pointer;font-size:15px;line-height:1;padding:0 2px}
+  .tagchip button:hover{color:#e0b24a}
+  .tagadd{display:inline-flex;gap:6px;align-items:center}
+  .tagin{width:120px;padding:6px 10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:8px;font:500 12px Inter}
+  .rembox{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px 14px;flex-wrap:wrap}
+  .rembox.over{border-color:#e0b24a;background:rgba(224,178,74,.08)}
+  .rembox b{font-size:13.5px}
+  .remform .grid2{gap:10px}
+  .cl .fudot.remind{background:#e0b24a}
+  .sp.rem-sp{background:rgba(224,178,74,.14);color:#e0b24a;border-color:rgba(224,178,74,.4)}
   .empty{text-align:center;color:var(--muted);padding:34px 10px;font-size:14px;line-height:1.6}
   .visit{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:13px}
   .visit:last-child{border-bottom:0}
@@ -1311,10 +1323,11 @@ function dealLine(d){
   return bits.join(' · ');
 }
 const needsFollow=p=>((p.status==='new'||p.status==='chat') && (p.views||0)>=2 && !(p.deals&&p.deals.length));
+const remDue=p=>!!(p.reminder && !p.reminder.done && p.reminder.due<=Date.now());
 function renderClients(){
   const all=people();
   const cnt=k=>all.filter(p=>p.status===k).length;
-  const fu=all.filter(needsFollow).length;
+  const fu=all.filter(p=>needsFollow(p)||remDue(p)).length;
   const qAP=all.reduce((n,p)=>n+p.deals.filter(d=>d.type==='quoted').reduce((m,d)=>m+annual(d),0),0);
   const sAP=all.reduce((n,p)=>n+p.deals.filter(d=>d.type==='sold').reduce((m,d)=>m+annual(d),0),0);
   const tiles=[['all','People tracked',all.length,'opened '+all.reduce((n,p)=>n+(p.views||0),0)+' times'],['follow','Follow up',fu,fu?'opened 2+, no quote yet':'all caught up'],['quoted','Quoted',cnt('quoted'),qAP?money(qAP)+'/yr quoted':''],['sold','Sold',cnt('sold'),sAP?money(sAP)+'/yr annual premium':'']];
@@ -1323,7 +1336,7 @@ function renderClients(){
   $('clFilter').innerHTML=[['all','All'],['follow','Follow up'],['new','New'],['chat','Brief chat'],['quoted','Quoted'],['sold','Sold']].map(([k,l])=>'<button data-f="'+k+'" class="'+(CL.filter===k?'on':'')+'">'+l+(k==='all'?'':' '+(k==='follow'?fu:cnt(k)))+'</button>').join('');
   $('clFilter').querySelectorAll('button').forEach(b=>b.onclick=()=>{CL.filter=b.dataset.f; renderClients();});
   const q=CL.q.trim().toLowerCase();
-  let list=all.filter(p=>CL.filter==='all'?true:CL.filter==='follow'?needsFollow(p):p.status===CL.filter);
+  let list=all.filter(p=>CL.filter==='all'?true:CL.filter==='follow'?(needsFollow(p)||remDue(p)):p.status===CL.filter);
   if(q) list=list.filter(p=>[p.name,p.phone,p.notes,...p.deals.map(d=>d.product+' '+d.carrier+' '+d.note)].join(' ').toLowerCase().includes(q));
   const lastAct=p=>Math.max(p.lastViewed||0,p.statusAt||0,p.created||0);
   list.sort((a,b)=>lastAct(b)-lastAct(a));
@@ -1336,7 +1349,8 @@ function clientHtml(p){
   const chips=p.deals.slice(0,3).map(d=>'<span class="sp '+(d.type==='sold'?'st-sold':'st-quoted')+'">'+(d.type==='sold'?'Sold':'Quoted')+(d.product?' · '+esc(d.product):'')+(d.premium?' · '+money(annual(d))+'/yr':'')+'</span>').join('');
   const meta=p.manual?('Tracked visitor'+(p.fromVisit&&p.fromVisit.place?' · '+esc(p.fromVisit.place):'')):((p.views||0)+' open'+(p.views===1?'':'s')+' · last '+ago(p.lastViewed)+(p.seen&&p.seen.length?'':''));
   const fu=needsFollow(p);
-  let h='<div class="cl '+(open?'open':'')+(fu?' fu':'')+'" data-tok="'+tok+'"><div class="clh" data-act="toggle"><div class="av">'+esc(initials(p.name))+(fu?'<span class="fudot" title="Opened 2+ times, no quote yet"></span>':'')+'</div><div class="clm"><h3>'+esc(p.name)+(fu?' <span class="sp follow-sp">Follow up</span>':'')+(paused&&!p.manual?' <span class="sp st-new" style="font-size:10px;padding:2px 8px">Paused</span>':'')+'</h3><div class="meta">'+meta+(p.phone?' · '+esc(p.phone):'')+'</div>'+(chips?'<div class="dealchips">'+chips+'</div>':'')+'</div><span class="sp '+ST[p.status].c+'">'+ST[p.status].l+'</span><span class="chev">▾</span></div>';
+  const due=remDue(p);
+  let h='<div class="cl '+(open?'open':'')+(fu||due?' fu':'')+'" data-tok="'+tok+'"><div class="clh" data-act="toggle"><div class="av">'+esc(initials(p.name))+((fu||due)?'<span class="fudot'+(due?' remind':'')+'" title="'+(due?'Reminder due':'Opened 2+ times, no quote yet')+'"></span>':'')+'</div><div class="clm"><h3>'+esc(p.name)+(due?' <span class="sp rem-sp">Follow up due</span>':(fu?' <span class="sp follow-sp">Follow up</span>':''))+(paused&&!p.manual?' <span class="sp st-new" style="font-size:10px;padding:2px 8px">Paused</span>':'')+'</h3><div class="meta">'+meta+(p.phone?' · '+esc(p.phone):'')+'</div>'+(chips?'<div class="dealchips">'+chips+'</div>':'')+'</div><span class="sp '+ST[p.status].c+'">'+ST[p.status].l+'</span><span class="chev">▾</span></div>';
   if(open){
     h+='<div class="cld">';
     h+='<div class="sec">Status</div><div class="seglist">'+Object.keys(ST).map(k=>'<button class="'+(p.status===k?'on ':'')+ST[k].c+'" data-act="status" data-v="'+k+'">'+ST[k].l+'</button>').join('')+'</div>';
@@ -1352,6 +1366,18 @@ function clientHtml(p){
       '<div class="row" style="margin-top:14px"><button class="btn sm" data-act="dealsave">Save '+(df==='sold'?'sale':'quote')+'</button><button class="btn sm ghost" data-act="dealcancel">Cancel</button></div></div>';
     } else h+='<div class="acts" style="margin-top:10px"><button class="btn sm" data-act="dealadd" data-v="quoted">+ Log a quote</button><button class="btn sm ghost" data-act="dealadd" data-v="sold">+ Log a sale</button></div>';
     h+='<div class="sec">Details</div><div class="grid2"><div><label>Name</label><input data-fld="name" value="'+esc(p.name)+'"></div><div><label>Phone</label><input data-fld="phone" inputmode="tel" value="'+esc(p.phone||'')+'"></div></div><label>Notes</label><textarea data-fld="notes" placeholder="What did you talk about?">'+esc(p.notes||'')+'</textarea>';
+    // Tags
+    const tags=p.tags||[];
+    h+='<div class="sec">Tags</div><div class="tagwrap">'+tags.map(t=>'<span class="tagchip">'+esc(t)+'<button data-act="tagdel" data-v="'+esc(t)+'" title="Remove">×</button></span>').join('')+'<span class="tagadd"><input class="tagin" placeholder="Add a tag" maxlength="28"><button class="btn sm ghost" data-act="tagadd">Add</button></span></div><div class="muted" style="font-size:11.5px;margin-top:5px">Products get tagged automatically when you log a quote or sale.</div>';
+    // Reminder
+    const rem=p.reminder;
+    h+='<div class="sec">Follow-up reminder</div>';
+    if(rem&&!rem.done){
+      const due=rem.due, over=due<Date.now();
+      h+='<div class="rembox'+(over?' over':'')+'"><div><b>'+(over?'Due':'Set for')+' '+new Date(due).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})+'</b>'+(rem.note?'<div class="muted" style="font-size:12px">'+esc(rem.note)+'</div>':'')+'</div><div class="acts"><button class="btn sm" data-act="remdone">Done</button><button class="btn sm ghost" data-act="remclear">Clear</button></div></div>';
+    } else {
+      h+='<div class="remform"><div class="grid2"><div><label>Remind me on</label><input class="remdate" type="date" min="'+new Date().toISOString().slice(0,10)+'"></div><div><label>About (optional)</label><input class="remnote" placeholder="e.g. call back with term quote" maxlength="160"></div></div><button class="btn sm" data-act="remset" style="margin-top:10px">Set reminder</button></div>';
+    }
     h+='<div class="sec">Link</div>';
     if(p.manual) h+='<p class="muted">Added from your click log. No private link for this person.</p><div class="acts" style="margin-top:8px"><button class="btn sm danger" data-act="del">Delete</button></div>';
     else h+='<div class="link-url">'+esc(location.origin+AB+'/?k='+tok)+'</div><p class="muted" style="margin-bottom:8px">'+(p.places||0)+' device/place'+((p.places||0)===1?'':'s')+' · created '+new Date(p.created).toLocaleDateString()+'</p><div class="acts"><button class="btn sm" data-act="send">📤 Send</button><button class="btn sm ghost" data-act="copy">Copy link</button><button class="btn sm ghost" data-act="pv">👁 See what they see</button><button class="btn sm '+(paused?'':'warn')+'" data-act="pause">'+(paused?'Give access':'Pause')+'</button><button class="btn sm danger" data-act="del">Delete</button></div>';
@@ -1386,6 +1412,18 @@ $('clientList').addEventListener('click',async e=>{
   if(act==='pause'){ const paused=p.paused||!p.active; if(await patchLink(tok,{paused:!paused,active:true})){ renderClients(); toast(paused?'Access given back':'Paused'); } return; }
   if(act==='del'){ if(!confirm('Delete '+p.name+'? This removes their link and everything logged for them.')) return; const r=await (await api(AB+'/api/admin/links/'+tok,{method:'DELETE'})).json(); if(r.links){ S.links=r.links; OPEN.delete(tok); renderClients(); loadActivity(); toast('Deleted'); } return; }
   if(act==='pv'){ window.open(location.origin+AB+'/?k='+tok,'_blank'); return; }
+  if(act==='tagadd'){ const inp=card.querySelector('.tagin'); const v=(inp.value||'').trim(); if(!v) return; const tags=[...(p.tags||[]),v]; if(await patchLink(tok,{tags})) renderClients(); return; }
+  if(act==='tagdel'){ const tags=(p.tags||[]).filter(t=>t!==el.dataset.v); if(await patchLink(tok,{tags})) renderClients(); return; }
+  if(act==='remset'){ const d=card.querySelector('.remdate').value; if(!d) return toast('Pick a date'); const due=new Date(d+'T09:00:00').getTime(); const note=card.querySelector('.remnote').value||''; if(await patchLink(tok,{reminder:{due,note}})){ renderClients(); toast('Reminder set'); } return; }
+  if(act==='remdone'){ if(await patchLink(tok,{reminderDone:true})){ renderClients(); toast('Nice work'); } return; }
+  if(act==='remclear'){ if(await patchLink(tok,{reminder:null})){ renderClients(); } return; }
+});
+// Enter adds a tag
+$('clientList').addEventListener('keydown',async e=>{
+  if(e.key!=='Enter'||!e.target.classList.contains('tagin')) return;
+  e.preventDefault();
+  const tok=e.target.closest('.cl').dataset.tok; const v=(e.target.value||'').trim(); if(!v) return;
+  const tags=[...((S.links[tok].tags)||[]),v]; if(await patchLink(tok,{tags})) renderClients();
 });
 $('clientList').addEventListener('focusout',async e=>{
   const f=e.target.dataset&&e.target.dataset.fld; if(!f) return;

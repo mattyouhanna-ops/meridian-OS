@@ -563,6 +563,12 @@ function cleanDeals(arr) {
     note: str(d.note, 300), date: Number(d.date) || Date.now(),
   }));
 }
+function cleanTags(arr) {
+  const seen = new Set();
+  return (Array.isArray(arr) ? arr : [])
+    .map((t) => str(t, 28).trim()).filter((t) => t && !seen.has(t.toLowerCase()) && seen.add(t.toLowerCase()))
+    .slice(0, 12);
+}
 async function handleAdmin(agent, sub, method, body, req) {
   const w = who(req);
   const S = () => normalizeSettings(agent.settings);
@@ -687,7 +693,18 @@ async function handleAdmin(agent, sub, method, body, req) {
       if (STATUSES.includes(body.status) && body.status !== l.status) { l.status = body.status; l.statusAt = Date.now(); }
       if (typeof body.phone === "string") l.phone = str(body.phone, 40);
       if (typeof body.notes === "string") l.notes = str(body.notes, 1000);
-      if (Array.isArray(body.deals)) l.deals = cleanDeals(body.deals);
+      if (Array.isArray(body.tags)) l.tags = cleanTags(body.tags);
+      if (Array.isArray(body.deals)) {
+        l.deals = cleanDeals(body.deals);
+        // auto-tag: give the contact a tag for each product they've been quoted/sold (merged after any explicit tags)
+        const autoTags = [...new Set(l.deals.map((d) => d.product).filter(Boolean))];
+        if (autoTags.length) l.tags = cleanTags([...(l.tags || []), ...autoTags]);
+      }
+      if ("reminder" in body) {
+        if (body.reminder && Number(body.reminder.due)) l.reminder = { due: Number(body.reminder.due), note: str(body.reminder.note, 160), done: false };
+        else l.reminder = null;
+      }
+      if (typeof body.reminderDone === "boolean" && l.reminder) l.reminder.done = body.reminderDone;
       const afterPaused = !!l.paused;
       if (afterPaused !== beforePaused) appendLog(agent.security, { t: Date.now(), ...w, event: (afterPaused ? "Paused" : "Gave access back to") + ` ${l.name}` }, 300);
       save();
