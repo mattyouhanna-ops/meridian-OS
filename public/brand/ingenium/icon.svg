@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<defs>
+<linearGradient id="orbD" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b63ff"/><stop offset="1" stop-color="#8fb0ff"/></linearGradient>
+<linearGradient id="sil" x1="0.2" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#f6f8fb"/><stop offset="0.5" stop-color="#cfd7e1"/><stop offset="1" stop-color="#9aa7b8"/></linearGradient>
+</defs>
+<rect width="512" height="512" rx="112" fill="#0a1024"/>
+<g transform="translate(256,250) scale(2.7) translate(-75,-74)">
+<g fill="none" stroke="url(#orbD)" stroke-width="3.2"><ellipse cx="75" cy="74" rx="53" ry="21" transform="rotate(34 75 74)"/><ellipse cx="75" cy="74" rx="53" ry="21" transform="rotate(-34 75 74)"/></g>
+<g fill="#6f8dff"><circle cx="119" cy="99" r="4.6"/><circle cx="31" cy="49" r="4.6"/><circle cx="119" cy="49" r="4.6"/><circle cx="31" cy="99" r="4.6"/></g>
+<path d="M75 48 C66 44 55 46 53 55 C45 52 38 59 44 66 C37 70 39 79 48 79 C44 86 50 93 60 89 C63 94 70 94 75 90 C80 94 87 94 90 89 C100 93 106 86 102 79 C111 79 113 70 106 66 C112 59 105 52 97 55 C95 46 84 44 75 48 Z" fill="url(#sil)" stroke="#2a46c0" stroke-width="2.4" stroke-linejoin="round"/>
+<g fill="none" stroke="#2a46c0" stroke-width="1.9" stroke-linecap="round"><line x1="75" y1="51" x2="75" y2="89"/><path d="M60 56 C64 59 63 64 58 65"/><path d="M62 75 C66 77 65 82 60 82"/><path d="M90 56 C86 59 87 64 92 65"/><path d="M88 75 C84 77 85 82 90 82"/></g>
+<circle cx="75" cy="74" r="3" fill="#1f3fe0"/>
+</g>
+</svg>
