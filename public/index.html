@@ -413,15 +413,9 @@
   </section>
 
   <section class="acc open" id="accProducts" data-f="products">
-    <button type="button" class="acc-head" data-acc><div><h2 class="gold-text">How I can help</h2><div class="peek" id="helpPeek">Tap a coverage for a free, no-obligation quote</div></div><span class="chev"></span></button>
+    <button type="button" class="acc-head" data-acc><div><h2 class="gold-text">How I can help</h2><div class="peek" id="helpPeek">The coverage I can help you with</div></div><span class="chev"></span></button>
     <div class="acc-body">
       <div class="products" id="productList"></div>
-      <div class="book" data-f="contact">
-        <button class="verify-btn bigbtn" id="bookBtn" type="button" style="width:100%;justify-content:center;padding:15px;font-size:16px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-          <span>Book a time to talk</span>
-        </button>
-      </div>
     </div>
   </section>
 
@@ -691,7 +685,7 @@
     const LICENSED=res.licensed!==false;
     REFER=!LICENSED;
     if(!LICENSED){ f.npn=false; f.states=false; f.nipr=false; f.lastResort=false; }
-    { const hp=$('helpPeek'); if(hp) hp.textContent=LICENSED?'Tap a coverage for a free, no-obligation quote':"Tap a coverage and I'll connect you with a trusted licensed agent"; }
+    { const hp=$('helpPeek'); if(hp) hp.textContent=LICENSED?'The coverage I can help you with':"Coverage I can connect you with a trusted licensed agent for"; }
     { const rb=$('regBadge'); if(rb) rb.style.display=LICENSED?'':'none'; }
     const shownTitle=res.title||'';
     $('brandText').textContent=res.brand||'';
@@ -718,14 +712,13 @@
       const pl=$('productList'); pl.innerHTML='';
       res.products.forEach(p=>{
         const soon=/^coming soon/i.test(p.d||'');
-        const el=document.createElement(soon?'div':'button'); el.className='prod'+(soon?' isSoon':''); if(!soon) el.type='button';
+        const el=document.createElement('div'); el.className='prod'+(soon?' isSoon':'');
         const dot=document.createElement('i');
         const mid=document.createElement('div'); mid.style.flex='1';
         const t=document.createElement('b'); t.textContent=p.t;
         if(soon){ const tag=document.createElement('em'); tag.className='soon'; tag.textContent='Soon'; t.appendChild(tag); }
         const s=document.createElement('span'); s.textContent=p.d;
         mid.appendChild(t); mid.appendChild(s);
-        if(!soon){ const q=document.createElement('span'); q.className='q'; q.textContent='Get a quote →'; mid.appendChild(q); el.addEventListener('click',()=>openQuote(p.t)); }
         el.appendChild(dot); el.appendChild(mid);
         pl.appendChild(el);
       });
@@ -840,7 +833,6 @@
     ['qFirst','qLast','qPhone','qEmail','qCoverage','qBudget','qPurpose','qSlot','qDate','qNote'].forEach(i=>{if($(i))$(i).value='';});
     document.querySelectorAll('#qProtect .q-chip.on').forEach(c=>c.classList.remove('on'));
   }
-  (function(){ const bb=$('bookBtn'); if(bb) bb.addEventListener('click',()=>openQuote('')); })();
   $('qCancel').addEventListener('click',closeQuote);
   $('qClose').addEventListener('click',closeQuote);
   $('quote').addEventListener('click',e=>{ if(e.target===$('quote')) closeQuote(); });
