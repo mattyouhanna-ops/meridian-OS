@@ -455,6 +455,7 @@ async function handleCard(agent, url, req) {
   if (P.socials && P.socials.length) out.socials = P.socials;
   if (P.website) out.website = P.website;
   if (P.address) out.address = P.address;
+  out.designV2 = agent.cardV2 === true;
   return out;
 }
 
@@ -557,7 +558,7 @@ async function handleAdmin(agent, sub, method, body, req) {
   const S = () => normalizeSettings(agent.settings);
 
   if (sub === "state" && method === "GET")
-    return { status: 200, data: { email: agent.profile.email, fields: FIELDS, stateNames: STATE_NAMES, profile: normalizeProfile(agent.profile), settings: S(), links: agent.links, mustChange: !!agent.mustChange, photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null, catalog: { products: DEFAULT_PRODUCTS, promises: DEFAULT_PROMISES } } };
+    return { status: 200, data: { email: agent.profile.email, fields: FIELDS, stateNames: STATE_NAMES, profile: normalizeProfile(agent.profile), settings: S(), links: agent.links, mustChange: !!agent.mustChange, cardV2: agent.cardV2 === true, photo: agent.photoVer ? `/a/${agent.slug}/photo.jpg?v=${agent.photoVer}` : null, catalog: { products: DEFAULT_PRODUCTS, promises: DEFAULT_PROMISES } } };
 
   if (sub === "profile" && method === "POST") {
     const next = normalizeProfile({ ...agent.profile, ...(body.profile || {}) });
@@ -565,6 +566,17 @@ async function handleAdmin(agent, sub, method, body, req) {
     agent.profile = next; agent.cardVer = Date.now();
     appendLog(agent.security, { t: Date.now(), ...w, event: "Edited card details" }, 300); save();
     return { status: 200, data: { ok: true, profile: next } };
+  }
+
+  // Opt-in to (or out of) the redesigned card. The dashboard "Update" button posts here.
+  if (sub === "design" && method === "POST") {
+    const on = body.cardV2 !== false; // default to turning it on
+    if (agent.cardV2 !== on) {
+      agent.cardV2 = on; agent.cardVer = Date.now();
+      appendLog(agent.security, { t: Date.now(), ...w, event: on ? "Switched to the new card" : "Reverted to the classic card" }, 300);
+      save();
+    }
+    return { status: 200, data: { ok: true, cardV2: agent.cardV2 === true } };
   }
 
   if (sub === "preview" && method === "POST") {
@@ -722,6 +734,7 @@ function agentPatch(body) {
   if (typeof body.carrier === "string") patch.carrier = body.carrier;
   if (typeof body.licensed === "boolean") patch.licensed = body.licensed;
   if (typeof body.active === "boolean") patch.active = body.active;
+  if (typeof body.cardV2 === "boolean") patch.cardV2 = body.cardV2;
   if (body.password) patch.password = String(body.password);
   if (body.unlock) patch.unlock = true;
   return patch;

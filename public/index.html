@@ -224,6 +224,38 @@
   .acc-body .id{width:100%;max-width:340px;text-align:left}
   .acc-body .prod{text-align:left}
 </style>
+<style>
+  /* ---- V2 card: opt-in redesign. Nothing here affects a card without the .v2 class ---- */
+  .v2only{display:none!important}
+  .card.v2 .hero{display:flex;flex-direction:column}
+  .card.v2 .hero .avatar{order:1}
+  .card.v2 .hero h1{order:2}
+  .card.v2 .hero .title{order:3}
+  .card.v2 .hero #companyText{order:4;display:block!important}
+  .card.v2 .hero .trust{order:5}
+  .card.v2 .hero .hero-actions{order:6;margin-top:16px}
+  .card.v2 .hero #v2rows{order:7;display:flex!important;flex-direction:column;gap:8px;margin-top:14px}
+  .card.v2 .hero .qrwrap{order:8}
+  .card.v2 .hero .socials{order:9}
+  .card.v2 .hero #skelHero{order:0}
+  .card.v2 .hero #loading{order:11}
+  .card.v2 .hero .contact-lines{display:none!important}
+  #companyText{font-size:13px;color:var(--muted);margin-top:3px}
+  .v2row{display:flex;align-items:center;gap:11px;width:100%;padding:12px 15px;border-radius:13px;background:var(--black);border:1px solid var(--line);text-decoration:none;color:var(--text);text-align:left;font:inherit;cursor:pointer;transition:border-color .15s,transform .12s}
+  .v2row:hover{border-color:var(--gold-dim)}
+  .v2row:active{transform:scale(.98)}
+  .v2row .i{width:18px;flex:none;text-align:center;color:var(--gold2);font-size:15px}
+  .v2row .tx{flex:1;min-width:0}
+  .v2row .tx b{display:block;font-size:14px;font-weight:700;line-height:1.2}
+  .v2row .tx .sub2{display:block;font-size:11.5px;color:var(--muted);line-height:1.2;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .v2row .ch{flex:none;color:var(--muted);font-size:16px}
+  .v2row.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));border:none}
+  .v2row.gold .i,.v2row.gold .ch{color:var(--black)}
+  .v2row.gold .tx b{color:var(--black)}
+  .v2row.gold .tx .sub2{color:#3a2f10}
+  .card.v2 .socials{display:none!important}
+  .card.v2 .socials.show{display:flex!important}
+</style>
 </head>
 <body class="pending">
 <main class="card">
@@ -237,6 +269,7 @@
     <div class="avatar"><div id="mono"></div></div>
     <h1 id="nameText"></h1>
     <div class="title" id="titleText"></div>
+    <div class="v2only" id="companyText"></div>
     <div class="trust">
       <span class="t" data-f="states"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span id="badgeText">Verify below</span></span>
       <span class="t g" id="regBadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>State-regulated agent</span>
@@ -255,6 +288,13 @@
     <div class="hero-actions" data-f="contact">
       <button class="hbtn" id="shareCard" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v14"/></svg>Share</button>
       <button class="hbtn pri" id="saveContact" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>Save contact</button>
+    </div>
+    <div class="v2rows v2only" id="v2rows">
+      <a class="v2row gold" id="rowVerify" href="#verify" data-f="any"><span class="i">🛡️</span><span class="tx"><b>Verify my license</b><span class="sub2">Every state I'm licensed in</span></span><span class="ch">›</span></a>
+      <a class="v2row" id="rowCall" href="#" data-f="phone"><span class="i">📞</span><span class="tx"><b>Call or text</b><span class="sub2" id="callSub"></span></span><span class="ch">›</span></a>
+      <a class="v2row" id="rowSocial" href="#"><span class="i">🔗</span><span class="tx"><b>Social</b><span class="sub2">All my profiles</span></span><span class="ch">›</span></a>
+      <button class="v2row" id="rowQuote" type="button" data-f="contact"><span class="i">📝</span><span class="tx"><b>Get a quote</b><span class="sub2">Tell me a little, I'll run numbers</span></span><span class="ch">›</span></button>
+      <button class="v2row" id="rowBook" type="button" data-f="contact"><span class="i">📅</span><span class="tx"><b>Book a time</b><span class="sub2">Grab a slot that works</span></span><span class="ch">›</span></button>
     </div>
     <div class="socials" id="socials" data-f="contact" hidden></div>
     <div class="loading" id="loading">Loading…</div>
@@ -592,6 +632,25 @@
     if(f.states||f.npn||f.nipr||f.lastResort) show('any');
     const bar=document.querySelector('.bar'); if(bar) bar.style.gridTemplateColumns='repeat('+Math.max(1,bar.querySelectorAll('.act:not([data-f])').length)+',1fr)';
     if(!(f.phone||f.email)) document.body.style.paddingBottom='40px';
+    applyDesign(res);
+  }
+  function applyDesign(res){
+    const card=document.querySelector('main.card'); if(!card) return;
+    const forceV2=new URLSearchParams(location.search).get('previewV2')==='1';
+    if(!res.designV2 && !forceV2){ card.classList.remove('v2'); return; }
+    const firstV2=!card.classList.contains('v2');
+    card.classList.add('v2');
+    const co=$('companyText'); if(co) co.textContent=res.brand||'';
+    if(res.phone){ const cs=$('callSub'); if(cs) cs.textContent=res.phone; }
+    if(res.phoneTel){ const rc=$('rowCall'); if(rc) rc.setAttribute('href','tel:'+res.phoneTel); }
+    { const rs=$('rowSocial'); if(rs) rs.style.display=(res.socials&&res.socials.length)?'':'none'; }
+    if(firstV2){
+      ['verify','accProducts','accPromise'].forEach(id=>{ const s=$(id); if(s) s.classList.remove('open'); });
+      const rv=$('rowVerify'); if(rv) rv.addEventListener('click',e=>{ e.preventDefault(); const s=$('verify'); if(s){ s.classList.add('open'); s.scrollIntoView({behavior:'smooth'}); } });
+      const rs=$('rowSocial'); if(rs) rs.addEventListener('click',e=>{ e.preventDefault(); const sc=$('socials'); if(sc){ sc.classList.toggle('show'); if(sc.classList.contains('show')) sc.scrollIntoView({behavior:'smooth'}); } });
+      const rq=$('rowQuote'); if(rq) rq.addEventListener('click',()=>openQuote(''));
+      const rb=$('rowBook'); if(rb) rb.addEventListener('click',openAppt);
+    }
   }
   async function fetchCard(first){
     const k=getK();
@@ -634,7 +693,7 @@
   }
   function openQuote(product){
     qKind='quote'; qProduct=product;
-    $('qTitle').textContent=(REFER?'Request a quote: ':'Free quote: ')+product; setQSub();
+    $('qTitle').textContent = product ? ((REFER?'Request a quote: ':'Free quote: ')+product) : (REFER?'Request a quote':'Get a free quote'); setQSub();
     $('qQuoteFields').hidden=false; $('qApptFields').hidden=true;
     $('qSend').querySelector('span').textContent='Send my request';
     qAltFill(); $('qForm').hidden=false; $('qDone').hidden=true; $('quote').hidden=false;
