@@ -377,6 +377,7 @@
       <nav class="tabs" role="tablist" aria-label="Dashboard sections">
         <button class="tab on" data-tab="admin" role="tab">My Admin</button>
         <button class="tab" data-tab="clients" role="tab">Clients<span class="nb" id="reqBadge" hidden>0</span></button>
+        <button class="tab" data-tab="stats" role="tab">Stats</button>
       </nav>
       <div class="topr"><a id="viewCardLink" href="#" target="_blank" rel="noopener" class="btn sm ghost">View card ↗</a><button class="btn sm ghost" id="signout">Sign out</button></div>
     </header>
@@ -690,6 +691,60 @@
           <div id="visitLog" style="margin-top:8px"></div>
           <button class="btn sm danger" id="clearVisits" style="margin-top:14px">Clear this log</button>
         </div>
+      </div>
+    </main>
+
+    <!-- ============ TAB 3: STATS ============ -->
+    <main id="tab-stats" hidden>
+      <style>
+        .st-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0 18px}
+        @media(max-width:720px){.st-grid{grid-template-columns:repeat(2,1fr)}}
+        .st-kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 15px}
+        .st-kpi b{display:block;font-family:"Cormorant Garamond",serif;font-size:28px;font-weight:700;color:var(--gold2);line-height:1}
+        .st-kpi span{display:block;font-size:12.5px;color:var(--muted);margin-top:5px}
+        .st-kpi em{display:block;font-size:11.5px;color:var(--gold-dim);font-style:normal;margin-top:3px}
+        .st-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:14px}
+        .st-card h3{font-family:"Cormorant Garamond",serif;font-size:19px;font-weight:700;margin:0 0 3px}
+        .st-card .sub{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+        .bars{display:flex;align-items:flex-end;gap:4px;height:120px}
+        .bars .bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-width:0}
+        .bars .bar i{width:100%;max-width:26px;background:linear-gradient(180deg,var(--gold2),var(--gold-dim));border-radius:4px 4px 0 0;min-height:2px;transition:height .3s}
+        .bars .bar em{font-size:9.5px;color:var(--muted);font-style:normal;white-space:nowrap;transform:rotate(0)}
+        .bars .bar .v{font-size:10px;color:var(--gold2);font-weight:700}
+        .funnel{display:flex;flex-direction:column;gap:8px}
+        .fn{display:flex;align-items:center;gap:12px}
+        .fn .fnbar{height:38px;border-radius:9px;background:linear-gradient(90deg,var(--gold),var(--gold-dim));display:flex;align-items:center;padding:0 13px;color:#231c00;font-weight:700;font-size:14px;min-width:44px;transition:width .4s}
+        .fn .fnlbl{flex:1;font-size:13.5px}
+        .fn .fnlbl b{color:var(--text)}
+        .fn .fnlbl span{color:var(--muted);font-size:12px}
+        .st-list{display:flex;flex-direction:column;gap:7px}
+        .st-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13.5px;padding:7px 0;border-bottom:1px solid var(--line)}
+        .st-row:last-child{border-bottom:none}
+        .st-row .mut{color:var(--muted)}
+        .st-empty{color:var(--muted);font-size:13px;padding:8px 0}
+      </style>
+      <h2 class="gold-text" style="font-family:'Cormorant Garamond',serif;font-size:24px">Your numbers</h2>
+      <p class="muted" style="margin-bottom:16px">How your card is performing and what it's turning into. Updates as people open your card and you log quotes and sales.</p>
+      <div class="st-grid" id="stKpis"></div>
+      <div class="st-card">
+        <h3>Card views</h3>
+        <div class="sub">Last 14 days</div>
+        <div class="bars" id="stBars"></div>
+      </div>
+      <div class="st-card">
+        <h3>From view to sale</h3>
+        <div class="sub">Where people are in your pipeline right now</div>
+        <div class="funnel" id="stFunnel"></div>
+      </div>
+      <div class="st-card">
+        <h3>Return on your card</h3>
+        <div class="sub">Annual premium you've logged</div>
+        <div class="st-list" id="stRoi"></div>
+      </div>
+      <div class="st-card">
+        <h3>Where opens come from</h3>
+        <div class="sub">Top places your card was opened</div>
+        <div class="st-list" id="stPlaces"></div>
       </div>
     </main>
   </div>
@@ -1070,7 +1125,8 @@ async function ensurePush(){
 // ---------- tabs ----------
 function applyTab(){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('on',b.dataset.tab===curTab));
-  $('tab-admin').hidden=curTab!=='admin'; $('tab-clients').hidden=curTab!=='clients';
+  $('tab-admin').hidden=curTab!=='admin'; $('tab-clients').hidden=curTab!=='clients'; $('tab-stats').hidden=curTab!=='stats';
+  if(curTab==='stats') renderStats();
   if(curTab!=='admin' && !pvCtx) closePv();
   if(curTab==='admin' && pvCtx){ closePv(); }
   setPvUI(); updateSaveBar(); schedulePreview();
@@ -1190,6 +1246,56 @@ function setPvUI(){}
 function openPv(){}
 function closePv(){ pvOpen=false; pvCtx=null; }
 function seeAs(){}
+
+// ---------- stats ----------
+function renderStats(){
+  const all=people();
+  const views=VISITS.filter(v=>v.view!=='blocked');
+  const now=Date.now(), day=86400000;
+  const weekAgo=now-7*day;
+  const uniq=new Set(views.map(v=>(v.ip||'')+'|'+(v.device||''))).size;
+  const thisWeek=views.filter(v=>v.t>=weekAgo).length;
+  const sold=all.filter(p=>p.status==='sold');
+  const quoted=all.filter(p=>p.deals.some(d=>d.type==='quoted')||p.status==='quoted');
+  const sAP=all.reduce((n,p)=>n+p.deals.filter(d=>d.type==='sold').reduce((m,d)=>m+annual(d),0),0);
+  const qAP=all.reduce((n,p)=>n+p.deals.filter(d=>d.type==='quoted').reduce((m,d)=>m+annual(d),0),0);
+  const policies=all.reduce((n,p)=>n+p.deals.filter(d=>d.type==='sold').length,0);
+  // KPIs
+  $('stKpis').innerHTML=[
+    ['Card views',views.length,thisWeek+' this week'],
+    ['Unique people',uniq,'distinct devices'],
+    ['In pipeline',all.length,all.length?people().filter(needsFollow).length+' to follow up':'none yet'],
+    ['Annual premium',money(sAP),policies+' polic'+(policies===1?'y':'ies')+' sold'],
+  ].map(k=>'<div class="st-kpi"><b>'+esc(String(k[1]))+'</b><span>'+esc(k[0])+'</span><em>'+esc(k[2])+'</em></div>').join('');
+  // 14-day bars
+  const days=14, buckets=new Array(days).fill(0), labels=[];
+  for(let i=days-1;i>=0;i--){ const d=new Date(now-i*day); labels.push(d); }
+  views.forEach(v=>{ const diff=Math.floor((now-v.t)/day); if(diff>=0&&diff<days) buckets[days-1-diff]++; });
+  const mx=Math.max(1,...buckets);
+  $('stBars').innerHTML=buckets.map((n,i)=>{
+    const lab=labels[i]; const dow=lab.toLocaleDateString(undefined,{weekday:'short'})[0];
+    return '<div class="bar" title="'+lab.toLocaleDateString()+': '+n+' views"><span class="v">'+(n||'')+'</span><i style="height:'+Math.max(n?3:0,Math.round(n/mx*92))+'px"></i><em>'+(i%2===0?dow:'')+'</em></div>';
+  }).join('');
+  // funnel
+  const steps=[['Opened your card',uniq],['Tracked as a lead',all.length],['Quoted',quoted.length],['Sold',sold.length]];
+  const fmx=Math.max(1,...steps.map(s=>s[1]));
+  $('stFunnel').innerHTML=steps.map((s,i)=>{
+    const prev=i>0?steps[i-1][1]:s[1];
+    const conv=prev?Math.round(s[1]/prev*100):0;
+    return '<div class="fn"><div class="fnbar" style="width:'+Math.max(8,Math.round(s[1]/fmx*70))+'%">'+s[1]+'</div><div class="fnlbl"><b>'+esc(s[0])+'</b>'+(i>0?' <span>'+conv+'% of previous</span>':'')+'</div></div>';
+  }).join('');
+  // ROI
+  $('stRoi').innerHTML=[
+    ['Sold — annual premium',money(sAP)],
+    ['Quoted — not yet closed',money(qAP)],
+    ['Policies sold',String(policies)],
+    ['Avg annual premium / sale',policies?money(sAP/policies):'—'],
+  ].map(r=>'<div class="st-row"><span>'+esc(r[0])+'</span><span class="mut">'+esc(r[1])+'</span></div>').join('');
+  // places
+  const pc={}; views.forEach(v=>{ const p=v.place&&v.place!=='Unknown location'?v.place:'Unknown'; pc[p]=(pc[p]||0)+1; });
+  const top=Object.entries(pc).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  $('stPlaces').innerHTML=top.length?top.map(([p,n])=>'<div class="st-row"><span>'+esc(p)+'</span><span class="mut">'+n+' open'+(n===1?'':'s')+'</span></div>').join(''):'<div class="st-empty">No opens yet. Share your card to start seeing where it lands.</div>';
+}
 
 // ---------- clients ----------
 const ST={new:{l:'New',c:'st-new'},chat:{l:'Brief chat',c:'st-chat'},quoted:{l:'Quoted',c:'st-quoted'},sold:{l:'Sold',c:'st-sold'}};
