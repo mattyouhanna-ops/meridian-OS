@@ -114,8 +114,10 @@
   .editrow input{margin-bottom:6px}
   /* ===== dashboard v2 ===== */
   .v2banner{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 18px;padding:16px 18px;border:1px solid rgba(212,175,55,.4);border-radius:14px;background:linear-gradient(135deg,rgba(212,175,55,.12),rgba(212,175,55,.03))}
-  .v2b-title{font-weight:700;font-size:15px;color:#f1d78a;margin-bottom:3px}
+  .v2b-tag{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#231c00;background:linear-gradient(135deg,var(--gold2),var(--gold));padding:3px 9px;border-radius:999px;margin-bottom:8px}
+  .v2b-title{font-weight:700;font-size:15px;color:#f1d78a;margin-bottom:4px}
   .v2b-sub{font-size:13px;color:var(--muted);line-height:1.45;max-width:640px}
+  .v2b-credit{font-size:11px;color:var(--gold-dim);margin-top:8px;letter-spacing:.02em}
   .v2b-actions{display:flex;gap:8px;flex:none}
   @media(max-width:560px){.v2b-actions{width:100%}.v2b-actions .btn{flex:1}}
   .wrap{max-width:1180px}
@@ -401,8 +403,10 @@
     <main id="tab-admin">
       <div id="v2banner" class="v2banner" hidden>
         <div class="v2b-txt">
-          <div class="v2b-title">A cleaner card is ready</div>
-          <div class="v2b-sub">Same info, less clutter. Your contact options sit up top with one tap, and the details tuck into a tidy menu. Nothing changes on your current card until you switch.</div>
+          <div class="v2b-tag">New update</div>
+          <div class="v2b-title">Your card and dashboard just got an upgrade</div>
+          <div class="v2b-sub">What's new: a cleaner card with your contact options up top, colors and layout you control under Customize, a Stats tab, and tags plus follow-up reminders on your leads. Nothing changes on your current card until you tap update.</div>
+          <div class="v2b-credit">Created by Ingenium One</div>
         </div>
         <div class="v2b-actions">
           <button id="v2Preview" class="btn sm ghost" type="button">Preview</button>
@@ -947,7 +951,7 @@ async function loadDash(){
   $('gateMono').textContent=initials(S.profile.name); $('topMono').textContent=initials(S.profile.name);
   $('topBrand').textContent=S.profile.brand||'Admin';
   $('whoami').textContent=S.email;
-  fillProfile(); fillVisibility(); baseline(); renderDashShare(); renderV2Banner(); renderAppearance();
+  renderV2Banner(); fillProfile(); fillVisibility(); baseline(); renderAppearance(); try{ renderDashShare(); }catch(e){}
   renderClients(); loadActivity(); pollRequests(); pollQuotes(); applyTab(); schedulePreview();
   if(S.mustChange) showWizard(); else ensurePush();
 }
