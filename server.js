@@ -158,7 +158,7 @@ function brainData() {
   }
   // Notes Scanner node: handwriting in, clean entries saved here (idempotent).
   if (!store.brain.nodes.some((n) => n.id === "scanner")) {
-    store.brain.nodes.push(mk("scanner", "Decipher", "knowledge", "building", "I.O. Decipher: snap a page of handwriting and it gets filed here as one clean, organized entry.", "/scan", 230, 20));
+    store.brain.nodes.push(mk("scanner", "I.O. Decipher", "knowledge", "building", "Ingenium One Decipher: snap a page of handwriting and it gets filed here as one clean, organized entry.", "/scan", 230, 20));
     store.brain.links.push({ a: "core", b: "scanner" });
     save();
   }
@@ -167,6 +167,12 @@ function brainData() {
     const sc = store.brain.nodes.find((n) => n.id === "scanner");
     if (sc && sc.title === "Notes Scanner") { sc.title = "Decipher"; sc.desc = "I.O. Decipher: snap a page of handwriting and it gets filed here as one clean, organized entry."; }
     store.brain.mig.decipherName = true;
+    save();
+  }
+  if (!store.brain.mig.decipherName2) {
+    const sc = store.brain.nodes.find((n) => n.id === "scanner");
+    if (sc && (sc.title === "Decipher" || sc.title === "Notes Scanner")) { sc.title = "I.O. Decipher"; sc.desc = "Ingenium One Decipher: snap a page of handwriting and it gets filed here as one clean, organized entry."; }
+    store.brain.mig.decipherName2 = true;
     save();
   }
   // The Playbook: a readable, nested reference. Sections hold entries. Seed Philosophy > Stoicism.
@@ -1100,6 +1106,14 @@ function hubData() {
     const plan = store.hub.plans.find((x) => x.id === "scanner");
     if (plan) plan.title = "Decipher: handwriting to Brain entries";
     store.hub.mig.decipherBrand = true;
+    save();
+  }
+  if (!store.hub.mig.decipherName2) {
+    const app = store.hub.apps.find((x) => x.id === "scanner");
+    if (app && app.name === "Decipher") app.name = "I.O. Decipher";
+    const plan = store.hub.plans.find((x) => x.id === "scanner");
+    if (plan) plan.title = "I.O. Decipher: handwriting to Brain entries";
+    store.hub.mig.decipherName2 = true;
     save();
   }
   return store.hub;
