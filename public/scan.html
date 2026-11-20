@@ -90,6 +90,8 @@
   .title{font-size:26px;line-height:31px;margin:0}
   .summary{font-size:15px;line-height:22px;color:#D3D6DB;margin:0}
   .rule{height:1px;background:var(--line)}
+  .meant{display:flex;flex-direction:column;gap:8px;background:rgba(138,180,255,.08);border-radius:12px;padding:14px}
+  .meant p{margin:0;font-size:15px;line-height:23px;color:#E3E7EF}
   .sec{display:flex;flex-direction:column;gap:10px}
   .lab{font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
   .pt{display:flex;gap:10px;font-size:15px;line-height:22px}
@@ -298,7 +300,7 @@
 
   function haystack(n) {
     const e = n.entry; if (!e) return "";
-    return [e.title, e.summary, e.dateOnPage, ...e.points, ...e.todos.map((t) => t.text + " " + t.who + " " + t.when), ...e.entities.map((x) => x.name), ...e.links.map((l) => l.title)].join(" ").toLowerCase();
+    return [e.title, e.summary, e.meaning, e.dateOnPage, ...e.points, ...e.todos.map((t) => t.text + " " + t.who + " " + t.when), ...e.entities.map((x) => x.name), ...e.links.map((l) => l.title)].join(" ").toLowerCase();
   }
   function renderItems() {
     const q = $("q").value.trim().toLowerCase();
@@ -482,6 +484,8 @@
     let html = `${head}${look}<div class="card entry">
       <div class="sec"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="tag">${esc(e.type)}</span><span class="muted" style="font-size:13px">${esc(dates)}</span></div>
         <h1 class="title hd">${highlight(e.title)}</h1>${e.summary ? `<p class="summary">${highlight(e.summary)}</p>` : ""}</div>`;
+    if (e.meaning) html += `<div class="rule"></div><div class="meant"><div class="lab" style="color:var(--accent)">What you meant</div><p>${highlight(e.meaning)}</p></div>`;
+    else html += `<div class="rule"></div><div class="sec"><div class="lab">What you meant</div><div class="muted" style="font-size:14px;line-height:20px">This entry was saved before explanations were added.</div><button class="secondary" style="min-height:44px;font-size:14px" data-act="retry">Read it again and explain</button></div>`;
     if (e.points.length) html += sec("Key points", e.points.map((p) => `<div class="pt"><span>•</span><span>${highlight(p)}</span></div>`).join(""));
     if (e.todos.length) html += sec("To-do", e.todos.map((t, i) => `<label class="todo ${t.done ? "done" : ""}"><input type="checkbox" data-todo="${i}" ${t.done ? "checked" : ""}><span class="t" style="flex:1">${highlight(t.text)}${t.who ? ` <span class="muted">· ${esc(t.who)}</span>` : ""}</span>${t.when ? `<span class="when">${esc(t.when)}</span>` : ""}</label>`).join(""));
     if (e.entities.length) html += sec("People, places, numbers", `<div class="chips">${e.entities.map((x) => `<span class="chip">${esc(x.name)}</span>`).join("")}</div>`);
