@@ -27,6 +27,7 @@ import {
 import { cardPNG } from "./lib/og.js";
 import { alertNewLead, sendEmail, welcomeEmailHTML, emailStatus, sendTestEmail, emailHealth, sendCardShare } from "./lib/notify.js";
 import { vapidPublicKey, addSubscription, pushToAgent } from "./lib/push.js";
+import { initScanner, createScan, listNotes, getNote, notePhoto, retryNote, deleteNote, setTodo, resolveUnclear } from "./lib/scanner.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUB = path.join(HERE, "public");
@@ -155,6 +156,12 @@ function brainData() {
     store.brain.links.push({ a: "core", b: "pulse" });
     save();
   }
+  // Notes Scanner node: handwriting in, clean entries saved here (idempotent).
+  if (!store.brain.nodes.some((n) => n.id === "scanner")) {
+    store.brain.nodes.push(mk("scanner", "Notes Scanner", "knowledge", "building", "Snap a page of handwriting and it gets filed here as one clean, organized entry.", "/scan", 230, 20));
+    store.brain.links.push({ a: "core", b: "scanner" });
+    save();
+  }
   // The Playbook: a readable, nested reference. Sections hold entries. Seed Philosophy > Stoicism.
   if (!Array.isArray(store.brain.playbook)) {
     store.brain.playbook = [
@@ -261,7 +268,18 @@ async function handleBrain(sub, method, body, req) {
   if (sub === "logout" && method === "POST") return { status: 200, data: { ok: true }, cookie: clearBrainCookie };
   if (!brainAuthed(req)) return { status: 401, data: { error: "Locked." } };
 
-  if (sub === "" && method === "GET") return { status: 200, data: brainData() };
+  if (sub === "" && method === "GET") { const { notes, scanGlossary, ...rest } = brainData(); return { status: 200, data: rest }; }
+
+  // Notes Scanner
+  if (method === "POST" && (sub === "scan" || sub.startsWith("note/")) && !sameOrigin(req)) return { status: 403, data: { error: "Not allowed" } };
+  if (sub === "scan" && method === "POST") return createScan(body);
+  if (sub === "notes" && method === "GET") return listNotes();
+  if (sub.startsWith("note/") && method === "GET") return getNote(sub.slice(5));
+  if (sub === "note/retry" && method === "POST") return retryNote(body.id);
+  if (sub === "note/delete" && method === "POST") return deleteNote(body.id);
+  if (sub === "note/todo" && method === "POST") return setTodo(body.id, body.i, body.done);
+  if (sub === "note/unclear" && method === "POST") return resolveUnclear(body.id, body.i, body.fix);
+
   if (sub === "node" && method === "POST") {
     const b = brainData();
     const id = String(body.id || "").trim();
@@ -339,9 +357,9 @@ function lockedBody(until, who) {
   return { error: `Too many failed attempts — this account is locked for security. Try again in about ${hrs}h, or ask ${contact} to unlock you.`, locked: true, until };
 }
 
-function readBody(req) {
+function readBody(req, max = 1e6) {
   return new Promise((resolve) => {
-    let b = ""; req.on("data", (c) => { b += c; if (b.length > 1e6) req.destroy(); });
+    let b = ""; req.on("data", (c) => { b += c; if (b.length > max) req.destroy(); });
     req.on("end", () => { try { resolve(JSON.parse(b || "{}")); } catch { resolve({}); } });
     req.on("error", () => resolve({}));
   });
@@ -1059,6 +1077,14 @@ function hubData() {
     store.hub.mig.plansNov2026 = true;
     save();
   }
+  if (!store.hub.mig.scannerBuilt) {
+    const app = store.hub.apps.find((x) => x.id === "scanner");
+    if (app) { app.url = "/scan"; if (app.status === "planned") app.status = "building"; }
+    const plan = store.hub.plans.find((x) => x.id === "scanner");
+    if (plan) { plan.title = "Notes scanner: handwriting to Brain entries"; if (plan.status === "planned") plan.status = "building"; }
+    store.hub.mig.scannerBuilt = true;
+    save();
+  }
   return store.hub;
 }
 
@@ -1290,7 +1316,14 @@ const server = http.createServer(async (req, res) => {
     }
     if (p === "/api/brain" || p.startsWith("/api/brain/")) {
       const sub = p === "/api/brain" ? "" : p.slice("/api/brain/".length);
-      const body = (method === "GET") ? {} : await readBody(req);
+      const ph = sub.match(/^note-photo\/([a-f0-9]{12})\/(\d)$/);
+      if (ph && method === "GET") {
+        if (!brainAuthed(req)) return res.writeHead(401).end();
+        const img = notePhoto(ph[1], ph[2]);
+        if (!img) return res.writeHead(404).end();
+        return res.writeHead(200, { "content-type": img.type, "cache-control": "private, max-age=86400" }).end(img.buf);
+      }
+      const body = (method === "GET") ? {} : await readBody(req, sub === "scan" ? 30e6 : 1e6);
       const r = await handleBrain(sub, method, body, req);
       return sendJSON(res, r.status, r.data, r.cookie ? { "set-cookie": r.cookie } : {});
     }
@@ -1310,6 +1343,7 @@ const server = http.createServer(async (req, res) => {
     // dashboards
     if (p === "/dev" || p === "/developer") return serveStatic(res, path.join(PUB, "dev.html"), "no-cache");
     if (p === "/brain") return serveStatic(res, path.join(PUB, "brain.html"), "no-cache");
+    if (p === "/scan") return serveStatic(res, path.join(PUB, "scan.html"), "no-cache");
     if (p === "/hub") return serveStatic(res, path.join(PUB, "hub.html"), "no-cache");
     if (p === "/" || p === "/login" || p === "/go") return serveStatic(res, path.join(PUB, "login.html"), "no-cache");
     if (p === "/owner") return serveStatic(res, path.join(PUB, "owner.html"), "no-cache");
@@ -1383,4 +1417,5 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+initScanner(brainData);
 server.listen(PORT, () => console.log(`Meridian Team running on :${PORT}`));

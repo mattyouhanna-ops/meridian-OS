@@ -19,6 +19,8 @@ Every agent's texted link auto-unfurls as their own black/gold business card (ge
 - `/a/<agent>` — that agent's card (what they text out).
 - `/a/<agent>/admin` — that agent's own dashboard.
 - `/a/<agent>/card.png` — the auto-generated business-card preview image.
+- `/brain` — the Brain (its own passcode).
+- `/scan` — Notes Scanner: snap handwritten pages, they get read and filed into the Brain as one clean entry. Uses the Brain passcode. Needs `ANTHROPIC_API_KEY` set in Railway.
 
 ## Run locally
 ```
