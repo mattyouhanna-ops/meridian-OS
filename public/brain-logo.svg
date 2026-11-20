@@ -1,0 +1,38 @@
+<svg viewBox="0 0 260 260" xmlns="http://www.w3.org/2000/svg">
+<defs><clipPath id="bc"><path d="M130,36 C168,32 202,52 212,90 C219,118 218,120 221,140 C225,172 198,206 158,218 C146,222 140,221 130,221 C120,221 114,222 102,218 C62,206 35,172 39,140 C42,120 41,118 48,90 C58,52 92,32 130,36 Z"/></clipPath></defs>
+<rect width="260" height="260" fill="#0b0d1f"/>
+<path d="M130,36 C168,32 202,52 212,90 C219,118 218,120 221,140 C225,172 198,206 158,218 C146,222 140,221 130,221 C120,221 114,222 102,218 C62,206 35,172 39,140 C42,120 41,118 48,90 C58,52 92,32 130,36 Z" fill="#11142e" stroke="#ffd25a" stroke-opacity="0.5" stroke-width="2"/>
+<g clip-path="url(#bc)">
+<path d="M130,40 C124,70 136,95 130,120 C124,150 136,178 130,214" fill="none" stroke="#ffd25a" stroke-opacity="0.38" stroke-width="2.5"/>
+<path d="M58,108 C84,98 106,114 120,104" fill="none" stroke="#ffd25a" stroke-opacity="0.22" stroke-width="2"/>
+<path d="M64,150 C88,142 104,156 120,150" fill="none" stroke="#ffd25a" stroke-opacity="0.22" stroke-width="2"/>
+<path d="M78,182 C96,176 110,186 120,182" fill="none" stroke="#ffd25a" stroke-opacity="0.22" stroke-width="2"/>
+<path d="M202,108 C176,98 154,114 140,104" fill="none" stroke="#ffd25a" stroke-opacity="0.22" stroke-width="2"/>
+<path d="M196,150 C172,142 156,156 140,150" fill="none" stroke="#ffd25a" stroke-opacity="0.22" stroke-width="2"/>
+<path d="M182,182 C164,176 150,186 140,182" fill="none" stroke="#ffd25a" stroke-opacity="0.22" stroke-width="2"/>
+<g stroke="#cdd6ff" stroke-opacity="0.3" stroke-width="2">
+<line x1="130" y1="96" x2="86" y2="80"/><line x1="130" y1="96" x2="174" y2="80"/>
+<line x1="130" y1="96" x2="110" y2="128"/><line x1="130" y1="96" x2="150" y2="128"/>
+<line x1="130" y1="96" x2="118" y2="62"/><line x1="130" y1="96" x2="142" y2="62"/>
+<line x1="86" y1="80" x2="64" y2="118"/><line x1="64" y1="118" x2="82" y2="158"/>
+<line x1="82" y1="158" x2="100" y2="194"/><line x1="100" y1="194" x2="110" y2="128"/>
+<line x1="110" y1="128" x2="86" y2="80"/>
+<line x1="174" y1="80" x2="196" y2="118"/><line x1="196" y1="118" x2="178" y2="158"/>
+<line x1="178" y1="158" x2="160" y2="194"/><line x1="160" y1="194" x2="150" y2="128"/>
+<line x1="150" y1="128" x2="174" y2="80"/><line x1="110" y1="128" x2="150" y2="128"/>
+</g>
+</g>
+<circle cx="86" cy="80" r="8" fill="#15d6c0"/>
+<circle cx="64" cy="118" r="8" fill="#2e9bff"/>
+<circle cx="82" cy="158" r="8" fill="#8b5cf6"/>
+<circle cx="110" cy="128" r="8" fill="#2ee06a"/>
+<circle cx="100" cy="194" r="8" fill="#ffb224"/>
+<circle cx="174" cy="80" r="8" fill="#ff3d8b"/>
+<circle cx="196" cy="118" r="8" fill="#ffb224"/>
+<circle cx="178" cy="158" r="8" fill="#ff6b4a"/>
+<circle cx="150" cy="128" r="8" fill="#2ee06a"/>
+<circle cx="160" cy="194" r="8" fill="#2e9bff"/>
+<circle cx="118" cy="62" r="7" fill="#ff3d8b"/>
+<circle cx="142" cy="62" r="7" fill="#2ee06a"/>
+<circle cx="130" cy="96" r="13" fill="#ffffff" stroke="#ffd25a" stroke-width="3"/>
+</svg>

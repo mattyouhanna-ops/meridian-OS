@@ -1268,10 +1268,11 @@ const server = http.createServer(async (req, res) => {
 
     // static assets at root
     if (p === "/favicon.ico") return serveStatic(res, path.join(PUB, "favicon.ico"));
-    if (["/logo.svg", "/logo.png", "/logo-dark.png", "/apple-touch-icon.png", "/favicon-32.png", "/icon-192.png", "/icon-512.png"].includes(p)) return serveStatic(res, path.join(PUB, p.slice(1)));
+    if (["/logo.svg", "/logo.png", "/logo-dark.png", "/apple-touch-icon.png", "/favicon-32.png", "/icon-192.png", "/icon-512.png", "/brain-logo.svg", "/brain-favicon-32.png", "/brain-apple-touch-icon.png", "/brain-icon-192.png", "/brain-icon-512.png"].includes(p)) return serveStatic(res, path.join(PUB, p.slice(1)));
     const bm = p.match(/^\/brand\/([a-z0-9-]+)\/([a-z0-9-]+\.(?:png|svg))$/);
     if (bm) return serveStatic(res, path.join(PUB, "brand", bm[1], bm[2]));
     if (p === "/statesmap.js") return serveStatic(res, path.join(PUB, "statesmap.js"), "no-cache");
+    if (p === "/brain.webmanifest") return serveStatic(res, path.join(PUB, "brain.webmanifest"), "no-cache");
     if (p === "/manifest.webmanifest" || p === "/admin.webmanifest") return serveStatic(res, path.join(PUB, "manifest.webmanifest"), "no-cache");
     if (p === "/sw.js") { try { const buf = fs.readFileSync(path.join(PUB, "sw.js")); return res.writeHead(200, { "content-type": "text/javascript", "cache-control": "no-cache", "service-worker-allowed": "/" }).end(buf); } catch { return res.writeHead(404).end(); } }
     if (p === "/api/push/vapid" && method === "GET") return sendJSON(res, 200, { key: await vapidPublicKey() });
