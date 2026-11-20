@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Scan">
+<title>Notes Scanner</title>
+<link rel="icon" href="/brand/ingenium/icon-32.png">
+<link rel="apple-touch-icon" href="/brand/ingenium/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0B0C0F;--panel:#14161B;--panel2:#0F1115;--line:#23262D;--line2:#2E323A;--text:#ECEDEF;--soft:#C3C7CE;--muted:#A3A9B3;--accent:#8AB4FF;--amber:#F2B544;--red:#FF8A80}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif;min-height:100%}
+  body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  button{font-family:inherit;cursor:pointer}
+  .hd{font-family:"Space Grotesk",Inter,sans-serif;font-weight:600}
+  .screen{display:none;max-width:520px;margin:0 auto;min-height:100vh;min-height:100dvh}
+  .screen.on{display:flex;flex-direction:column}
+  .iconbtn{width:44px;height:44px;border-radius:22px;border:0;background:#1A1D23;color:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .primary{min-height:52px;border-radius:14px;border:0;background:var(--accent);color:#0B0C0F;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:0 18px}
+  .secondary{min-height:52px;border-radius:14px;border:1px solid var(--line2);background:transparent;color:var(--text);font-size:16px;font-weight:500;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:0 18px}
+  .primary:disabled{opacity:.45}
+  .muted{color:var(--muted)}
+  .sr{position:absolute;left:-9999px}
+
+  /* gate */
+  #gate{align-items:center;justify-content:center;gap:14px;padding:32px;text-align:center}
+  #gate input{width:100%;max-width:300px;min-height:50px;border-radius:12px;border:1px solid var(--line2);background:var(--panel);color:var(--text);font-size:16px;padding:0 14px;text-align:center;outline:none}
+  #gate input:focus{border-color:var(--accent)}
+  #gate .primary{width:100%;max-width:300px}
+  .err{color:var(--red);font-size:14px;min-height:18px}
+
+  /* snap */
+  .top{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px}
+  .vf{flex:1;position:relative;margin:0 16px;border-radius:20px;background:#16181D;overflow:hidden;min-height:420px}
+  .vf video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .frame{position:absolute;left:9%;right:9%;top:8%;bottom:8%;pointer-events:none}
+  .frame i{position:absolute;width:34px;height:34px;border-color:var(--accent);border-style:solid;border-width:0}
+  .frame i:nth-child(1){left:0;top:0;border-left-width:4px;border-top-width:4px;border-top-left-radius:8px}
+  .frame i:nth-child(2){right:0;top:0;border-right-width:4px;border-top-width:4px;border-top-right-radius:8px}
+  .frame i:nth-child(3){left:0;bottom:0;border-left-width:4px;border-bottom-width:4px;border-bottom-left-radius:8px}
+  .frame i:nth-child(4){right:0;bottom:0;border-right-width:4px;border-bottom-width:4px;border-bottom-right-radius:8px}
+  .pill{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(11,12,15,.85);border:1px solid #2A2E36;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;white-space:nowrap}
+  .pill b{width:8px;height:8px;border-radius:4px;background:var(--accent)}
+  .nocam{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center}
+  .nocam.on{display:flex}
+  .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
+  .flash.go{opacity:.7;transition:none}
+  .tip{padding:14px 24px 0;text-align:center;font-size:13px;line-height:18px;color:var(--muted)}
+  .tray{display:flex;gap:8px;padding:12px 16px 0;overflow-x:auto;min-height:12px}
+  .thumb{position:relative;width:52px;height:68px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid var(--line2)}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb button{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:11px;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:13px;line-height:22px;padding:0}
+  .controls{display:flex;align-items:center;justify-content:space-between;padding:16px 24px 26px}
+  .side{width:64px;min-height:52px;border-radius:12px;border:1px solid var(--line2);background:var(--panel);color:var(--muted);font-size:12px;font-weight:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .shutter{width:78px;height:78px;border-radius:39px;border:4px solid var(--text);background:transparent;padding:0;display:flex;align-items:center;justify-content:center}
+  .shutter span{width:62px;height:62px;border-radius:31px;background:var(--text);transition:transform .1s}
+  .shutter:active span{transform:scale(.9)}
+  .done{width:64px;min-height:52px;border:0;background:transparent;color:var(--accent);font-size:16px;font-weight:600}
+  .done:disabled{color:#4B5160}
+
+  /* reading */
+  #reading{padding:28px 20px 30px;gap:22px}
+  .paper{position:relative;align-self:center;width:250px;height:320px;border-radius:8px;overflow:hidden;background:#222}
+  .paper img{width:100%;height:100%;object-fit:cover;display:block}
+  .scanline{position:absolute;left:0;right:0;height:3px;background:var(--accent);box-shadow:0 0 18px 6px rgba(138,180,255,.45);animation:sweep 2.4s ease-in-out infinite alternate}
+  @keyframes sweep{from{top:4%}to{top:94%}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px}
+  .steps{padding:6px 16px}
+  .step{display:flex;align-items:center;gap:12px;min-height:48px;font-size:15px;line-height:20px}
+  .step.wait{color:#8B919B}
+  .ring{width:22px;height:22px;flex-shrink:0}
+  .spin{animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .foot{margin-top:auto;text-align:center;font-size:13px;color:var(--muted)}
+
+  /* entry */
+  #entry{padding:20px 16px 30px;gap:16px}
+  .savedhd{display:flex;align-items:center;gap:12px;padding:0 4px}
+  .okdot{width:40px;height:40px;border-radius:20px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .look{display:flex;align-items:center;gap:12px;background:rgba(242,181,68,.10);border:1px solid rgba(242,181,68,.45);border-radius:14px;padding:12px 14px;font-size:14px;line-height:19px}
+  .look a{font-weight:600;color:var(--amber);text-decoration:none;padding:10px 4px;white-space:nowrap}
+  .entry{padding:20px 18px;display:flex;flex-direction:column;gap:20px}
+  .tag{font-size:12px;font-weight:600;letter-spacing:.04em;color:#0B0C0F;background:var(--accent);border-radius:6px;padding:3px 8px;text-transform:uppercase}
+  .title{font-size:26px;line-height:31px;margin:0}
+  .summary{font-size:15px;line-height:22px;color:#D3D6DB;margin:0}
+  .rule{height:1px;background:var(--line)}
+  .sec{display:flex;flex-direction:column;gap:10px}
+  .lab{font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+  .pt{display:flex;gap:10px;font-size:15px;line-height:22px}
+  .pt>span:first-child{color:var(--accent)}
+  .flag{border-bottom:2px dotted var(--amber)}
+  .todo{display:flex;align-items:center;gap:12px;min-height:44px;font-size:15px;line-height:20px}
+  .todo input{width:20px;height:20px;accent-color:var(--accent);margin:0;flex-shrink:0}
+  .todo.done span.t{color:var(--muted);text-decoration:line-through}
+  .when{font-size:13px;color:#0B0C0F;background:var(--text);border-radius:6px;padding:2px 8px;font-weight:500;white-space:nowrap}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:14px;border:1px solid var(--line2);border-radius:999px;padding:6px 12px}
+  .chip small{color:var(--muted);font-size:11px;margin-left:4px}
+  .lchip{font-size:14px;color:var(--accent);background:rgba(138,180,255,.12);border-radius:999px;padding:7px 12px;text-decoration:none;display:flex;align-items:center;gap:6px}
+  .unc{background:var(--panel2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+  .unc .row{display:flex;gap:10px;align-items:baseline}
+  .unc .row span:first-child{font-size:12px;color:var(--muted);width:58px;flex-shrink:0}
+  .hand{font-family:Caveat,cursive;font-size:21px;color:#C9CFF5}
+  .btns{display:flex;gap:8px}
+  .btns button{flex:1;min-height:44px;border-radius:10px;font-size:14px}
+  .b-yes{border:0;background:var(--text);color:#0B0C0F;font-weight:600}
+  .b-fix{border:1px solid var(--line2);background:transparent;color:var(--text);font-weight:500}
+  .fixrow{display:flex;gap:8px}
+  .fixrow input{flex:1;min-height:44px;border-radius:10px;border:1px solid var(--line2);background:var(--panel);color:var(--text);font-size:15px;padding:0 12px;outline:none}
+  .orig{display:flex;gap:10px;flex-wrap:wrap}
+  .orig a{width:64px;height:84px;border-radius:6px;overflow:hidden;border:1px solid var(--line2);display:block}
+  .orig img{width:100%;height:100%;object-fit:cover;display:block}
+  .actions{display:flex;gap:10px;margin-top:auto}
+  .actions>*{flex:1}
+  .del{background:none;border:0;color:var(--muted);font-size:14px;padding:12px;align-self:center}
+  .failbox{padding:18px;display:flex;flex-direction:column;gap:12px;font-size:15px;line-height:21px}
+
+  /* list */
+  #list{padding:20px 16px 110px;gap:14px;position:relative}
+  .search{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:0 14px;min-height:46px}
+  .search input{flex:1;background:transparent;border:0;color:var(--text);font-size:15px;outline:none;font-family:inherit}
+  .filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+  .filters button{flex-shrink:0;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--text);font-size:14px;font-weight:500}
+  .filters button.on{border-color:var(--text);background:var(--text);color:#0B0C0F;font-weight:600}
+  .item{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;color:var(--text);font:inherit}
+  .item .r1{display:flex;justify-content:space-between;align-items:center}
+  .item .ty{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--accent);text-transform:uppercase}
+  .item .ty.amb{color:var(--amber)} .item .ty.red{color:var(--red)}
+  .item .dt{font-size:12px;color:var(--muted)}
+  .item .tt{font-size:17px;margin:6px 0 4px}
+  .item .sm{font-size:14px;line-height:20px;color:var(--soft)}
+  .item .r3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .item .lk{font-size:12px;color:var(--accent);background:rgba(138,180,255,.12);border-radius:999px;padding:4px 10px}
+  .item .td{font-size:12px;color:var(--muted)}
+  .empty{text-align:center;color:var(--muted);font-size:15px;line-height:22px;padding:40px 20px}
+  .fab{position:fixed;right:max(20px,calc(50% - 240px));bottom:calc(28px + env(safe-area-inset-bottom));width:60px;height:60px;border-radius:30px;border:0;background:var(--accent);color:#0B0C0F;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  .viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .viewer.on{display:flex}
+  .viewer img{max-width:100%;max-height:100%;border-radius:6px}
+  .viewer button{position:absolute;top:calc(16px + env(safe-area-inset-top));right:16px}
+  .toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--panel);border:1px solid var(--line2);color:var(--text);font-size:14px;padding:11px 16px;border-radius:12px;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+  .toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- Passcode (same one as the Brain) -->
+<section id="gate" class="screen">
+  <div class="hd" style="font-size:24px">Notes Scanner</div>
+  <p class="muted" style="margin:0;max-width:300px;line-height:21px">Use your Brain passcode.</p>
+  <form id="gateForm" style="display:contents">
+    <label for="pass" class="sr">Passcode</label>
+    <input id="pass" type="password" autocomplete="current-password" placeholder="Passcode">
+    <button class="primary" type="submit">Unlock</button>
+  </form>
+  <div class="err" id="gateErr"></div>
+</section>
+
+<!-- 1. Snap -->
+<section id="snap" class="screen">
+  <div class="top">
+    <button class="iconbtn" id="snapClose" aria-label="Close">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="hd" style="font-size:17px">Scan notes</div>
+    <button class="iconbtn" id="torch" aria-label="Flash" style="visibility:hidden">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>
+    </button>
+  </div>
+  <div class="vf">
+    <video id="video" playsinline muted autoplay></video>
+    <div class="frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="pill" id="vfPill"><b></b><span>Fit the page in the corners</span></div>
+    <div class="nocam" id="nocam">
+      <div class="muted" style="font-size:15px;line-height:21px" id="nocamMsg">Camera isn't available here. Take or pick a photo instead.</div>
+      <button class="primary" id="nocamTake">Take a photo</button>
+    </div>
+    <div class="flash" id="flash"></div>
+  </div>
+  <div class="tray" id="tray"></div>
+  <div class="tip">Messy is fine. Crossed-out and written-over parts get sorted out.</div>
+  <div class="controls">
+    <button class="side" id="pickBtn" aria-label="Pick photos from your library">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
+      Photos
+    </button>
+    <button class="shutter" id="shutter" aria-label="Snap page"><span></span></button>
+    <button class="done" id="doneBtn" disabled>Done</button>
+  </div>
+  <input type="file" id="filePick" accept="image/*" multiple class="sr" aria-hidden="true" tabindex="-1">
+  <input type="file" id="fileCam" accept="image/*" capture="environment" class="sr" aria-hidden="true" tabindex="-1">
+</section>
+
+<!-- 2. Reading -->
+<section id="reading" class="screen">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div class="hd" style="font-size:26px;line-height:32px">Reading your page</div>
+    <div class="muted" style="font-size:14px" id="readSub">1 page</div>
+  </div>
+  <div class="paper"><img id="readImg" alt="The page being read"><div class="scanline" id="scanline"></div></div>
+  <div class="card steps" id="steps"></div>
+  <div class="foot">You can close this. It saves on its own.</div>
+</section>
+
+<!-- 3. Entry (just saved, or opened from the list) -->
+<section id="entry" class="screen"></section>
+
+<!-- 4. Notes in the Brain -->
+<section id="list" class="screen">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:0 4px">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <a href="/brain" class="muted" style="font-size:13px;text-decoration:none">The Brain</a>
+      <div class="hd" style="font-size:28px">Notes</div>
+    </div>
+  </div>
+  <label class="search">
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A3A9B3" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <span class="sr">Search notes</span>
+    <input type="search" id="q" placeholder="Search everything you've written">
+  </label>
+  <div class="filters" id="filters"></div>
+  <div id="items" style="display:flex;flex-direction:column;gap:10px"></div>
+  <button class="fab" id="fab" aria-label="Scan notes">
+    <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+  </button>
+</section>
+
+<div class="viewer" id="viewer"><img id="viewerImg" alt="Original page"><button class="iconbtn" id="viewerClose" aria-label="Close photo"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const MAX_PAGES = 6, MAX_EDGE = 2000, QUALITY = 0.85;
+  const TYPES = [["all", "All"], ["idea", "Ideas"], ["meeting", "Meetings"], ["call", "Calls"], ["study", "Study"], ["plan", "Plans"], ["log", "Logs"]];
+  const ICON_CHECK = '<svg aria-hidden="true" class="ring" viewBox="0 0 24 24" fill="none" stroke="#8AB4FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg>';
+  const ICON_SPIN = '<svg aria-hidden="true" class="ring spin" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10" stroke="#2A2E36"/><path d="M12 2a10 10 0 0 1 10 10" stroke="#8AB4FF"/></svg>';
+  const ICON_WAIT = '<svg aria-hidden="true" class="ring" viewBox="0 0 24 24" fill="none" stroke="#3A3F48" stroke-width="2.2"><circle cx="12" cy="12" r="10"/></svg>';
+  const ICON_LINK = '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="6" cy="12" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.6 10.6l6.8-3.2M8.6 13.4l6.8 3.2"/></svg>';
+
+  let pages = [];          // { blob, url }
+  let stream = null;
+  let notes = [];
+  let filter = "all";
+  let pollTimer = null, stepTimer = null;
+  let current = null;      // note shown in the entry screen
+  let justSaved = false;
+  let fixing = -1;
+
+  function show(id) {
+    document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("on", s.id === id));
+    if (id !== "snap") stopCamera();
+    window.scrollTo(0, 0);
+  }
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("on"), 2400); }
+
+  async function api(path, opts = {}) {
+    const res = await fetch("/api/brain/" + path, { credentials: "same-origin", headers: opts.body ? { "content-type": "application/json" } : {}, ...opts, body: opts.body ? JSON.stringify(opts.body) : undefined });
+    if (res.status === 401) { show("gate"); throw new Error("locked"); }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Something went wrong.");
+    return data;
+  }
+
+  // ---------- gate ----------
+  $("gateForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    $("gateErr").textContent = "";
+    try {
+      const res = await fetch("/api/brain/login", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ passcode: $("pass").value }) });
+      if (!res.ok) { $("gateErr").textContent = "Wrong passcode."; return; }
+      $("pass").value = "";
+      start();
+    } catch { $("gateErr").textContent = "Couldn't connect. Try again."; }
+  });
+
+  // ---------- list ----------
+  function fmtDate(ts) {
+    const d = new Date(ts), now = new Date();
+    if (d.toDateString() === now.toDateString()) return "Today";
+    const y = new Date(now); y.setDate(now.getDate() - 1);
+    if (d.toDateString() === y.toDateString()) return "Yesterday";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: d.getFullYear() === now.getFullYear() ? undefined : "numeric" });
+  }
+  function renderFilters() {
+    $("filters").innerHTML = TYPES.map(([k, l]) => `<button data-f="${k}" class="${k === filter ? "on" : ""}">${l}</button>`).join("");
+  }
+  $("filters").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; filter = b.dataset.f; renderFilters(); renderItems(); });
+  $("q").addEventListener("input", renderItems);
+
+  function haystack(n) {
+    const e = n.entry; if (!e) return "";
+    return [e.title, e.summary, e.dateOnPage, ...e.points, ...e.todos.map((t) => t.text + " " + t.who + " " + t.when), ...e.entities.map((x) => x.name), ...e.links.map((l) => l.title)].join(" ").toLowerCase();
+  }
+  function renderItems() {
+    const q = $("q").value.trim().toLowerCase();
+    const list = notes.filter((n) => (filter === "all" || (n.entry && n.entry.type === filter)) && (!q || haystack(n).includes(q)));
+    if (!notes.length) { $("items").innerHTML = '<div class="empty">Nothing here yet.<br>Tap the camera to scan your first page.</div>'; return; }
+    if (!list.length) { $("items").innerHTML = '<div class="empty">No notes match that.</div>'; return; }
+    $("items").innerHTML = list.map((n) => {
+      const e = n.entry;
+      if (n.status === "reading") return `<button class="item" data-id="${n.id}"><div class="r1"><span class="ty">Reading</span><span class="dt">${fmtDate(n.createdAt)}</span></div><div class="tt hd">Reading ${n.pages} page${n.pages > 1 ? "s" : ""}...</div><div class="sm">It'll show up here when it's filed.</div></button>`;
+      if (n.status === "failed") return `<button class="item" data-id="${n.id}"><div class="r1"><span class="ty red">Didn't save</span><span class="dt">${fmtDate(n.createdAt)}</span></div><div class="tt hd">Couldn't read this page</div><div class="sm">${esc(n.error)}</div></button>`;
+      const open = e.todos.filter((t) => !t.done).length;
+      return `<button class="item" data-id="${n.id}">
+        <div class="r1"><span class="ty">${esc(e.type)}</span><span class="dt">${fmtDate(n.savedAt || n.createdAt)}</span></div>
+        <div class="tt hd">${esc(e.title)}</div>
+        <div class="sm">${esc(e.summary)}</div>
+        <div class="r3">${e.links.slice(0, 2).map((l) => `<span class="lk">${esc(l.title)}</span>`).join("")}
+          <span class="td">${open ? open + " to-do" + (open > 1 ? "s" : "") : e.todos.length ? "To-dos done" : "No to-dos"}</span>
+          ${e.unclear.length ? '<span class="td" style="color:var(--amber)">Needs a look</span>' : ""}</div>
+      </button>`;
+    }).join("");
+  }
+  $("items").addEventListener("click", (e) => { const b = e.target.closest(".item"); if (!b) return; const n = notes.find((x) => x.id === b.dataset.id); if (!n) return; if (n.status === "reading") return openReading(n); justSaved = false; openEntry(n); });
+
+  async function loadList() {
+    const d = await api("notes");
+    notes = d.notes || [];
+    renderFilters(); renderItems();
+    if (notes.some((n) => n.status === "reading")) { clearTimeout(loadList.t); loadList.t = setTimeout(() => { if ($("list").classList.contains("on")) loadList().catch(() => {}); }, 4000); }
+  }
+  function goList() { show("list"); loadList().catch(() => {}); }
+  $("fab").addEventListener("click", openSnap);
+
+  // ---------- snap ----------
+  async function openSnap() {
+    pages.forEach((p) => URL.revokeObjectURL(p.url)); pages = [];
+    renderTray();
+    show("snap");
+    $("nocam").classList.remove("on");
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return noCamera();
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 2560 }, height: { ideal: 1920 } }, audio: false });
+      if (!$("snap").classList.contains("on")) return stopCamera();
+      $("video").srcObject = stream;
+      const track = stream.getVideoTracks()[0];
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      $("torch").style.visibility = caps.torch ? "visible" : "hidden";
+    } catch { noCamera("Camera access is off. Take or pick a photo instead."); }
+  }
+  function noCamera(msg) { if (msg) $("nocamMsg").textContent = msg; $("nocam").classList.add("on"); $("vfPill").style.display = "none"; }
+  function stopCamera() { if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; } $("vfPill").style.display = ""; }
+  let torchOn = false;
+  $("torch").addEventListener("click", async () => { try { torchOn = !torchOn; await stream.getVideoTracks()[0].applyConstraints({ advanced: [{ torch: torchOn }] }); } catch {} });
+  $("snapClose").addEventListener("click", goList);
+
+  function toBlob(source, w, h) {
+    const scale = Math.min(1, MAX_EDGE / Math.max(w, h));
+    const c = document.createElement("canvas");
+    c.width = Math.round(w * scale); c.height = Math.round(h * scale);
+    c.getContext("2d").drawImage(source, 0, 0, c.width, c.height);
+    return new Promise((r) => c.toBlob(r, "image/jpeg", QUALITY));
+  }
+  async function addBlob(blob) {
+    if (!blob) return;
+    if (pages.length >= MAX_PAGES) { toast(`Up to ${MAX_PAGES} pages at a time`); return; }
+    pages.push({ blob, url: URL.createObjectURL(blob) });
+    renderTray();
+  }
+  async function addFile(file) {
+    try {
+      let bmp;
+      try { bmp = await createImageBitmap(file, { imageOrientation: "from-image" }); }
+      catch { bmp = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file); }); }
+      await addBlob(await toBlob(bmp, bmp.width || bmp.naturalWidth, bmp.height || bmp.naturalHeight));
+    } catch { toast("Couldn't open that photo"); }
+  }
+  $("shutter").addEventListener("click", async () => {
+    const v = $("video");
+    if (!stream || !v.videoWidth) { $("fileCam").click(); return; }
+    $("flash").classList.add("go"); requestAnimationFrame(() => requestAnimationFrame(() => $("flash").classList.remove("go")));
+    await addBlob(await toBlob(v, v.videoWidth, v.videoHeight));
+  });
+  $("nocamTake").addEventListener("click", () => $("fileCam").click());
+  $("pickBtn").addEventListener("click", () => $("filePick").click());
+  for (const id of ["filePick", "fileCam"]) $(id).addEventListener("change", async (e) => { for (const f of [...e.target.files]) await addFile(f); e.target.value = ""; });
+
+  function renderTray() {
+    $("tray").innerHTML = pages.map((p, i) => `<div class="thumb"><img src="${p.url}" alt="Page ${i + 1}"><button data-i="${i}" aria-label="Remove page ${i + 1}">&times;</button></div>`).join("");
+    $("doneBtn").disabled = !pages.length;
+    $("vfPill").querySelector("span").textContent = pages.length ? `${pages.length} page${pages.length > 1 ? "s" : ""}. Snap the next or tap Done.` : "Fit the page in the corners";
+  }
+  $("tray").addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (!b) return; const [p] = pages.splice(+b.dataset.i, 1); URL.revokeObjectURL(p.url); renderTray(); });
+
+  const b64 = (blob) => new Promise((r) => { const fr = new FileReader(); fr.onload = () => r(String(fr.result).split(",")[1]); fr.readAsDataURL(blob); });
+  $("doneBtn").addEventListener("click", async () => {
+    if (!pages.length) return;
+    $("doneBtn").disabled = true;
+    const firstUrl = pages[0].url, count = pages.length;
+    try {
+      const payload = { pages: await Promise.all(pages.map((p) => b64(p.blob))) };
+      showReading(firstUrl, count);
+      const d = await api("scan", { method: "POST", body: payload });
+      pollNote(d.note.id);
+    } catch (err) {
+      if (err.message === "locked") return;
+      show("snap"); $("doneBtn").disabled = false;
+      toast(err.message || "Couldn't upload. Try again.");
+    }
+  });
+
+  // ---------- reading ----------
+  const STEPS = ["Finding the writing", "Sorting out crossed-out and written-over parts", "Pulling out to-dos, people and numbers", "Linking it into the Brain"];
+  function renderSteps(active, labels) {
+    $("steps").innerHTML = (labels || STEPS).map((s, i) => `<div class="step ${i > active ? "wait" : ""}">${i < active ? ICON_CHECK : i === active ? ICON_SPIN : ICON_WAIT}<div>${esc(s)}</div></div>`).join("");
+  }
+  function showReading(imgUrl, count) {
+    $("readImg").src = imgUrl;
+    $("readSub").textContent = `${count} page${count > 1 ? "s" : ""}`;
+    $("scanline").style.display = "";
+    show("reading");
+    let step = 0; renderSteps(0);
+    clearInterval(stepTimer);
+    stepTimer = setInterval(() => { if (step < STEPS.length - 1) renderSteps(++step); }, 3500);
+  }
+  function openReading(n) { showReading(`/api/brain/note-photo/${n.id}/0`, n.pages); pollNote(n.id); }
+  function pollNote(id) {
+    clearTimeout(pollTimer);
+    const tick = async () => {
+      if (!$("reading").classList.contains("on")) return;
+      let d; try { d = await api("note/" + id); } catch (e) { if (e.message !== "locked") pollTimer = setTimeout(tick, 3000); return; }
+      const n = d.note;
+      if (n.status === "reading") { pollTimer = setTimeout(tick, 2000); return; }
+      clearInterval(stepTimer);
+      if (n.status === "saved") {
+        const s = n.entry.stats || {};
+        const plural = (k, w) => `${k} ${w}${k === 1 ? "" : "s"}`;
+        const cleanup = s.crossedOut || s.writtenOver
+          ? `Sorted out ${[s.crossedOut ? plural(s.crossedOut, "crossed-out part") : "", s.writtenOver ? plural(s.writtenOver, "written-over word") : ""].filter(Boolean).join(" and ")}`
+          : "Nothing crossed out or written over";
+        renderSteps(4, [s.lines ? `Found ${plural(s.lines, "line")} of writing` : STEPS[0], cleanup, STEPS[2], STEPS[3]]);
+        $("scanline").style.display = "none";
+        setTimeout(() => { justSaved = true; openEntry(n); }, 900);
+      } else { justSaved = false; openEntry(n); }
+    };
+    pollTimer = setTimeout(tick, 1500);
+  }
+
+  // ---------- entry ----------
+  function openEntry(n) { current = n; fixing = -1; renderEntry(); show("entry"); }
+  function photoUrl(i) { return `/api/brain/note-photo/${current.id}/${i}`; }
+  function highlight(text) {
+    let h = esc(text);
+    for (const u of current.entry.unclear) { const r = esc(u.readAs); if (r && h.includes(r)) h = h.split(r).join(`<span class="flag">${r}</span>`); }
+    return h;
+  }
+  function renderEntry() {
+    const n = current, e = n.entry;
+    const back = `<div style="display:flex;align-items:center;gap:12px"><button class="iconbtn" data-act="back" aria-label="Back to notes"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button><div class="hd" style="font-size:17px">Notes</div></div>`;
+    const originals = `<div class="sec"><div class="lab">Original page${n.pages > 1 ? "s" : ""}</div><div style="display:flex;gap:12px;align-items:center"><div class="orig">${Array.from({ length: n.pages }, (_, i) => `<a href="#" data-photo="${i}" aria-label="View page ${i + 1}"><img src="${photoUrl(i)}" alt="" loading="lazy"></a>`).join("")}</div>${n.pages === 1 ? '<div class="muted" style="font-size:13px;line-height:19px">Kept with the entry. Crossed-out parts stay here and not in the notes above.</div>' : ""}</div></div>`;
+
+    if (n.status === "failed") {
+      $("entry").innerHTML = `${back}
+        <div class="card failbox"><div class="hd" style="font-size:20px">Didn't save yet</div><div class="muted">${esc(n.error)}</div><div>The photo is kept, so nothing is lost.</div>
+          <button class="primary" data-act="retry">Try again</button></div>
+        <div class="card entry">${originals}</div>
+        <button class="del" data-act="delete">Delete</button>`;
+      return;
+    }
+
+    const head = justSaved
+      ? `<div class="savedhd"><div class="okdot"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B0C0F" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+          <div style="display:flex;flex-direction:column;gap:2px"><div class="hd" style="font-size:20px">Saved to the Brain</div>
+          <div class="muted" style="font-size:13px">Just now · ${n.pages} page${n.pages > 1 ? "s" : ""}${e.links.length ? ` · linked to ${e.links.length} thing${e.links.length > 1 ? "s" : ""}` : ""}</div></div></div>`
+      : back;
+    const look = e.unclear.length
+      ? `<div class="look"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F2B544" stroke-width="2.2" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 7v6M12 16.5v.5"/></svg>
+          <div style="flex:1">${e.unclear.length === 1 ? "1 spot was" : e.unclear.length + " spots were"} hard to read. Saved with a best guess.</div><a href="#needs" data-act="jump">Look</a></div>`
+      : "";
+    const dates = [e.dateOnPage ? "Written " + e.dateOnPage : "", "Scanned " + new Date(n.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })].filter(Boolean).join(" · ");
+    const sec = (label, body) => `<div class="rule"></div><div class="sec"><div class="lab">${label}</div>${body}</div>`;
+
+    let html = `${head}${look}<div class="card entry">
+      <div class="sec"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="tag">${esc(e.type)}</span><span class="muted" style="font-size:13px">${esc(dates)}</span></div>
+        <h1 class="title hd">${highlight(e.title)}</h1>${e.summary ? `<p class="summary">${highlight(e.summary)}</p>` : ""}</div>`;
+    if (e.points.length) html += sec("Key points", e.points.map((p) => `<div class="pt"><span>•</span><span>${highlight(p)}</span></div>`).join(""));
+    if (e.todos.length) html += sec("To-do", e.todos.map((t, i) => `<label class="todo ${t.done ? "done" : ""}"><input type="checkbox" data-todo="${i}" ${t.done ? "checked" : ""}><span class="t" style="flex:1">${highlight(t.text)}${t.who ? ` <span class="muted">· ${esc(t.who)}</span>` : ""}</span>${t.when ? `<span class="when">${esc(t.when)}</span>` : ""}</label>`).join(""));
+    if (e.entities.length) html += sec("People, places, numbers", `<div class="chips">${e.entities.map((x) => `<span class="chip">${esc(x.name)}</span>`).join("")}</div>`);
+    if (e.links.length) html += sec("Linked in the Brain", `<div class="chips">${e.links.map((l) => `<a class="lchip" href="/brain">${ICON_LINK}${esc(l.title)}</a>`).join("")}</div>`);
+    if (e.unclear.length) html += `<div class="rule"></div><div class="sec" id="needs"><div class="lab" style="color:var(--amber)">Needs a look</div>${e.unclear.map((u, i) => `
+        <div class="unc"><div class="row"><span>Written</span><span class="hand">${esc(u.written)}</span></div>
+          <div class="row"><span>Read as</span><span style="font-size:15px">${esc(u.readAs)}</span></div>
+          ${fixing === i
+            ? `<form class="fixrow" data-fixform="${i}"><label class="sr" for="fix${i}">Correct wording</label><input id="fix${i}" value="${esc(u.readAs)}" autocomplete="off"><button class="b-yes" style="min-height:44px;border-radius:10px;padding:0 16px" type="submit">Save</button></form>`
+            : `<div class="btns"><button class="b-yes" data-ok="${i}">That's right</button><button class="b-fix" data-fix="${i}">Fix it</button></div>`}
+        </div>`).join("")}</div>`;
+    html += `<div class="rule"></div>${originals}</div>`;
+    html += justSaved
+      ? `<div class="actions"><button class="primary" data-act="again">Scan another</button><button class="secondary" data-act="back">Open in Brain</button></div>`
+      : `<button class="del" data-act="delete">Delete entry</button>`;
+    $("entry").innerHTML = html;
+    if (fixing !== -1) { const inp = $("fix" + fixing); if (inp) { inp.focus(); inp.select(); } }
+  }
+
+  $("entry").addEventListener("click", async (ev) => {
+    const t = ev.target.closest("[data-act],[data-ok],[data-fix],[data-photo]");
+    if (!t) return;
+    if (t.dataset.photo != null) { ev.preventDefault(); $("viewerImg").src = photoUrl(+t.dataset.photo); $("viewer").classList.add("on"); return; }
+    if (t.dataset.fix != null) { fixing = +t.dataset.fix; renderEntry(); return; }
+    if (t.dataset.ok != null) return resolve(+t.dataset.ok, "");
+    const act = t.dataset.act;
+    if (act === "jump") { ev.preventDefault(); const s = $("needs"); if (s) s.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+    if (act === "back") return goList();
+    if (act === "again") return openSnap();
+    if (act === "retry") {
+      try { const d = await api("note/retry", { method: "POST", body: { id: current.id } }); openReading(d.note); } catch (e) { if (e.message !== "locked") toast(e.message); }
+      return;
+    }
+    if (act === "delete") {
+      if (!confirm("Delete this entry and its photo from the Brain?")) return;
+      try { await api("note/delete", { method: "POST", body: { id: current.id } }); toast("Deleted"); goList(); } catch (e) { if (e.message !== "locked") toast(e.message); }
+    }
+  });
+  $("entry").addEventListener("submit", (ev) => {
+    const f = ev.target.closest("[data-fixform]"); if (!f) return;
+    ev.preventDefault();
+    const i = +f.dataset.fixform; resolve(i, $("fix" + i).value.trim());
+  });
+  $("entry").addEventListener("change", async (ev) => {
+    const box = ev.target.closest("[data-todo]"); if (!box) return;
+    try { const d = await api("note/todo", { method: "POST", body: { id: current.id, i: +box.dataset.todo, done: box.checked } }); current = d.note; renderEntry(); }
+    catch (e) { box.checked = !box.checked; if (e.message !== "locked") toast(e.message); }
+  });
+  async function resolve(i, fix) {
+    try {
+      const d = await api("note/unclear", { method: "POST", body: { id: current.id, i, fix } });
+      current = d.note; fixing = -1; renderEntry();
+      toast(fix ? "Fixed. It'll read that right next time." : "Got it");
+    } catch (e) { if (e.message !== "locked") toast(e.message); }
+  }
+  $("viewerClose").addEventListener("click", () => $("viewer").classList.remove("on"));
+  $("viewer").addEventListener("click", (e) => { if (e.target.id === "viewer") $("viewer").classList.remove("on"); });
+
+  // ---------- start ----------
+  async function start() {
+    try { await loadList(); } catch (e) { if (e.message !== "locked") { show("list"); toast(e.message); } return; }
+    show("list");
+    if (location.hash === "#snap") openSnap();
+  }
+  start();
+})();
+</script>
+</body>
+</html>
