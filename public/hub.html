@@ -203,7 +203,7 @@ function render(){
   // apps
   $("#apps").innerHTML = DATA.apps.map(a=>`
     <div class="app" data-id="${a.id}">
-      <div class="top"><div><div class="nm">${esc(a.name)}</div><div class="kind">${esc(a.kind)}</div></div><div class="pill ${a.frozen?'paused':a.status}">${a.frozen?'frozen':esc(a.status)}</div></div>
+      <div class="top"><div style="display:flex;align-items:center;gap:10px">${a.icon?`<img src="${esc(a.icon)}" alt="" width="36" height="36" style="border-radius:9px;flex-shrink:0">`:""}<div><div class="nm">${esc(a.name)}</div><div class="kind">${esc(a.kind)}</div></div></div><div class="pill ${a.frozen?'paused':a.status}">${a.frozen?'frozen':esc(a.status)}</div></div>
       <div class="row">
         <div class="gate"><span>Ship gate</span><div class="sw ${a.approved?'on':''}" data-gate="${a.id}"><b></b></div></div>
         <div class="gate"><span>Freeze</span><div class="sw red ${a.frozen?'on':''}" data-freeze="${a.id}"><b></b></div></div>
