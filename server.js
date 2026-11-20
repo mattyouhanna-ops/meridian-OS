@@ -158,8 +158,15 @@ function brainData() {
   }
   // Notes Scanner node: handwriting in, clean entries saved here (idempotent).
   if (!store.brain.nodes.some((n) => n.id === "scanner")) {
-    store.brain.nodes.push(mk("scanner", "Notes Scanner", "knowledge", "building", "Snap a page of handwriting and it gets filed here as one clean, organized entry.", "/scan", 230, 20));
+    store.brain.nodes.push(mk("scanner", "Decipher", "knowledge", "building", "I.O. Decipher: snap a page of handwriting and it gets filed here as one clean, organized entry.", "/scan", 230, 20));
     store.brain.links.push({ a: "core", b: "scanner" });
+    save();
+  }
+  store.brain.mig ||= {};
+  if (!store.brain.mig.decipherName) {
+    const sc = store.brain.nodes.find((n) => n.id === "scanner");
+    if (sc && sc.title === "Notes Scanner") { sc.title = "Decipher"; sc.desc = "I.O. Decipher: snap a page of handwriting and it gets filed here as one clean, organized entry."; }
+    store.brain.mig.decipherName = true;
     save();
   }
   // The Playbook: a readable, nested reference. Sections hold entries. Seed Philosophy > Stoicism.
@@ -1085,6 +1092,16 @@ function hubData() {
     store.hub.mig.scannerBuilt = true;
     save();
   }
+  if (!store.hub.mig.decipherBrand) {
+    const app = store.hub.apps.find((x) => x.id === "scanner");
+    if (app) { app.name = "Decipher"; app.kind = "Bad handwriting scanner"; app.icon = "/brand/decipher/icon-192.png"; }
+    const card = store.hub.apps.find((x) => x.id === "card");
+    if (card && !card.icon) card.icon = "/icon-192.png";
+    const plan = store.hub.plans.find((x) => x.id === "scanner");
+    if (plan) plan.title = "Decipher: handwriting to Brain entries";
+    store.hub.mig.decipherBrand = true;
+    save();
+  }
   return store.hub;
 }
 
@@ -1238,6 +1255,8 @@ const server = http.createServer(async (req, res) => {
     // static assets at root
     if (p === "/favicon.ico") return serveStatic(res, path.join(PUB, "favicon.ico"));
     if (["/logo.svg", "/logo.png", "/logo-dark.png", "/apple-touch-icon.png", "/favicon-32.png", "/icon-192.png", "/icon-512.png"].includes(p)) return serveStatic(res, path.join(PUB, p.slice(1)));
+    const bm = p.match(/^\/brand\/([a-z0-9-]+)\/([a-z0-9-]+\.(?:png|svg))$/);
+    if (bm) return serveStatic(res, path.join(PUB, "brand", bm[1], bm[2]));
     if (p === "/statesmap.js") return serveStatic(res, path.join(PUB, "statesmap.js"), "no-cache");
     if (p === "/manifest.webmanifest" || p === "/admin.webmanifest") return serveStatic(res, path.join(PUB, "manifest.webmanifest"), "no-cache");
     if (p === "/sw.js") { try { const buf = fs.readFileSync(path.join(PUB, "sw.js")); return res.writeHead(200, { "content-type": "text/javascript", "cache-control": "no-cache", "service-worker-allowed": "/" }).end(buf); } catch { return res.writeHead(404).end(); } }
